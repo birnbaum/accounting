@@ -11,6 +11,8 @@ These two signals are not, and should not be, identical. **But they must be reco
 
 > Given a real-time, physically motivated action metric, how do we map it onto the delayed, provider-allocated reporting number without hiding the mismatch?
 
+Today, GHG-style cloud accounting for customers happens through the numbers providers report. Those numbers are imperfect and provider methodologies remain heterogeneous. Better disclosure, stricter boundaries, and more unified reporting standards are still needed. But even under imperfect reporting, users need a framework that maps real-time operational action to the provider-reported number that currently governs reporting practice. A useful side effect is that this mapping makes weaknesses in provider methodologies more visible rather than hiding them behind a single delayed total.
+
 This framework serves two goals:
 
 - **For users:** provide an SCI-based action metric per workload and per provider-aligned service slice, then reconcile that signal to the provider's delayed GHG-style report.
@@ -34,6 +36,10 @@ That bridge has two distinct sources:
 
 The main design problem is not to eliminate that bridge by definition, but to make it explicit, predictable, and small enough that users can understand how action-level improvements flow into reporting-level totals.
 
+The primary success criterion is therefore a **calibrated month-end prediction** at the provider reporting slice, together with directional faithfulness of the main optimization levers and uncertainty that is small enough to remain actionable. We treat the provider-reported number as the reconciliation target because it governs current reporting practice, not because it is physically correct. A more defensible normative estimate is explored separately in [`NORMATIVE_REFERENCE_ESTIMATE.md`](NORMATIVE_REFERENCE_ESTIMATE.md).
+
+The canonical use case assumes **full coverage of customer-visible activity inside a declared provider reporting slice**. For example, if a customer wants to reconcile `EC2 × eu-central-1 × month`, we assume they can observe all EC2 resources they run in that region over that month with enough fidelity to reconstruct resource-time and, where needed, utilization. Under full coverage the core problem reduces to estimating the residual bridge added by provider methodology and infrastructure effects.
+
 ## Boundary Model
 
 The boundary needs to be explicit.
@@ -49,7 +55,9 @@ The reconciliation unit is the **provider reporting slice**, not an abstract "jo
 
 Every measured workload event must map to one or more provider reporting slices. For distributed workloads, we split the workload across slices by observed resource share. This matters because reconciling at the finest provider-exposed slice reduces uncertainty: the bridge only needs to explain residuals inside a slice, not cross-service mixing introduced by aggregating too early.
 
-If the observable boundary fully covers the provider reporting slice, the coverage-gap term should be near zero. If it does not, that gap must be made explicit rather than silently absorbed into "model error."
+The framework assumes the observable boundary fully covers customer-visible activity in the provider reporting slice. This is a structural requirement, not a simplifying assumption: without full coverage the residual bridge loses its interpretation as a provider-methodology effect and becomes entangled with missing-data noise.
+
+We therefore work with the finest provider slice that is actually exposed, not the slice we wish existed. If the provider's available slice is too coarse for a reliable action signal, the framework should surface that the mapping is noisy and that optimization claims at that slice are weak.
 
 ## Notation
 
@@ -74,10 +82,9 @@ If the observable boundary fully covers the provider reporting slice, the covera
 | Symbol | Description |
 |--------|-------------|
 | $`\text{SCI}_i = (O_i + M_i^\text{obs}) / R_i`$ | Action metric for an observed workload on the observable boundary. |
-| $`\text{SCI}_b(T) = C_\text{action}(b,T) / R_b(T)`$ | Provider-aligned service-slice SCI aggregated to the reporting slice. |
 | $`\hat{C}(b,T)`$ | Our estimate of the provider-reported carbon before actuals arrive. |
 
-$`R_b(T)`$ is only well-defined when the workloads rolled into slice $`b`$ share a common functional unit or have been normalized to one. Otherwise, the slice should be reported as an absolute carbon total plus its constituent workload SCI values.
+Workload-level $`\text{SCI}_i`$ is the primary user-facing intensity metric; $`C_\text{action}(b,T)`$ is the slice-level reconciliation object.
 
 ### Core Equations
 
@@ -89,15 +96,14 @@ For each provider reporting slice:
 
 $$C_\text{action}(b,T) = \sum_{i \mapsto b}\big(O_i(T) + M_i^\text{obs}(T)\big)$$
 
-$$\hat{C}(b,T) = C_\text{action}(b,T) + \hat{\Delta}_\text{residual}(b,T) + \hat{\Delta}_\text{coverage}(b,T) \approx C_\text{reported}(b,T)$$
+$$\hat{C}(b,T) = C_\text{action}(b,T) + \hat{\Delta}_\text{residual}(b,T) \approx C_\text{reported}(b,T)$$
 
 Where:
 
 - $`C_\text{action}`$ is the observable SCI-style carbon total for the slice.
 - $`\hat{\Delta}_\text{residual}`$ is residual carbon inside the slice that the observable metric does not directly capture.
-- $`\hat{\Delta}_\text{coverage}`$ is the explicit boundary mismatch term for uninstrumented or unmappable activity.
 
-This is the central formalization change: **we reconcile at the provider slice, and we keep residual effects separate from coverage gaps.**
+This is the central formalization change: **we reconcile at the provider slice, with the residual bridge capturing everything the action metric misses.**
 
 ### SCI Reference
 
@@ -114,7 +120,7 @@ This layer is responsible for:
 - estimating $`E_i(t)`$
 - computing $`O_i(T)`$
 - assigning each observed workload to one or more provider slices
-- recording where coverage is partial or ambiguous
+- verifying that coverage of the declared provider slice is complete
 
 Output: observable per-workload SCI values and slice-aligned action totals.
 
@@ -122,7 +128,7 @@ Output: observable per-workload SCI values and slice-aligned action totals.
 
 Estimate the gap between the observable action total and the provider-reported total at the slice level.
 
-This layer does **not** cleanly identify every latent component from monthly data alone. The monthly reported target mainly constrains the **total bridge**. The decomposition of that bridge into PUE, idle, residual embodied carbon, Scope 1, other Scope 3, and allocation artifacts is partly data-driven and partly prior-driven.
+This layer does **not** cleanly identify every latent component from monthly data alone. The monthly reported target mainly constrains the **total bridge**. The decomposition of that bridge into PUE, idle, non-energy overhead, residual embodied carbon, and allocation artifacts is partly data-driven and partly prior-driven.
 
 Output: $`\hat{C}(b,T)`$ with uncertainty intervals and a decomposition of the bridge annotated by confidence.
 
@@ -149,6 +155,7 @@ The framework therefore needs a **provider profile** that tells us:
 - how emissions are allocated to that slice
 - what temporal and spatial resolution the provider uses
 - which residuals are likely to dominate the bridge
+- whether the available methodology disclosure is sufficient for a credible minimum viable profile
 
 When a provider improves methodology, new optimization levers become reconcilable. Making that visible is part of the point.
 
@@ -172,28 +179,21 @@ Key finding: **reconcilability is provider-specific.**
 
 ### Goal
 
-Estimate the bridge at the provider reporting slice before provider actuals arrive:
-
-$$\hat{\Delta}_\text{total}(b,T) = \hat{\Delta}_\text{residual}(b,T) + \hat{\Delta}_\text{coverage}(b,T)$$
+Estimate the residual bridge at the provider reporting slice before provider actuals arrive.
 
 ### Residual Bridge Decomposition
 
 We decompose the residual bridge into carbon terms:
 
-$$\hat{\Delta}_\text{residual} = \Delta_\text{PUE} + \Delta_\text{idle} + \Delta_\text{scope1} + \Delta_\text{embodied,resid} + \Delta_\text{other-s3} + \Delta_\text{alloc}$$
+$$\hat{\Delta}_\text{residual} = \Delta_\text{PUE} + \Delta_\text{idle} + \Delta_\text{non-energy} + \Delta_\text{embodied,resid} + \Delta_\text{alloc}$$
 
 Where:
 
 - $`\Delta_\text{PUE}`$ — facility overhead not present in measured IT energy
 - $`\Delta_\text{idle}`$ — idle/shared capacity not assigned by the observable boundary
-- $`\Delta_\text{scope1}`$ — provider-allocated diesel and refrigerants
+- $`\Delta_\text{non-energy}`$ — provider-allocated non-energy overhead (Scope 1 diesel/refrigerants plus other Scope 3 categories)
 - $`\Delta_\text{embodied,resid}`$ — embodied carbon not directly attributable from observed reservations
-- $`\Delta_\text{other-s3}`$ — other provider-allocated Scope 3 categories
 - $`\Delta_\text{alloc}`$ — provider methodology effects that make the reported slice differ from a purely physical allocation
-
-And:
-
-- $`\hat{\Delta}_\text{coverage}`$ — explicit gap from uninstrumented or unmappable activity inside the provider slice
 
 ### Parameter Table
 
@@ -202,16 +202,14 @@ And:
 | $`\alpha_\text{PUE}(b,T)`$ | Facility/IT energy ratio | Dimensionless; converts observed IT energy toward facility energy | ~1.1–1.3 | High |
 | $`E_\text{idle}(b,T)`$ | Unobserved idle/shared energy | kWh not assigned to observed workloads | ~15–30% of observed IT energy | Medium |
 | $`M_\text{resid}(b,T)`$ | Residual embodied carbon | tCO₂e not directly attributable from observed reservations | Provider LCA / profile-driven | Medium-High |
-| $`\rho_{s1}(b,T)`$ | Scope 1 ratio | Dimensionless carbon uplift over facility-energy carbon | ~0.01–0.03 | Low |
-| $`\rho_{s3}(b,T)`$ | Other Scope 3 ratio | Dimensionless carbon uplift over action carbon | ~0.05–0.15 | Low-Medium |
+| $`\rho_\text{ne}(b,T)`$ | Non-energy overhead ratio | Dimensionless carbon uplift for Scope 1 + other Scope 3 | ~0.03–0.15 | Low-Medium |
 | $`\beta_\text{alloc}(b,T)`$ | Allocation adjustment | Dimensionless correction for provider allocation method | Physical ~1.0; wider on usage/economic methods | High |
-| $`C_\text{cov}(b,T)`$ | Coverage-gap carbon | tCO₂e from uninstrumented or unmappable workload share | zero if slice fully covered | High |
 
 ### Bayesian Framing
 
 At the slice level:
 
-$$C_\text{reported}(b,T) \sim \mathcal{N}\big(C_\text{action}(b,T) + \hat{\Delta}_\text{total}(b,T;\boldsymbol{\theta}),\;\sigma^2_\text{obs}\big)$$
+$$C_\text{reported}(b,T) \sim \mathcal{N}\big(C_\text{action}(b,T) + \hat{\Delta}_\text{residual}(b,T;\boldsymbol{\theta}),\;\sigma^2_\text{obs}\big)$$
 
 The important modeling point is:
 
@@ -226,32 +224,35 @@ So the honest output is not "we inferred each latent component from data alone."
 ```text
 Provider slice: project=foo / sku=n2-standard-16 / region=europe-west4 / month=2026-02
 
-Reported estimate: 12.3 tCO2e [10.8 - 14.1, 90% CI]
+Reported estimate: 12.1 tCO2e [10.6 - 13.9, 90% CI]
 Observable action total: 8.7 tCO2e
-Estimated total bridge: 3.6 tCO2e
+Estimated residual bridge: 3.4 tCO2e
 
 Bridge component                         Estimate    Confidence
 --------------------------------------------------------------
 Facility overhead (PUE)                 1.2 tCO2e   medium
 Idle/shared capacity                    0.8 tCO2e   low
-Scope 1                                 0.1 tCO2e   low
+Non-energy overhead (S1 + other S3)     0.4 tCO2e   low-medium
 Residual embodied carbon                0.9 tCO2e   medium
-Other Scope 3                           0.3 tCO2e   low
 Allocation adjustment                   0.1 tCO2e   low
-Coverage gap                            0.2 tCO2e   high
 
 Model maturity: 8 months
 Last residual error: +0.3 tCO2e (2.4%)
 ```
 
-## Open Design Questions
+## Open Problem Formulation Questions
+
+1. **Actionability limits:** When a provider slice is too coarse or too opaque, how should the framework expose that optimization claims are weak rather than presenting false precision?
+2. **Lever reconcilability:** Which user actions should be expected to move the provider-reported number directly, approximately, or not at all under a given provider methodology?
+3. **Minimum viable provider knowledge:** What minimum provider profile can be constructed from public documentation and customer-visible outputs before the framework becomes too speculative?
+
+## Modeling Questions
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific questions.
 
 1. **Identifiability:** Which bridge components are estimable from monthly slice-level data, and which should be treated as provider-profile priors plus side information?
-2. **Coverage accounting:** How do we estimate $`\hat{\Delta}_\text{coverage}`$ for partially instrumented slices without hiding it inside generic uncertainty?
-3. **Non-stationarity:** How should methodology changes trigger profile version updates and regime shifts in the model?
-4. **Minimum viable history:** How many months of slice-level pairs $`(C_\text{action}, C_\text{reported})`$ are needed before the bridge estimate is decision-useful for each provider?
+2. **Non-stationarity:** How should methodology changes trigger profile version updates and regime shifts in the model?
+3. **Minimum viable history:** How many months of slice-level pairs $`(C_\text{action}, C_\text{reported})`$ are needed before the bridge estimate is decision-useful for each provider?
 
 ## Repository Structure
 
