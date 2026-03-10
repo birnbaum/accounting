@@ -2,210 +2,258 @@
 
 ## Mission
 
-Metrics that make carbon data auditable and comparable across organizations (top-down, billing-based, auditable, comparable) are not the same metrics that help individual teams reduce emissions (bottom-up, granular, real-time, scoped to a team's agency).
+Auditable cloud carbon reporting and actionable software carbon signals are not the same object.
 
-While these two signals can by design not be identical, our position is that they must be **reconcilable**. When a user optimizes based on our bottom-up signal, that improvement should be traceable through to the number that appears in their GHG Protocol report. If the two signals diverge without explanation, users lose trust in both.
+- **Top-down reporting** is billing-aligned, standardized, delayed, and anchored in provider data such as utility bills, diesel consumption, refrigerant losses, and embodied hardware/building emissions.
+- **Bottom-up action metrics** are granular, near-real-time, and scoped to what a team can change: code efficiency, workload placement, resource sizing, and scheduling.
 
-We focus on **location-based accounting** (GHG Protocol Scope 2 Guidance). Market-based accounting (RECs, PPAs) is inherently decoupled from physical consumption and therefore not actionable for our purpose (e.g. a team's emissions can change without their behavior changing).
+These signals should not be forced to be identical. They **must** be reconcilable. If a team improves its bottom-up signal, that improvement should map cleanly to the cloud provider's reported number at the boundary the provider actually reports. If the mapping is unclear, both numbers lose credibility.
 
-**This framework serves two goals:**
+We focus on **location-based accounting**. Market-based accounting is intentionally excluded from the action metric because it is decoupled from physical consumption and therefore weak as an operational signal.
 
-- **For users:** Report an SCI-based metric per workload that, when summed over the month, reconciles with the provider's GHG Protocol-reported total. Users get an actionable signal they can trust.
-- **For the ecosystem:** By making the provider's methodology quality visible — which optimization levers are blocked, which are rewarded — create market pressure for providers to adopt more granular methodologies (e.g. hourly $`I`$) that open up new optimization levers like temporal shifting.
+This framework serves two goals:
 
+- **For users:** provide an SCI-based action metric per workload and per provider-aligned service slice, then reconcile that signal to the provider's delayed GHG-style report.
+- **For the ecosystem:** make provider methodology quality visible by showing which optimization levers are directly rewarded, only approximately rewarded, or structurally blocked by provider accounting choices.
 
-## Context: Top-Down vs. Bottom-Up
+## Problem Framing
 
-**Top-down (reporting):** The cloud provider computes its total monthly footprint from utility bills, diesel consumption, refrigerant losses, and amortized embodied carbon of hardware and buildings. It then allocates this total down to individual customers, services, and jobs. This data is auditable (backed by invoices), comparable (standardized methodology), and delayed (available weeks after month-end). It tells you the size of the problem but not what to do about it.
+The hard problem is not "compute one true carbon number."
 
-**Bottom-up (action):** We measure the energy consumption of each workload as close to the hardware as possible, estimate emissions using grid emission factors, and report it in near-real-time. This gives teams a clear signal for optimization but it misses facility overhead, embodied carbon, shared infrastructure, and other components that the top-down number includes.
+The hard problem is: **given a real-time, physically motivated action metric, how do we map it onto the delayed, provider-allocated reporting number without hiding the mismatch?**
 
-The gap between these two is the **reconciliation bridge** $`\hat{\Delta}`$: everything the bottom-up measurement misses. Making this bridge transparent, predictable, and shrinking over time is the core technical challenge.
+That mismatch is the **reconciliation bridge**. It has two distinct causes:
+
+1. **Residual carbon inside the reporting slice** that the observable real-time metric does not directly capture: facility overhead, idle/shared capacity, Scope 1, residual embodied carbon, other Scope 3, and provider allocation artifacts.
+2. **Boundary mismatch** between what we instrument and what the provider reports: uninstrumented services, partial workload coverage, or a workload that spans multiple provider-reported slices.
+
+Those two causes should not be conflated.
+
+## Boundary Model
+
+The boundary needs to be explicit.
+
+- **Observable boundary:** the workloads and hardware reservations we can instrument in near real time.
+- **Provider reporting boundary:** the finest slice at which the provider exposes carbon data to the customer.
+
+The reconciliation unit is the **provider reporting slice**, not an abstract "job." In practice this means:
+
+- **AWS:** `account × service × region × month`
+- **GCP:** `project × SKU × region × month`
+- **Azure:** `subscription × service_category × region × month`
+
+Every measured workload event must map to one or more provider reporting slices. For distributed workloads, we split the workload across slices by observed resource share. This matters because reconciling at the finest provider-exposed slice reduces uncertainty: the bridge only needs to explain residuals inside a slice, not cross-service mixing introduced by aggregating too early.
+
+If the observable boundary fully covers the provider reporting slice, the coverage-gap term should be near zero. If it does not, that gap must be made explicit rather than silently absorbed into "model error."
 
 ## Notation
 
 ### Indices
 
-- $`t`$ — time (continuous; power measured at ~seconds, $`I`$ available at 5-min to hourly resolution)
-- $`r`$ — cloud region
-- $`T`$ — reporting period (typically one calendar month — the granularity at which provider actuals arrive)
+- $`i`$ — measured workload execution, component, or reservation
+- $`b`$ — provider reporting slice
+- $`t`$ — time within a reporting month
+- $`T`$ — reporting month
 
-The SCI is a rate and can be computed at any granularity. The monthly boundary only matters for reconciliation — that's when provider actuals arrive and we can calibrate.
-
-### Inputs (measured / known)
+### Inputs
 
 | Symbol | Description |
 |--------|-------------|
-| $`E(t,r)`$ | Energy per job/service in kWh (measured, Layer 1; SCI's $`E`$). Fine-grained (sub-hourly). |
-| $`I(t,r)`$ | Grid carbon intensity in gCO₂eq/kWh (from Electricity Maps / IEA; SCI's $`I`$). Available at 5-min to hourly resolution, but must be matched to the provider's accounting resolution for reconciliation. |
-| $`C_\text{reported}(T,r)`$ | Provider's top-down reported carbon for reporting period $`T`$ (arrives ~15–21 days after month-end). |
+| $`E_i(t)`$ | Measured IT energy for observed workload $`i`$ in kWh. |
+| $`I_b^\star(t)`$ | Provider-compatible location-based carbon intensity for slice $`b`$, matched to the provider's accounting resolution. |
+| $`M_i^\text{obs}(T)`$ | Directly attributable embodied carbon share for observed workload $`i`$ over month $`T`$. |
+| $`C_\text{reported}(b,T)`$ | Provider-reported carbon for slice $`b`$ and month $`T`$. |
 
 ### Outputs
 
 | Symbol | Description |
 |--------|-------------|
-| $`\text{SCI}_j(t,r) = (O_j + M_j) / R_j`$ | Real-time, per-workload carbon rate (what the user sees). |
-| $`\hat{C}(T,r)`$ | Our estimate of $`C_\text{reported}(T,r)`$, available before actuals arrive. |
+| $`\text{SCI}_i = (O_i + M_i^\text{obs}) / R_i`$ | Action metric for an observed workload on the observable boundary. |
+| $`\text{SCI}_b(T) = C_\text{action}(b,T) / R_b(T)`$ | Provider-aligned service-slice SCI aggregated to the reporting slice. |
+| $`\hat{C}(b,T)`$ | Our estimate of the provider-reported carbon before actuals arrive. |
 
-### The Core Equation
+$`R_b(T)`$ is only well-defined when the workloads rolled into slice $`b`$ share a common functional unit or have been normalized to one. Otherwise, the slice should be reported as an absolute carbon total plus its constituent workload SCI values.
 
-$$\int_T \sum_j \text{SCI}_j(t,r) \cdot R_j(t)\;dt \;+\; \hat{\Delta}(T,r) \;=\; \hat{C}(T,r) \;\approx\; C_\text{reported}(T,r)$$
+### Core Equations
+
+For each observed workload:
+
+$$O_i(T) = \int_T E_i(t)\, I_{b(i)}^\star(t)\, dt$$
+
+For each provider reporting slice:
+
+$$C_\text{action}(b,T) = \sum_{i \mapsto b}\big(O_i(T) + M_i^\text{obs}(T)\big)$$
+
+$$\hat{C}(b,T) = C_\text{action}(b,T) + \hat{\Delta}_\text{residual}(b,T) + \hat{\Delta}_\text{coverage}(b,T) \approx C_\text{reported}(b,T)$$
 
 Where:
-- The integral sums all bottom-up SCI scores across jobs and time within reporting period $`T`$
-- $`\hat{\Delta}(T,r)`$ is the **reconciliation bridge** — everything the bottom-up measurement misses (facility overhead, idle capacity, Scope 1, other Scope 3, allocation artifacts)
 
-The model's job: estimate $`\hat{\Delta}`$ so that $`\hat{C}`$ predicts $`C_\text{reported}`$ before actuals arrive. The SCI scores themselves are available in real time at fine granularity; the reconciliation bridge is calibrated monthly when actuals arrive.
+- $`C_\text{action}`$ is the observable SCI-style carbon total for the slice.
+- $`\hat{\Delta}_\text{residual}`$ is residual carbon inside the slice that the observable metric does not directly capture.
+- $`\hat{\Delta}_\text{coverage}`$ is the explicit boundary mismatch term for uninstrumented or unmappable activity.
 
-### Model Parameters (components of $`\hat{\Delta}`$)
-
-| Parameter | Meaning |
-|-----------|---------|
-| $`\alpha_\text{PUE}(r,t)`$ | Facility/IT energy ratio (Power Usage Effectiveness) |
-| $`E_\text{idle}(r,t)`$ | Idle/shared energy not captured by per-job measurement |
-| $`M(r,t)`$ | Amortized embodied carbon of hardware and buildings |
-| $`\alpha_{s1}(r)`$ | Scope 1 emissions ratio (diesel, refrigerants) |
-| $`\alpha_{s3}(r)`$ | Other Scope 3 emissions ratio (FERA, transport, waste) |
-| $`\beta_\text{alloc}(r)`$ | Allocation scaling factor (physical vs. usage-based) |
+This is the central formalization change: **we reconcile at the provider slice, and we keep residual effects separate from coverage gaps.**
 
 ### SCI Reference
 
-$`E`$, $`I`$, $`M`$, $`R`$ follow SCI (ISO/IEC 21031:2024) naming. See [`references/SCI.md`](references/SCI.md) for the full specification.
+We use SCI naming for $`E`$, $`I`$, $`M`$, and $`R`$; see [`references/SCI.md`](references/SCI.md). The user-facing metric is best described as an **SCI-based metric on the observable boundary**. In public cloud, teams usually cannot observe all supporting infrastructure in real time, so the raw action metric alone should not be presented as the provider's full reported footprint.
 
 ## Design: Three-Layer Architecture
 
-### Layer 1 — Energy Measurement
+### Layer 1 — Measurement and Mapping
 
-Ground truth. Energy consumption at job/service level via CPU/GPU power modeling (utilization × TDP), hardware counters (RAPL, NVML), or direct metering. Provider-agnostic.
+Measure workload energy as close to the hardware as possible via power telemetry, hardware counters, or calibrated models, then map each measurement to a provider reporting slice.
 
-**Output:** $`E(t,r)`$ in kWh at sub-hourly granularity. Uncertainty ~2–5%.
+This layer is responsible for:
+
+- estimating $`E_i(t)`$
+- computing $`O_i(T)`$
+- assigning each observed workload to one or more provider slices
+- recording where coverage is partial or ambiguous
+
+Output: observable per-workload SCI values and slice-aligned action totals.
 
 ### Layer 2 — Reconciliation Model
 
-Estimates $`\hat{\Delta}(T,r)`$ — the reconciliation bridge. Given known inputs ($`E`$, $`I`$), the model treats everything else — PUE, idle allocation, embodied carbon, Scope 1, other Scope 3, customer allocation — as **parameters** with priors and uncertainty. Calibrated monthly when $`(C_\text{reported}, \int \text{SCI})`$ pairs arrive.
+Estimate the gap between the observable action total and the provider-reported total at the slice level.
 
-This is where the novel design work lives. See **Estimation Framework** below for the full model specification.
+This layer does **not** cleanly identify every latent component from monthly data alone. The monthly reported target mainly constrains the **total bridge**. The decomposition of that bridge into PUE, idle, residual embodied carbon, Scope 1, other Scope 3, and allocation artifacts is partly data-driven and partly prior-driven.
 
-**Output:** $`\hat{C}(T,r)`$ in tCO₂e with posterior credible intervals, reconciled monthly against provider actuals.
+Output: $`\hat{C}(b,T)`$ with uncertainty intervals and a decomposition of the bridge annotated by confidence.
 
-### Layer 3 — User-Facing Signal
+### Layer 3 — User-Facing Views
 
-Users see $`\text{SCI}_j = (O_j + M_j) / R_j`$ per workload in real time — carbon per unit of work scoped to their team's agency. Roll-up into GHG Protocol reporting view shows absolute totals plus their allocated share of $`\hat{\Delta}`$, with full methodology transparency into how the bridge was allocated.
+Users should see two linked but distinct views:
 
-**Output:** Per-team dashboards showing both the action metric (optimize this) and the reporting metric (report this), with the reconciliation bridge between them. Each number carries uncertainty and fractional decomposition.
+- **Action view:** per-workload or per-service SCI on the observable boundary
+- **Reporting view:** provider-aligned slice totals plus allocated reconciliation bridge
+
+This preserves agency without pretending the real-time metric already contains the full provider methodology.
 
 ## Why the Framework Must Be Provider-Adaptive
 
-Not all optimization levers are rewarded by all providers:
+Not all optimization levers survive contact with provider accounting:
 
-- **Temporal shifting** — only reconcilable if the provider uses sub-monthly emission factors (currently only GCP uses hourly factors internally; AWS and Azure use monthly averages).
-- **Compute efficiency** — directly reconcilable on physical allocation providers (GCP, AWS foundational services); approximately reconcilable on Azure (usage-based, correlated but undisclosed derivation).
-- **Spatial shifting** — reconcilable across all three providers (all use regional emission factors).
+- **Temporal shifting** only reconciles if the provider uses sub-monthly emission factors.
+- **Compute efficiency** reconciles most directly when allocation is physical.
+- **Spatial shifting** is broadly reconcilable because all three providers use regional factors.
 
-The framework must be **parametrized by a provider profile** encoding how each provider accounts for carbon.
+The framework therefore needs a **provider profile** that tells us:
 
-When a provider adopts finer-grained methodology (e.g. hourly $`I`$), new optimization levers become reconcilable. Our framework makes this visible — showing users which optimizations are "blocked" by their provider's methodology creates demand for better accounting. This is the ecosystem pressure goal in action.
+- what the reporting slice is
+- how emissions are allocated to that slice
+- what temporal and spatial resolution the provider uses
+- which residuals are likely to dominate the bridge
+
+When a provider improves methodology, new optimization levers become reconcilable. Making that visible is part of the point.
 
 ## Provider Profiles
 
-The framework is parametrized by a **provider profile** encoding each provider's accounting methodology. Full schema definition, populated profiles for AWS/GCP/Azure, reconcilability analysis, and minimum viable profile requirements are in [`SCHEMA.md`](SCHEMA.md).
+The provider profile schema lives in [`SCHEMA.md`](SCHEMA.md). It captures:
 
-Key finding: **Not all optimization levers are equally reconcilable across providers**. GCP's physical allocation makes most energy-based optimizations directly reconcilable. AWS's hybrid approach is direct for foundational services, approximate for managed services. Azure's usage-based allocation correlates with physical usage but the undisclosed derivation limits confidence.
+- provider-exposed reporting dimensions and recommended reconciliation unit
+- allocation method and granularity
+- temporal resolution of emission factors
+- embodied-carbon treatment
+- overhead and verification metadata
 
-- **Universally safe:** Spatial shifting, eliminate idle resources, right-sizing.
-- **Provider-dependent:** Compute efficiency, architecture choice (strongest on GCP and AWS foundational; approximate on Azure), temporal shifting (GCP).
+Key finding: **reconcilability is provider-specific.**
+
+- **GCP:** strongest direct alignment for electricity-related signals because allocation is physical and granular.
+- **AWS:** strong for foundational services, weaker where economic allocation is used.
+- **Azure:** directionally aligned for many actions, but confidence is limited by usage-factor opacity and coarser service granularity.
 
 ## Estimation Framework
 
 ### Goal
 
-Estimate $`\hat{\Delta}(T,r)`$ — the reconciliation bridge — in real time, before provider actuals arrive. The bottom-up SCI is computed in real time; the estimation framework's job is to estimate the bridge so that $`\hat{C}`$ predicts $`C_\text{reported}`$.
+Estimate the bridge at the provider reporting slice before provider actuals arrive:
 
-### $`\hat{\Delta}`$ Decomposition
+$$\hat{\Delta}_\text{total}(b,T) = \hat{\Delta}_\text{residual}(b,T) + \hat{\Delta}_\text{coverage}(b,T)$$
 
-The bridge decomposes into the components that the bottom-up SCI misses:
+### Residual Bridge Decomposition
 
-$$\hat{\Delta}(T,r) = \Delta_\text{PUE} + \Delta_\text{idle} + \Delta_\text{scope1} + \Delta_\text{embodied} + \Delta_\text{other-s3} + \Delta_\text{alloc}$$
+We decompose the residual bridge into carbon terms:
+
+$$\hat{\Delta}_\text{residual} = \Delta_\text{PUE} + \Delta_\text{idle} + \Delta_\text{scope1} + \Delta_\text{embodied,resid} + \Delta_\text{other-s3} + \Delta_\text{alloc}$$
 
 Where:
 
-- $`\Delta_\text{PUE}(T,r) = (\alpha_\text{PUE}(r,t) - 1) \cdot \int_T E(t,r)\,dt \cdot \bar{I}(T,r)`$ — facility overhead energy × carbon intensity
-- $`\Delta_\text{idle}(T,r) = E_\text{idle}(r,t) \cdot \bar{I}(T,r)`$ — idle/shared capacity emissions
-- $`\Delta_\text{scope1}(T,r) = \alpha_{s1}(r) \cdot E_\text{facility}(T,r)`$ — diesel, refrigerants
-- $`\Delta_\text{embodied}(T,r) = M(r,T)`$ — amortized hardware/buildings
-- $`\Delta_\text{other-s3}(T,r) = \alpha_{s3}(r) \cdot \int_T E(t,r)\,dt`$ — FERA, transport, waste
-- $`\Delta_\text{alloc}(T,r)`$ — allocation adjustment ($`\beta_\text{alloc}`$)
+- $`\Delta_\text{PUE}`$ — facility overhead not present in measured IT energy
+- $`\Delta_\text{idle}`$ — idle/shared capacity not assigned by the observable boundary
+- $`\Delta_\text{scope1}`$ — provider-allocated diesel and refrigerants
+- $`\Delta_\text{embodied,resid}`$ — embodied carbon not directly attributable from observed reservations
+- $`\Delta_\text{other-s3}`$ — other provider-allocated Scope 3 categories
+- $`\Delta_\text{alloc}`$ — provider methodology effects that make the reported slice differ from a purely physical allocation
 
-Note: $`\bar{I}(T,r)`$ is $`I`$ averaged at the provider's accounting resolution (monthly for AWS/Azure, hourly for GCP). $`E_\text{facility} = E \cdot \alpha_\text{PUE} + E_\text{idle}`$ is the total facility energy.
+And:
 
-### Parameter Table (parameters of $`\hat{\Delta}`$)
+- $`\hat{\Delta}_\text{coverage}`$ — explicit gap from uninstrumented or unmappable activity inside the provider slice
 
-| Parameter | Meaning | Prior | Uncertainty | Cadence | Sensitivity |
-|---|---|---|---|---|---|
-| $`\alpha_\text{PUE}(r,t)`$ | Facility/IT energy ratio | ~1.1–1.3 (sustainability reports) | ±10–15% | Seasonal | High |
-| $`E_\text{idle}(r,t)`$ | Idle/shared energy | ~15–30% of $`E`$ | ±20–40% | Monthly | Medium |
-| $`M(r,t)`$ | Embodied carbon (SCI: $`M`$) | Provider LCA / SCHEMA.md | ±15–30% | Quarterly | Medium–High |
-| $`\alpha_{s1}(r)`$ | Scope 1 ratio | ~0.01–0.03 | ±30–50% | Annual | Low |
-| $`\alpha_{s3}(r)`$ | Other Scope 3 ratio | ~0.05–0.15 | ±20–35% | Annual | Low–Medium |
-| $`\beta_\text{alloc}(r)`$ | Allocation scaling | Physical ~1.0; usage-based ~0.9–1.1 | ±5–30% | Monthly | High |
+### Parameter Table
 
-**Known inputs** (not fitted): $`E(t,r)`$ from Layer 1 measurement, $`I(t,r)`$ from Electricity Maps / IEA.
+| Parameter | Meaning | Units / Role | Prior | Sensitivity |
+|---|---|---|---|---|
+| $`\alpha_\text{PUE}(b,T)`$ | Facility/IT energy ratio | Dimensionless; converts observed IT energy toward facility energy | ~1.1–1.3 | High |
+| $`E_\text{idle}(b,T)`$ | Unobserved idle/shared energy | kWh not assigned to observed workloads | ~15–30% of observed IT energy | Medium |
+| $`M_\text{resid}(b,T)`$ | Residual embodied carbon | tCO₂e not directly attributable from observed reservations | Provider LCA / profile-driven | Medium-High |
+| $`\rho_{s1}(b,T)`$ | Scope 1 ratio | Dimensionless carbon uplift over facility-energy carbon | ~0.01–0.03 | Low |
+| $`\rho_{s3}(b,T)`$ | Other Scope 3 ratio | Dimensionless carbon uplift over action carbon | ~0.05–0.15 | Low-Medium |
+| $`\beta_\text{alloc}(b,T)`$ | Allocation adjustment | Dimensionless correction for provider allocation method | Physical ~1.0; wider on usage/economic methods | High |
+| $`C_\text{cov}(b,T)`$ | Coverage-gap carbon | tCO₂e from uninstrumented or unmappable workload share | zero if slice fully covered | High |
 
-### Bayesian Inference
+### Bayesian Framing
 
-**Priors:** Log-normal for multiplicative parameters ($`\alpha_\text{PUE}`$, $`\beta_\text{alloc}`$); normal for additive parameters ($`E_\text{idle}`$, $`M`$).
+At the slice level:
 
-**Likelihood:**
+$$C_\text{reported}(b,T) \sim \mathcal{N}\big(C_\text{action}(b,T) + \hat{\Delta}_\text{total}(b,T;\boldsymbol{\theta}),\;\sigma^2_\text{obs}\big)$$
 
-$$C_\text{reported}(T,r) \sim \mathcal{N}\big(\hat{C}(T,r;\,\boldsymbol{\theta}),\;\sigma^2_\text{obs}\big)$$
+The important modeling point is:
 
-**Posterior:**
+- monthly data strongly constrains the **total bridge**
+- the component breakdown is only partially identifiable
+- side information such as published PUE, provider methodology changes, and service coverage assumptions are required for a credible decomposition
 
-$$p(\boldsymbol{\theta} \mid \mathcal{D}) \propto \prod_{T} p\big(C_\text{reported}(T) \mid \boldsymbol{\theta}\big) \cdot p(\boldsymbol{\theta})$$
-
-Updated monthly when $(E, C_\text{reported})$ pairs arrive.
-
-**Cold start:** Months 1–3 prior-dominated (±30–50% CI). Months 6–12 posterior-driven.
-
-**Diagnostics on $`\varepsilon = C_\text{reported} - \hat{C}`$:**
-- Seasonal autocorrelation → $`\alpha_\text{PUE}`$ needs Fourier terms
-- Utilization correlation → $`E_\text{idle}`$ mis-specified
-- Step change → methodology update (check provider profile version)
+So the honest output is not "we inferred each latent component from data alone." The honest output is "we estimated the total bridge and apportioned it into components with stated prior strength and uncertainty."
 
 ### Output Format
 
-```
-Estimated footprint: 12.3 tCO₂e [10.8 — 14.1, 90% CI]
+```text
+Provider slice: project=foo / sku=n2-standard-16 / region=europe-west4 / month=2026-02
 
-Component                               Estimate    σ       Share
-────────────────────────────────────────────────────────────────
-IT energy (measured)                    4.96 tCO₂e  ±5%      40%
-Facility overhead (PUE)                 1.24 tCO₂e  ±12%     10%
-Idle/shared capacity                    1.85 tCO₂e  ±25%     15%
-Scope 1                                 0.12 tCO₂e  ±35%      1%
-Embodied carbon                         2.96 tCO₂e  ±18%     24%
-Other Scope 3                           0.74 tCO₂e  ±25%      6%
-Allocation adjustment                   0.49 tCO₂e  ±30%      4%
+Reported estimate: 12.3 tCO2e [10.8 - 14.1, 90% CI]
+Observable action total: 8.7 tCO2e
+Estimated total bridge: 3.6 tCO2e
 
-Model maturity: 8 months. Last ε: +0.3 tCO₂e (2.4%).
+Bridge component                         Estimate    Confidence
+--------------------------------------------------------------
+Facility overhead (PUE)                 1.2 tCO2e   medium
+Idle/shared capacity                    0.8 tCO2e   low
+Scope 1                                 0.1 tCO2e   low
+Residual embodied carbon                0.9 tCO2e   medium
+Other Scope 3                           0.3 tCO2e   low
+Allocation adjustment                   0.1 tCO2e   low
+Coverage gap                            0.2 tCO2e   high
+
+Model maturity: 8 months
+Last residual error: +0.3 tCO2e (2.4%)
 ```
 
 ## Open Design Questions
 
-See also [`SCHEMA.md`](SCHEMA.md) for schema-specific open questions.
+See also [`SCHEMA.md`](SCHEMA.md) for schema-specific questions.
 
-1. **Identifiability:** With $`I`$ known, $`\alpha_\text{PUE}`$ and $`E_\text{idle}`$ are the main degrees of freedom in the energy domain. Are they separable from monthly $(E, C_\text{reported})$ pairs alone, or do we need side information (e.g. published PUE)?
-
-2. **Non-stationarity:** Methodology changes create regime shifts. Change-point detection vs. short lookback window?
-
-3. **Minimum viable data:** How many months of $(E, C_\text{reported})$ pairs before the model is usable per provider?
+1. **Identifiability:** Which bridge components are estimable from monthly slice-level data, and which should be treated as provider-profile priors plus side information?
+2. **Coverage accounting:** How do we estimate $`\hat{\Delta}_\text{coverage}`$ for partially instrumented slices without hiding it inside generic uncertainty?
+3. **Non-stationarity:** How should methodology changes trigger profile version updates and regime shifts in the model?
+4. **Minimum viable history:** How many months of slice-level pairs $`(C_\text{action}, C_\text{reported})`$ are needed before the bridge estimate is decision-useful for each provider?
 
 ## Repository Structure
 
-```
-├── README.md                              # this file
-├── HYPERSCALER_CARBON_ACCOUNTING.md       # detailed provider methodology comparison
-├── SCHEMA.md                              # provider profile schema, populated profiles, reconcilability analysis
-├── references/SCI.md                       # Software Carbon Intensity standard
-├── references/SCI_AI.md                   # SCI for AI standard
+```text
+├── README.md                            # this file
+├── HYPERSCALER_CARBON_ACCOUNTING.md     # detailed provider methodology comparison
+├── SCHEMA.md                            # provider profile schema and populated profiles
+├── references/SCI.md                    # Software Carbon Intensity standard
+├── references/SCI_AI.md                 # SCI for AI standard
 ```

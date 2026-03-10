@@ -37,6 +37,8 @@ Each parameter carries:
 | `reporting_delay_days` | integer | Days after month-end before data is available |
 | `customer_temporal_granularity` | enum: `hourly`, `daily`, `monthly` | Finest granularity exposed to customers |
 | `internal_temporal_granularity` | enum: `hourly`, `daily`, `monthly` | Finest granularity used internally (if known) |
+| `customer_reporting_dimensions` | array | Dimensions exposed to the customer in the reporting tool, e.g. `[account, service, region]` |
+| `recommended_reconciliation_unit` | string | Finest provider-exposed slice at which bottom-up signals should be reconciled to provider reports |
 | `historical_recast_policy` | enum: `full`, `limited_window`, `none` | Whether methodology changes are applied retroactively |
 | `recast_window_months` | integer \| null | If limited_window, how far back |
 | `data_retention_months` | integer \| null | How long historical data is retained |
@@ -145,6 +147,8 @@ methodology_version: "Model 3.0, October 2025"
 reporting_delay_days: 21
 customer_temporal_granularity: monthly
 internal_temporal_granularity: monthly  # assumed; not disclosed as hourly
+customer_reporting_dimensions: [account, service, region]
+recommended_reconciliation_unit: "account × service × region × month"
 historical_recast_policy: full
 recast_window_months: null  # full recast to Jan 2020
 data_retention_months: 38
@@ -224,6 +228,8 @@ methodology_version: "2024 (Electricity Maps integration)"
 reporting_delay_days: 15
 customer_temporal_granularity: monthly
 internal_temporal_granularity: hourly
+customer_reporting_dimensions: [project, sku, region]
+recommended_reconciliation_unit: "project × sku × region × month"
 historical_recast_policy: full
 recast_window_months: null  # unlimited via BigQuery
 data_retention_months: null  # unlimited
@@ -302,6 +308,8 @@ methodology_version: "CHEM Whitepaper 2026"
 reporting_delay_days: 15
 customer_temporal_granularity: monthly
 internal_temporal_granularity: monthly  # assumed
+customer_reporting_dimensions: [subscription, service_category, region]
+recommended_reconciliation_unit: "subscription × service_category × region × month"
 historical_recast_policy: limited_window
 recast_window_months: 12
 data_retention_months: 12
@@ -404,20 +412,21 @@ Based on this analysis, these are the **minimum parameters** a provider must dis
 ### Required (framework cannot function without):
 1. `primary_allocation_method` — physical vs usage-based vs economic determines whether and how well energy-based signals reconcile
 2. `emission_factor_temporal_resolution` — determines which time-based optimizations are valid
-3. `allocation_granularity` — determines at what level we can provide signals
-4. `customer_temporal_granularity` — determines feedback loop speed
+3. `customer_reporting_dimensions` and `recommended_reconciliation_unit` — determine the exact slice at which reconciliation should happen
+4. `allocation_granularity` — determines at what level we can provide physically meaningful action signals
+5. `customer_temporal_granularity` — determines feedback loop speed
 
 ### Required for reconciliation (framework works but reconciliation gap is unbounded without):
-5. `it_hardware_lifetime_years` — needed to model embodied carbon baseline
-6. `embodied_carbon_allocation_method` — needed to reconcile Scope 3
-7. `scope1_allocation_method` — needed for complete picture
-8. `pue_type` and `pue_granularity` — needed to bridge raw energy to facility energy
+6. `it_hardware_lifetime_years` — needed to model embodied carbon baseline
+7. `embodied_carbon_allocation_method` — needed to reconcile Scope 3
+8. `scope1_allocation_method` — needed for complete picture
+9. `pue_type` and `pue_granularity` — needed to bridge raw energy to facility energy
 
 ### Desirable (improves accuracy but framework degrades gracefully without):
-9. `hybrid_allocation_split` — which services are physically vs economically allocated
-10. `idle_capacity_treatment` — affects accuracy of per-job attribution
-11. `lca_data_source` — affects embodied carbon confidence bounds
-12. `emission_factor_source` — affects Scope 2 accuracy
+10. `hybrid_allocation_split` — which services are physically vs economically allocated
+11. `idle_capacity_treatment` — affects accuracy of per-slice attribution
+12. `lca_data_source` — affects embodied carbon confidence bounds
+13. `emission_factor_source` — affects Scope 2 accuracy
 
 ---
 
@@ -427,6 +436,8 @@ Based on this analysis, these are the **minimum parameters** a provider must dis
 
 2. **How to handle GCP's hourly-internal / monthly-external gap?** GCP computes hourly but reports monthly. If a user shifts load to low-carbon hours, the internal accounting captures it but the customer-facing report doesn't show it at that granularity. Do we reward it (because it's real) or not (because the customer can't verify it in their report)?
 
-3. **How to model the overhead delta?** The gap between sum-of-bottom-up-signals and top-down-total includes shared infrastructure, embodied carbon, and allocation artifacts. Should the profile include an expected overhead ratio, or should this be discovered empirically?
+3. **How to model the overhead delta?** The gap between slice-level bottom-up action totals and provider reports includes shared infrastructure, embodied carbon, and allocation artifacts. Should the profile include an expected overhead ratio, or should this be discovered empirically?
 
 4. **Provider profile versioning.** Methodologies change (e.g., AWS's Oct 2024 expansion). The profile needs a versioning mechanism, and ideally the framework should detect when a provider's methodology changes and flag that reconciliation assumptions may need updating.
+
+5. **How should coverage gaps be represented?** A provider slice may be only partially instrumented. Should the profile carry explicit coverage assumptions, or should coverage be handled entirely in the reconciliation model?
