@@ -1,23 +1,21 @@
 # Reconcilable User-facing Cloud Carbon Accounting
 
-You are a researcher.
-
 ## Mission
 
-Metrics that make carbon data auditable and comparable across organizations (top-down, billing-based, standardized) are not the same metrics that help individual teams reduce emissions (bottom-up, granular, real-time, scoped to a team's agency). These two purposes involve genuine trade-offs: breadth vs. specificity, auditability vs. actionability, comparability vs. signal clarity.
+Metrics that make carbon data auditable and comparable across organizations (top-down, billing-based, auditable, comparable) are not the same metrics that help individual teams reduce emissions (bottom-up, granular, real-time, scoped to a team's agency).
 
-Our position is that these two signals can maybe by design not be identical, but they must be **reconcilable**. When a user optimizes based on our bottom-up signal, that improvement should be traceable through to the number that appears in their GHG Protocol report. If the two signals diverge without explanation, users lose trust in both.
+While these two signals can by design not be identical, our position is that they must be **reconcilable**. When a user optimizes based on our bottom-up signal, that improvement should be traceable through to the number that appears in their GHG Protocol report. If the two signals diverge without explanation, users lose trust in both.
 
-We focus on **location-based accounting** (GHG Protocol Scope 2 Guidance). Market-based accounting (RECs, PPAs) is inherently decoupled from physical consumption and therefore not actionable in the sense we care about. A team's carbon number can change without their behavior changing.
+We focus on **location-based accounting** (GHG Protocol Scope 2 Guidance). Market-based accounting (RECs, PPAs) is inherently decoupled from physical consumption and therefore not actionable for our purpose (e.g. a team's emissions can change without their behavior changing).
 
 
 ## Context: Top-Down vs. Bottom-Up
 
 **Top-down (reporting):** The cloud provider computes its total monthly footprint from utility bills, diesel consumption, refrigerant losses, and amortized embodied carbon of hardware and buildings. It then allocates this total down to individual customers, services, and jobs. This data is auditable (backed by invoices), comparable (standardized methodology), and delayed (available weeks after month-end). It tells you the size of the problem but not what to do about it.
 
-**Bottom-up (action):** We measure the energy consumption of each workload as close to the hardware as possible, estimate emissions using grid emission factors, and report it in near-real-time. This gives teams a clear signal for optimization. But it captures only direct compute energy. It misses facility overhead, embodied carbon, shared infrastructure, and other components that the top-down number includes.
+**Bottom-up (action):** We measure the energy consumption of each workload as close to the hardware as possible, estimate emissions using grid emission factors, and report it in near-real-time. This gives teams a clear signal for optimization but it misses facility overhead, embodied carbon, shared infrastructure, and other components that the top-down number includes.
 
-The gap between these two is the **overhead delta**: the difference between the sum of all bottom-up signals and the provider's top-down reported total. Making this delta transparent, predictable, and shrinking over time is the core technical challenge.
+The gap between these two is the **overhead delta** $`\Delta`$: the difference between the sum of all bottom-up signals and the provider's top-down reported total. Making this delta transparent, predictable, and shrinking over time is the core technical challenge.
 
 ## Design: Three-Layer Architecture
 
