@@ -17,6 +17,34 @@ We focus on **location-based accounting** (GHG Protocol Scope 2 Guidance). Marke
 
 The gap between these two is the **overhead delta** $`\Delta`$: the difference between the sum of all bottom-up signals and the provider's top-down reported total. Making this delta transparent, predictable, and shrinking over time is the core technical challenge.
 
+## Notation
+
+We adopt the variable names from the [SCI specification](references/SCI.md) (ISO/IEC 21031:2024) where possible and extend them for the reconciliation model.
+
+**SCI core variables:**
+
+| Symbol | SCI meaning | Our usage |
+|--------|------------|-----------|
+| $`E`$ | Energy consumed by a software system (kWh) | $`E_\text{IT}(t,r)`$ — IT energy per job/service, our ground-truth measurement |
+| $`I`$ | Region-specific carbon intensity (gCO₂eq/kWh) | $`I(r,t)`$ — grid emission factor, treated as a model parameter with prior |
+| $`M`$ | Embodied emissions of hardware (gCO₂eq) | $`M(r,t)`$ — amortized hardware + buildings baseline |
+| $`O`$ | Operational emissions: $`O = E \cdot I`$ | Operational carbon before overhead adjustments |
+| $`R`$ | Functional unit | Per request, per pipeline run, per training epoch, etc. |
+| $`C`$ | Total carbon: $`C = (O + M) \text{ per } R`$ | $`\hat{C}(t,r)`$ — our full model estimate of reported carbon |
+
+**Reconciliation model parameters** (extending SCI):
+
+| Symbol | Meaning |
+|--------|---------|
+| $`\alpha_\text{PUE}(r,t)`$ | Facility/IT energy ratio (Power Usage Effectiveness) |
+| $`E_\text{idle}(r,t)`$ | Idle/shared energy not captured by per-job measurement |
+| $`E_\text{facility}(r,t)`$ | Total facility energy: $`E_\text{IT} \cdot \alpha_\text{PUE} + E_\text{idle}`$ |
+| $`\alpha_{s1}(r)`$ | Scope 1 emissions ratio (diesel, refrigerants) |
+| $`\alpha_{s3}(r)`$ | Other Scope 3 emissions ratio (FERA, transport, waste) |
+| $`\beta_\text{alloc}(r)`$ | Allocation scaling factor (physical vs. usage-based) |
+
+The SCI computes $`O = E \cdot I`$ directly. Our reconciliation model interposes facility overhead ($`\alpha_\text{PUE}`$, $`E_\text{idle}`$) between $`E`$ and $`I`$, adds non-operational scopes, and wraps everything in an allocation factor — modeling the gap between the bottom-up SCI signal and the provider's top-down reported total.
+
 ## Design: Three-Layer Architecture
 
 ### Layer 1 — Energy Measurement
@@ -35,7 +63,7 @@ This is where the novel design work lives. See **Estimation Framework** below fo
 
 ### Layer 3 — User-Facing Signal
 
-Users see an SCI-style rate metric — carbon per unit of work (per request, per pipeline run, per training epoch) — scoped to their team's agency. Roll-up into GHG Protocol reporting view shows absolute totals plus allocated overhead share, with full methodology transparency.
+Users see an SCI-style rate metric — carbon per unit of work (per $`R`$) — scoped to their team's agency. Roll-up into GHG Protocol reporting view shows absolute totals plus allocated overhead share, with full methodology transparency.
 
 **Output:** Per-team dashboards showing both the action metric (optimize this) and the reporting metric (report this), with the reconciliation bridge between them. Each number carries uncertainty and fractional decomposition.
 
@@ -49,7 +77,7 @@ Not all optimization levers are rewarded by all providers:
 
 The framework must be **parametrized by a provider profile** encoding how each provider accounts for carbon.
 
-## The Provider Profile Schema
+## Provider Profiles
 
 The framework is parametrized by a **provider profile** encoding each provider's accounting methodology. Full schema definition, populated profiles for AWS/GCP/Azure, reconcilability analysis, and minimum viable profile requirements are in [`SCHEMA.md`](SCHEMA.md).
 
@@ -67,41 +95,41 @@ Estimate $`\hat{C}_\text{reported}`$ in real time from $`E_\text{IT}`$, before p
 
 ### Model Structure
 
-**Energy domain** — apply PUE before carbon conversion:
+**Energy domain** — apply PUE before carbon conversion (cf. SCI software boundary: $`E`$ should include datacenter efficiency):
 
 $$E_\text{facility}(t,r) = E_\text{IT}(t,r) \cdot \alpha_\text{PUE}(r,t) + E_\text{idle}(r,t)$$
 
-**Carbon conversion** — $\text{EF}$ is a model parameter with prior (from Electricity Maps / IEA), not a known constant:
+**Carbon conversion** — $`I`$ is a model parameter with prior (from Electricity Maps / IEA), not a known constant:
 
-$$C_\text{scope2}(t,r) = E_\text{facility}(t,r) \cdot \text{EF}(r,t)$$
+$$C_\text{scope2}(t,r) = E_\text{facility}(t,r) \cdot I(r,t)$$
 
 **Additional scopes:**
 
 $$C_\text{scope1}(t,r) = \alpha_{s1}(r) \cdot E_\text{facility}(t,r)$$
 
-$$C_\text{embodied}(t,r) = \beta_\text{emb}(r,t)$$
+$$C_\text{embodied}(t,r) = M(r,t)$$
 
 $$C_\text{other-s3}(t,r) = \alpha_{s3}(r) \cdot E_\text{IT}(t,r)$$
 
 **Full model:**
 
-$$\hat{C}(t,r) = \beta_\text{alloc}(r) \cdot \Big[\big(E_\text{IT} \cdot \alpha_\text{PUE} + E_\text{idle}\big) \cdot \big(\text{EF} + \alpha_{s1}\big) + \beta_\text{emb} + \alpha_{s3} \cdot E_\text{IT}\Big]$$
+$$\hat{C}(t,r) = \beta_\text{alloc}(r) \cdot \Big[\big(E_\text{IT} \cdot \alpha_\text{PUE} + E_\text{idle}\big) \cdot \big(I + \alpha_{s1}\big) + M + \alpha_{s3} \cdot E_\text{IT}\Big]$$
 
 ### Parameter Table
 
 | Parameter | Meaning | Prior | Uncertainty | Cadence | Sensitivity |
 |---|---|---|---|---|---|
 | $`\alpha_\text{PUE}(r,t)`$ | Facility/IT energy ratio | ~1.1–1.3 (sustainability reports) | ±10–15% | Seasonal | High |
-| $`\text{EF}(r,t)`$ | Grid carbon intensity | Electricity Maps / IEA | ±5–15% | Monthly–annual | High |
+| $`I(r,t)`$ | Grid carbon intensity (SCI: $`I`$) | Electricity Maps / IEA | ±5–15% | Monthly–annual | High |
 | $`E_\text{idle}(r,t)`$ | Idle/shared energy | ~15–30% of $`E_\text{IT}`$ | ±20–40% | Monthly | Medium |
 | $`\alpha_{s1}(r)`$ | Scope 1 ratio | ~0.01–0.03 | ±30–50% | Annual | Low |
-| $`\beta_\text{emb}(r,t)`$ | Embodied carbon baseline | Provider LCA / SCHEMA.md | ±15–30% | Quarterly | Medium–High |
+| $`M(r,t)`$ | Embodied carbon (SCI: $`M`$) | Provider LCA / SCHEMA.md | ±15–30% | Quarterly | Medium–High |
 | $`\alpha_{s3}(r)`$ | Other Scope 3 ratio | ~0.05–0.15 | ±20–35% | Annual | Low–Medium |
 | $`\beta_\text{alloc}(r)`$ | Allocation scaling | Physical ~1.0; usage-based ~0.9–1.1 | ±5–30% | Monthly | High |
 
 ### Bayesian Inference
 
-**Priors:** Log-normal for multiplicative parameters ($`\alpha_\text{PUE}`$, $`\text{EF}`$, $`\beta_\text{alloc}`$); normal for additive parameters ($`E_\text{idle}`$, $`\beta_\text{emb}`$).
+**Priors:** Log-normal for multiplicative parameters ($`\alpha_\text{PUE}`$, $`I`$, $`\beta_\text{alloc}`$); normal for additive parameters ($`E_\text{idle}`$, $`M`$).
 
 **Likelihood:**
 
@@ -142,7 +170,7 @@ Model maturity: 8 months. Last ε: +0.3 tCO₂e (2.4%).
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific open questions.
 
-1. **Identifiability:** $`\alpha_\text{PUE}`$ and $`\text{EF}`$ are multiplicatively coupled. Separable from monthly data alone, or need side information (published PUE)?
+1. **Identifiability:** $`\alpha_\text{PUE}`$ and $`I`$ are multiplicatively coupled. Separable from monthly data alone, or need side information (published PUE)?
 
 2. **Non-stationarity:** Methodology changes create regime shifts. Change-point detection vs. short lookback window?
 
