@@ -4,17 +4,20 @@ You are a researcher.
 
 ## Mission
 
-Provide **actionable carbon signals** to cloud users that are **reconcilable** with their GHG Protocol-compliant reported carbon footprint.
+Metrics that make carbon data auditable and comparable across organizations (top-down, billing-based, standardized) are not the same metrics that help individual teams reduce emissions (bottom-up, granular, real-time, scoped to a team's agency). These two purposes involve genuine trade-offs: breadth vs. specificity, auditability vs. actionability, comparability vs. signal clarity.
 
-Top-down reported footprints (auditable, comparable, delayed) and bottom-up measured signals (granular, real-time, actionable) serve different purposes with genuine trade-offs. They cannot be identical, but they must be **reconcilable**: optimizing on the bottom-up signal must trace through to the GHG Protocol number. We focus on **location-based accounting** (Scope 2 Guidance) — market-based instruments (RECs, PPAs) decouple carbon from physical consumption and are not actionable.
+Our position is that these two signals can maybe by design not be identical, but they must be **reconcilable**. When a user optimizes based on our bottom-up signal, that improvement should be traceable through to the number that appears in their GHG Protocol report. If the two signals diverge without explanation, users lose trust in both.
+
+We focus on **location-based accounting** (GHG Protocol Scope 2 Guidance). Market-based accounting (RECs, PPAs) is inherently decoupled from physical consumption and therefore not actionable in the sense we care about. A team's carbon number can change without their behavior changing.
+
 
 ## Context: Top-Down vs. Bottom-Up
 
-**Top-down (reporting):** Provider computes total monthly footprint from utility bills, diesel, refrigerant losses, and amortized embodied carbon, then allocates to customers. Auditable, comparable, delayed (~15–21 days). Tells you the size of the problem.
+**Top-down (reporting):** The cloud provider computes its total monthly footprint from utility bills, diesel consumption, refrigerant losses, and amortized embodied carbon of hardware and buildings. It then allocates this total down to individual customers, services, and jobs. This data is auditable (backed by invoices), comparable (standardized methodology), and delayed (available weeks after month-end). It tells you the size of the problem but not what to do about it.
 
-**Bottom-up (action):** We measure energy per workload near the hardware, estimate emissions via grid emission factors, report in near-real-time. Clear optimization signal, but captures only direct compute energy — missing facility overhead, embodied carbon, shared infrastructure.
+**Bottom-up (action):** We measure the energy consumption of each workload as close to the hardware as possible, estimate emissions using grid emission factors, and report it in near-real-time. This gives teams a clear signal for optimization. But it captures only direct compute energy. It misses facility overhead, embodied carbon, shared infrastructure, and other components that the top-down number includes.
 
-The **overhead delta** — the gap between summed bottom-up signals and the provider's top-down total — is the core technical challenge.
+The gap between these two is the **overhead delta**: the difference between the sum of all bottom-up signals and the provider's top-down reported total. Making this delta transparent, predictable, and shrinking over time is the core technical challenge.
 
 ## Design: Three-Layer Architecture
 
@@ -22,15 +25,15 @@ The **overhead delta** — the gap between summed bottom-up signals and the prov
 
 Ground truth. Energy consumption at job/service level via CPU/GPU power modeling (utilization × TDP), hardware counters (RAPL, NVML), or direct metering. Provider-agnostic.
 
-**Output:** $E_\text{IT}(t,r)$ in kWh, sub-hourly granularity. Uncertainty ~2–5%.
+**Output:** $`E_\text{IT}(t,r)`$ in kWh, sub-hourly granularity. Uncertainty ~2–5%.
 
 ### Layer 2 — Reconciliation Model
 
-Bayesian parametric model mapping $E_\text{IT} \to \hat{C}_\text{reported}$. Every step after energy measurement — PUE, emission factor, idle allocation, Scope 1, embodied carbon, other Scope 3, customer allocation — is a **model parameter** with prior and uncertainty. Fitted monthly on provider actuals.
+Bayesian parametric model mapping $`E_\text{IT}`$ $`\to`$ $`\hat{C}_\text{reported}`$. Every step after energy measurement — PUE, emission factor, idle allocation, Scope 1, embodied carbon, other Scope 3, customer allocation — is a **model parameter** with prior and uncertainty. Fitted monthly on provider actuals.
 
 This is where the novel design work lives. See **Estimation Framework** below for the full model specification.
 
-**Output:** $\hat{C}(t,r)$ in tCO₂e with posterior credible intervals, reconciled monthly against provider actuals.
+**Output:** $`\hat{C}(t,r)`$ in tCO₂e with posterior credible intervals, reconciled monthly against provider actuals.
 
 ### Layer 3 — User-Facing Signal
 
@@ -52,7 +55,7 @@ The framework must be **parametrized by a provider profile** encoding how each p
 
 The framework is parametrized by a **provider profile** encoding each provider's accounting methodology. Full schema definition, populated profiles for AWS/GCP/Azure, reconcilability analysis, and minimum viable profile requirements are in [`SCHEMA.md`](SCHEMA.md).
 
-Key finding: GCP's physical allocation makes most energy-based optimizations directly reconcilable. AWS's hybrid approach is direct for foundational services, approximate for managed services. Azure's usage-based allocation correlates with physical usage but the undisclosed derivation limits confidence.
+Key finding: **Not all optimization levers are equally reconcilable across providers**. GCP's physical allocation makes most energy-based optimizations directly reconcilable. AWS's hybrid approach is direct for foundational services, approximate for managed services. Azure's usage-based allocation correlates with physical usage but the undisclosed derivation limits confidence.
 
 **Universally safe:** Spatial shifting, eliminate idle resources, right-sizing.
 **Provider-dependent:** Compute efficiency, architecture choice (strongest on GCP and AWS foundational; approximate on Azure).
@@ -62,7 +65,7 @@ Key finding: GCP's physical allocation makes most energy-based optimizations dir
 
 ### Goal
 
-Estimate $\hat{C}_\text{reported}$ in real time from $E_\text{IT}$, before provider actuals arrive. The reconciliation bridge is predictive, not retrospective.
+Estimate $`\hat{C}_\text{reported}`$ in real time from $`E_\text{IT}`$, before provider actuals arrive. The reconciliation bridge is predictive, not retrospective.
 
 ### Model Structure
 
@@ -90,17 +93,17 @@ $$\hat{C}(t,r) = \beta_\text{alloc}(r) \cdot \Big[\big(E_\text{IT} \cdot \alpha_
 
 | Parameter | Meaning | Prior | Uncertainty | Cadence | Sensitivity |
 |---|---|---|---|---|---|
-| $\alpha_\text{PUE}(r,t)$ | Facility/IT energy ratio | ~1.1–1.3 (sustainability reports) | ±10–15% | Seasonal | High |
-| $\text{EF}(r,t)$ | Grid carbon intensity | Electricity Maps / IEA | ±5–15% | Monthly–annual | High |
-| $E_\text{idle}(r,t)$ | Idle/shared energy | ~15–30% of $E_\text{IT}$ | ±20–40% | Monthly | Medium |
-| $\alpha_{s1}(r)$ | Scope 1 ratio | ~0.01–0.03 | ±30–50% | Annual | Low |
-| $\beta_\text{emb}(r,t)$ | Embodied carbon baseline | Provider LCA / SCHEMA.md | ±15–30% | Quarterly | Medium–High |
-| $\alpha_{s3}(r)$ | Other Scope 3 ratio | ~0.05–0.15 | ±20–35% | Annual | Low–Medium |
-| $\beta_\text{alloc}(r)$ | Allocation scaling | Physical ~1.0; usage-based ~0.9–1.1 | ±5–30% | Monthly | High |
+| $`\alpha_\text{PUE}(r,t)`$ | Facility/IT energy ratio | ~1.1–1.3 (sustainability reports) | ±10–15% | Seasonal | High |
+| $`\text{EF}(r,t)`$ | Grid carbon intensity | Electricity Maps / IEA | ±5–15% | Monthly–annual | High |
+| $`E_\text{idle}(r,t)`$ | Idle/shared energy | ~15–30% of $`E_\text{IT}`$ | ±20–40% | Monthly | Medium |
+| $`\alpha_{s1}(r)`$ | Scope 1 ratio | ~0.01–0.03 | ±30–50% | Annual | Low |
+| $`\beta_\text{emb}(r,t)`$ | Embodied carbon baseline | Provider LCA / SCHEMA.md | ±15–30% | Quarterly | Medium–High |
+| $`\alpha_{s3}(r)`$ | Other Scope 3 ratio | ~0.05–0.15 | ±20–35% | Annual | Low–Medium |
+| $`\beta_\text{alloc}(r)`$ | Allocation scaling | Physical ~1.0; usage-based ~0.9–1.1 | ±5–30% | Monthly | High |
 
 ### Bayesian Inference
 
-**Priors:** Log-normal for multiplicative parameters ($\alpha_\text{PUE}$, $\text{EF}$, $\beta_\text{alloc}$); normal for additive parameters ($E_\text{idle}$, $\beta_\text{emb}$).
+**Priors:** Log-normal for multiplicative parameters ($`\alpha_\text{PUE}`$, $`\text{EF}`$, $`\beta_\text{alloc}`$); normal for additive parameters ($`E_\text{idle}`$, $`\beta_\text{emb}`$).
 
 **Likelihood:**
 
@@ -114,9 +117,9 @@ Updated monthly when $(E_\text{IT}, C_\text{reported})$ pairs arrive.
 
 **Cold start:** Months 1–3 prior-dominated (±30–50% CI). Months 6–12 posterior-driven.
 
-**Diagnostics on $\varepsilon = C_\text{reported} - \hat{C}$:**
-- Seasonal autocorrelation → $\alpha_\text{PUE}$ needs Fourier terms
-- Utilization correlation → $E_\text{idle}$ mis-specified
+**Diagnostics on $`\varepsilon = C_\text{reported} - \hat{C}`$:**
+- Seasonal autocorrelation → $`\alpha_\text{PUE}`$ needs Fourier terms
+- Utilization correlation → $`E_\text{idle}`$ mis-specified
 - Step change → methodology update (check provider profile version)
 
 ### Output Format
@@ -141,7 +144,7 @@ Model maturity: 8 months. Last ε: +0.3 tCO₂e (2.4%).
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific open questions.
 
-1. **Identifiability:** $\alpha_\text{PUE}$ and $\text{EF}$ are multiplicatively coupled. Separable from monthly data alone, or need side information (published PUE)?
+1. **Identifiability:** $`\alpha_\text{PUE}`$ and $`\text{EF}`$ are multiplicatively coupled. Separable from monthly data alone, or need side information (published PUE)?
 
 2. **Non-stationarity:** Methodology changes create regime shifts. Change-point detection vs. short lookback window?
 
