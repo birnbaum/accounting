@@ -2,12 +2,12 @@
 
 ## Mission
 
-Auditable cloud carbon reporting and actionable software carbon signals are not the same object.
+Metrics that make cloud carbon data auditable and comparable across organizations are not the same metrics that help individual teams reduce emissions.
 
 - **Top-down reporting** is billing-aligned, standardized, delayed, and anchored in provider data such as utility bills, diesel consumption, refrigerant losses, and embodied hardware/building emissions.
 - **Bottom-up action metrics** are granular, near-real-time, and scoped to what a team can change: code efficiency, workload placement, resource sizing, and scheduling.
 
-These signals should not be forced to be identical. They **must** be reconcilable. If a team improves its bottom-up signal, that improvement should map cleanly to the cloud provider's reported number at the boundary the provider actually reports. If the mapping is unclear, both numbers lose credibility.
+These two signals are not, and should not be, identical. Our claim is weaker and more practical: they must be **reconcilable**. If a team improves its bottom-up signal, that improvement should be traceable through to the cloud provider's reported number at the reporting boundary the provider actually exposes. If the two diverge without explanation, users lose trust in both.
 
 We focus on **location-based accounting**. Market-based accounting is intentionally excluded from the action metric because it is decoupled from physical consumption and therefore weak as an operational signal.
 
@@ -16,18 +16,18 @@ This framework serves two goals:
 - **For users:** provide an SCI-based action metric per workload and per provider-aligned service slice, then reconcile that signal to the provider's delayed GHG-style report.
 - **For the ecosystem:** make provider methodology quality visible by showing which optimization levers are directly rewarded, only approximately rewarded, or structurally blocked by provider accounting choices.
 
-## Problem Framing
+## Context: Top-Down vs. Bottom-Up
 
-The hard problem is not "compute one true carbon number."
+**Top-down (reporting):** The cloud provider computes its total monthly footprint from utility bills, diesel consumption, refrigerant losses, and amortized embodied carbon of hardware and buildings. It then allocates this total down to individual customers, services, and jobs. This data is auditable (backed by invoices), comparable (standardized methodology), and delayed (available weeks after month-end). It tells you the size of the problem but not what to do about it.
 
-The hard problem is: **given a real-time, physically motivated action metric, how do we map it onto the delayed, provider-allocated reporting number without hiding the mismatch?**
+**Bottom-up (action):** We measure workload energy as close to the hardware as possible, combine it with location-based carbon intensity, and report an SCI-style signal in near real time. This gives teams an optimization signal they can act on, but by itself it does not fully capture facility overhead, idle/shared capacity, provider-specific allocation effects, or all Scope 1/3 components.
 
-That mismatch is the **reconciliation bridge**. It has two distinct causes:
+We call the gap between these two **reconciliation bridge**. That bridge has two distinct sources:
 
-1. **Residual carbon inside the reporting slice** that the observable real-time metric does not directly capture: facility overhead, idle/shared capacity, Scope 1, residual embodied carbon, other Scope 3, and provider allocation artifacts.
-2. **Boundary mismatch** between what we instrument and what the provider reports: uninstrumented services, partial workload coverage, or a workload that spans multiple provider-reported slices.
+1. **Residual carbon inside a provider reporting slice** that the observable real-time metric does not directly capture.
+2. **Boundary mismatch** between what we instrument and what the provider reports.
 
-Those two causes should not be conflated.
+The main design problem is not to eliminate that bridge by definition, but to make it explicit, predictable, and small enough that users can understand how action-level improvements flow into reporting-level totals.
 
 ## Boundary Model
 
