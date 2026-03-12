@@ -9,8 +9,6 @@ For context:
 
 **Top-down (reporting):** The cloud provider computes its total monthly footprint from utility bills, diesel consumption, refrigerant losses, and amortized embodied carbon of hardware and buildings. It then allocates this total down to individual customers, services, and jobs. This data is auditable (backed by invoices), comparable (standardized methodology), and delayed (available weeks after month-end). It tells you the size of the problem but not what to do about it.
 
-
-
 These two signals are not, and should not be, identical. **But they must be reconcilable**: If a team improves its bottom-up signal, that improvement should be traceable through to the cloud provider's reported number at the reporting boundary the provider actually exposes. If the two diverge without explanation, users lose trust in both.
 
 ### Why optimizing for imperfect cloud carbon accounting methodologies?
@@ -57,7 +55,7 @@ It has two distinct sources:
 2. **Boundary mismatch**: A provider may bundle supporting services — storage I/O, managed networking, control-plane operations — into the same reporting slice that you are only partially observing. Even if measurements are precise, a structural gap remains wherever the two boundaries do not coincide.
    - *Example: you instrument all EC2 instances in `eu-central-1` perfectly, but the provider's `Compute` slice for that account and region also includes EBS volume activity and NAT Gateway traffic that you have not instrumented. Your action total covers only a subset of what that number reflects.*
 
-The goal is not to eliminate that bridge by definition, but to make it **explicit, predictable, and small enough** that users can understand how improving the action metric maps to improving the reporting metric.
+The goal is to make the bridge **explicit, predictable, and small enough** that users can understand how improving the action metric maps to improving the reporting metric.
 The primary goal is a calibrated month-end prediction at the reporting slice.
 
 ### Assumptions
@@ -86,16 +84,14 @@ We fix a single reporting slice and month (see Boundary Model), so slice and mon
 | $`E_i(t)`$ | Measured IT energy for observed workload $`i`$ in kWh. |
 | $`I^\star(t)`$ | Provider-compatible location-based carbon intensity, matched to the provider's accounting resolution. |
 | $`M_i^\text{obs}`$ | Directly attributable embodied carbon share for observed workload $`i`$. |
-| $`C_\text{reported}`$ | Provider-reported carbon for the slice. |
+| $`C_\text{reported}`$ | Provider-reported carbon (reporting metric) for the slice. |
 
 ### Outputs
 
 | Symbol | Description |
 |--------|-------------|
 | $`\text{SCI}_i = (O_i + M_i^\text{obs}) / R_i`$ | Action metric for an observed workload on the observable boundary. |
-| $`\hat{C}`$ | Our estimate of the provider-reported carbon before actuals arrive. |
-
-Workload-level $`\text{SCI}_i`$ is the primary user-facing intensity metric; $`C_\text{action}`$ is the slice-level reconciliation object.
+| $`\hat{C}`$ | Our estimate of the reporting metric before actuals arrive. |
 
 ### Core Equations
 
@@ -111,94 +107,40 @@ $$\hat{C} = C_\text{action} + \hat{\Delta}_\text{residual} \approx C_\text{repor
 
 Where:
 
-- $`C_\text{action}`$ is the observable SCI-style carbon total for the slice.
-- $`\hat{\Delta}_\text{residual}`$ is residual carbon inside the slice that the observable metric does not directly capture.
+- $`C_\text{action}`$ is the slice-level action metric total.
+- $`\hat{\Delta}_\text{residual}`$ is residual carbon inside the slice that the action metric does not directly capture.
 
-This is the central formalization change: **we reconcile at the provider slice, with the residual bridge capturing everything the action metric misses.**
-
-### SCI Reference
-
-We use SCI naming for $`E`$, $`I`$, $`M`$, and $`R`$; see [`references/SCI.md`](references/SCI.md). The user-facing metric is best described as an **SCI-based metric on the observable boundary**. In public cloud, teams usually cannot observe all supporting infrastructure in real time, so the raw action metric alone should not be presented as the provider's full reported footprint.
-
-## Design: Three-Layer Architecture
-
-### Layer 1 — Measurement and Mapping
-
-Measure workload energy as close to the hardware as possible via power telemetry, hardware counters, or calibrated models, then map each measurement to a reporting slice.
-
-This layer is responsible for:
-
-- estimating $`E_i(t)`$
-- computing $`O_i(T)`$
-- assigning each observed workload to one or more provider slices
-- verifying that coverage of the declared provider slice is complete
-
-Output: observable per-workload SCI values and slice-aligned action totals.
-
-### Layer 2 — Reconciliation Model
-
-Estimate the gap between the observable action total and the provider-reported total at the slice level.
-
-This layer does **not** cleanly identify every latent component from monthly data alone. The monthly reported target mainly constrains the **total bridge**. The decomposition of that bridge into PUE, idle, non-energy overhead, residual embodied carbon, and allocation artifacts is partly data-driven and partly prior-driven.
-
-Output: $`\hat{C}`$ with uncertainty intervals and a decomposition of the bridge annotated by confidence.
-
-### Layer 3 — User-Facing Views
-
-Users should see two linked but distinct views:
-
-- **Action view:** per-workload or per-service SCI on the observable boundary
-- **Reporting view:** provider-aligned slice totals plus allocated reconciliation bridge
-
-This preserves agency without pretending the real-time metric already contains the full provider methodology.
-
-## Why the Framework Must Be Provider-Adaptive
-
-Not all optimization levers survive contact with provider accounting:
-
-- **Temporal shifting** only reconciles if the provider uses sub-monthly emission factors.
-- **Compute efficiency** reconciles most directly when allocation is physical.
-- **Spatial shifting** is broadly reconcilable because all three providers use regional factors.
-
-The framework therefore needs a **provider profile** that tells us:
-
-- what the reporting slice is
-- how emissions are allocated to that slice
-- what temporal and spatial resolution the provider uses
-- which residuals are likely to dominate the bridge
-- whether the available methodology disclosure is sufficient for a credible minimum viable profile
-
-When a provider improves methodology, new optimization levers become reconcilable. Making that visible is part of the point.
+We use SCI naming for $`E`$, $`I`$, $`M`$, and $`R`$; see [`references/SCI.md`](references/SCI.md).
 
 ## Provider Profiles
 
-The provider profile schema lives in [`SCHEMA.md`](SCHEMA.md). It captures:
+Not all optimization levers reconcile equally across providers. Temporal shifting only reconciles if the provider uses sub-monthly emission factors; compute efficiency reconciles most directly under physical allocation; spatial shifting is broadly reconcilable because all three providers use regional factors. The framework therefore needs provider-specific configuration.
 
-- provider-exposed reporting dimensions and recommended reconciliation unit
+A provider profile captures:
+
+- reporting dimensions and recommended reporting slice
 - allocation method and granularity
 - temporal resolution of emission factors
 - embodied-carbon treatment
 - overhead and verification metadata
 
-Key finding: **reconcilability is provider-specific.**
+Schema: [`SCHEMA.md`](SCHEMA.md).
 
-- **GCP:** strongest direct alignment for electricity-related signals because allocation is physical and granular.
+Summary by provider:
+
+- **GCP:** strongest direct alignment for electricity-related signals — allocation is physical and granular.
 - **AWS:** strong for foundational services, weaker where economic allocation is used.
 - **Azure:** directionally aligned for many actions, but confidence is limited by usage-factor opacity and coarser service granularity.
 
+When a provider improves methodology, new optimization levers become reconcilable. Making that visible is part of the point.
+
 ## Estimation Framework
 
-### Goal
-
-Estimate the residual bridge at the reporting slice before provider actuals arrive.
+**Goal:** estimate the residual bridge at the reporting slice before provider actuals arrive.
 
 ### Residual Bridge Decomposition
 
-We decompose the residual bridge into carbon terms:
-
 $$\hat{\Delta}_\text{residual} = \Delta_\text{PUE} + \Delta_\text{idle} + \Delta_\text{non-energy} + \Delta_\text{embodied,resid} + \Delta_\text{alloc}$$
-
-Where:
 
 - $`\Delta_\text{PUE}`$ — facility overhead not present in measured IT energy
 - $`\Delta_\text{idle}`$ — idle/shared capacity not assigned by the observable boundary
@@ -218,17 +160,13 @@ Where:
 
 ### Bayesian Framing
 
-At the slice level:
+$$
+C_\text{reported} \sim \mathcal{N}\big(C_\text{action} + \hat{\Delta}_\text{residual}(\theta),\;\sigma^2_\text{obs}\big)
+$$
 
-$$C_\text{reported} \sim \mathcal{N}\big(C_\text{action} + \hat{\Delta}_\text{residual}(\boldsymbol{\theta}),\;\sigma^2_\text{obs}\big)$$
-
-The important modeling point is:
-
-- monthly data strongly constrains the **total bridge**
-- the component breakdown is only partially identifiable
-- side information such as published PUE, provider methodology changes, and service coverage assumptions are required for a credible decomposition
-
-So the honest output is not "we inferred each latent component from data alone." The honest output is "we estimated the total bridge and apportioned it into components with stated prior strength and uncertainty."
+- Monthly data strongly constrains the **total bridge**.
+- The component breakdown is only partially identifiable.
+- Side information (published PUE, methodology changes, service coverage assumptions) is required for a credible decomposition.
 
 ### Output Format
 
@@ -251,19 +189,15 @@ Model maturity: 8 months
 Last residual error: +0.3 tCO2e (2.4%)
 ```
 
-## Open Problem Formulation Questions
+## Open Questions
 
-1. **Actionability limits:** When a provider slice is too coarse or too opaque, how should the framework expose that optimization claims are weak rather than presenting false precision?
-2. **Lever reconcilability:** Which user actions should be expected to move the provider-reported number directly, approximately, or not at all under a given provider methodology?
-3. **Minimum viable provider knowledge:** What minimum provider profile can be constructed from public documentation and customer-visible outputs before the framework becomes too speculative?
-
-## Modeling Questions
+1. **Actionability limits:** When a reporting slice is too coarse or too opaque, how should the framework expose that optimization claims are weak rather than presenting false precision?
+2. **Lever reconcilability:** Which user actions move the reporting metric directly, approximately, or not at all under a given provider methodology?
+3. **Minimum viable provider knowledge:** What minimum provider profile can be constructed from public documentation before the framework becomes too speculative? How many months of slice-level pairs $`(C_\text{action}, C_\text{reported})`$ are needed before the residual bridge estimate is decision-useful?
+4. **Identifiability:** Which bridge components are estimable from monthly slice-level data, and which require provider-profile priors plus side information?
+5. **Non-stationarity:** How should methodology changes trigger profile version updates and regime shifts in the model?
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific questions.
-
-1. **Identifiability:** Which bridge components are estimable from monthly slice-level data, and which should be treated as provider-profile priors plus side information?
-2. **Non-stationarity:** How should methodology changes trigger profile version updates and regime shifts in the model?
-3. **Minimum viable history:** How many months of slice-level pairs $`(C_\text{action}, C_\text{reported})`$ are needed before the bridge estimate is decision-useful for each provider?
 
 ## Repository Structure
 
@@ -271,6 +205,7 @@ See also [`SCHEMA.md`](SCHEMA.md) for schema-specific questions.
 ├── README.md                            # this file
 ├── HYPERSCALER_CARBON_ACCOUNTING.md     # detailed provider methodology comparison
 ├── SCHEMA.md                            # provider profile schema and populated profiles
+├── NORMATIVE_REFERENCE_ESTIMATE.md      # normative reference estimate methodology
 ├── references/SCI.md                    # Software Carbon Intensity standard
 ├── references/SCI_AI.md                 # SCI for AI standard
 ```
