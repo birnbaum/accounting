@@ -1,14 +1,11 @@
 # Reconcilable User-facing Cloud Carbon Accounting
 
-- Reconciled Actionable Carbon Estimates (RACE)
-- rSCI: Reconciled Software Carbon Intensity
-
 ## Mission
 
 Metrics that make cloud carbon data auditable and comparable across organizations are not the same metrics that help individual teams reduce emissions.
 For context:
 
-**Bottom-up (action):** We measure workload energy as close to the hardware as possible, combine it with location-based carbon intensity, and report an SCI-style signal in near real time. This gives teams an optimization signal they can act on, but by itself it does not fully capture facility overhead, idle/shared capacity, provider-specific allocation effects, or all Scope 1/3 components.
+**Bottom-up (action):** We measure workload energy as close to the hardware as possible, combine it with location-based carbon intensity, and report an rSCI signal (reconciled Software Carbon Intensity) in near real time. This gives teams an optimization signal they can act on, but by itself it does not fully capture facility overhead, idle/shared capacity, provider-specific allocation effects, or all Scope 1/3 components.
 
 **Top-down (reporting):** The cloud provider computes its total monthly footprint from utility bills, diesel consumption, refrigerant losses, and amortized embodied carbon of hardware and buildings. It then allocates this total down to individual customers, services, and jobs. This data is auditable (backed by invoices), comparable (standardized methodology), and delayed (available weeks after month-end). It tells you the size of the problem but not what to do about it.
 
@@ -20,7 +17,7 @@ In practice, cloud customers' Scope 3 GHG accounting happens through the numbers
 
 This framework serves two goals:
 
-- **For users:** provide an SCI-based action metric per workload and per provider-aligned service slice, then reconcile that signal to the provider's delayed GHG-style report.
+- **For users:** provide an rSCI action metric per workload and per provider-aligned service slice, then reconcile that signal to the provider's delayed GHG-style report.
 - **For the ecosystem:** make provider methodology quality visible by showing which optimization levers are directly rewarded, only approximately rewarded, or structurally blocked by provider accounting choices.
 
 We focus on **location-based accounting**. Market-based accounting is intentionally excluded from the action metric because it is decoupled from physical consumption and therefore weak as an operational signal.
@@ -28,11 +25,23 @@ We focus on **location-based accounting**. Market-based accounting is intentiona
 ## Problem Framing
 
 Given:
-- **Action metric:** a bottom-up, SCI-style metric on the observable boundary that teams can optimize in real time.
+- **Action metric:** a bottom-up, rSCI metric on the observable boundary that teams can optimize in real time.
 - **Reporting metric:** the top-down, provider-reported carbon for Scope 3 accounting that is delayed by weeks.
 
 > How do we map action metrics onto reporting metrics while being explicit about the sources and uncertainty of the gap?
 
+### SCI Variant Taxonomy
+
+The GSF's [Software Carbon Intensity](references/SCI.md) (SCI) was designed as a standalone optimization signal. Bashir et al. (2024) showed that including embodied carbon — a sunk cost — in the optimization metric can lead to [perverse scheduling outcomes](references/SCI_SUNK_CARBON.md) where carbon-aware schedulers route work to older, less efficient servers. They proposed oSCI (operational only) and tSCI (total infrastructure, allocated proportionally) as alternatives. We extend the taxonomy with **rSCI** — a variant that reconciles to a provider-reported total.
+
+| Metric | Formula | Includes | Key limitation |
+|--------|---------|----------|----------------|
+| oSCI | $`(E \cdot I) / R`$ | Operational only | Misses embodied entirely |
+| SCI | $`((E \cdot I) + M) / R`$ | + active server embodied | Sunk carbon fallacy (Bashir et al.) |
+| tSCI | $`(tO + tM) / R`$ | Full infrastructure, allocated proportionally | Requires bottom-up datacenter knowledge |
+| **rSCI** | $`(O_i + M_i^\text{obs} + w_i \cdot \Delta_\text{residual}(t)) / R_i`$ | Action metric + learned residual | Requires historical slice pairs for calibration |
+
+rSCI trades the need for full infrastructure knowledge (tSCI) for a reconciliation target — the provider-reported total — and learns the gap over time.
 
 ### Boundary Model
 
@@ -86,7 +95,7 @@ We fix a single reporting slice and month (see Boundary Model), so slice and mon
 |--------|-------------|
 | $`E_i(t)`$ | Measured IT energy for observed workload $`i`$ in kWh. |
 | $`I^\star(t)`$ | Provider-compatible location-based carbon intensity, matched to the provider's accounting resolution. |
-| $`\alpha_\text{PUE}`$ | Facility/IT energy ratio, fitted from provider-published PUE or calibrated from historical data. |
+| $`\alpha_\text{PUE}(t)`$ | Facility/IT energy ratio, learned from provider-published PUE or calibrated from historical slice pairs; evolves over time. |
 | $`M_i^\text{obs}`$ | Directly attributable embodied carbon share for observed workload $`i`$. |
 | $`C_\text{reported}`$ | Provider-reported carbon (reporting metric) for the slice. |
 
@@ -94,29 +103,43 @@ We fix a single reporting slice and month (see Boundary Model), so slice and mon
 
 | Symbol | Description |
 |--------|-------------|
-| $`\text{SCI}_i = (O_i + M_i^\text{obs}) / R_i`$ | Action metric for an observed workload on the observable boundary. |
-| $`\hat{C}`$ | Our estimate of the reporting metric before actuals arrive. |
+| $`\text{rSCI}_i = C_i^\text{rec} / R_i`$ | Action metric per workload — includes allocated residual, reconciles to provider total. |
+| $`\hat{C} = \sum_i \text{rSCI}_i \cdot R_i`$ | Estimate of the reporting metric before actuals arrive. |
 
 ### Core Equations
 
-Per workload:
+**Action layer (per workload):**
 
-$$O_i = \alpha_\text{PUE} \cdot \int E_i(t)\, I^\star(t)\, dt$$
+$$O_i = \alpha_\text{PUE}(t) \cdot \int E_i(t)\, I^\star(t)\, dt$$
+
+$$\text{SCI}_i = (O_i + M_i^\text{obs}) / R_i$$
 
 PUE scales with energy, so reducing energy also reduces this overhead — it belongs in the action metric.
 
-For the slice:
+**Reconciliation layer (per slice):**
 
-$$C_\text{action} = \sum_i\big(O_i + M_i^\text{obs}\big)$$
+$$C_\text{action} = \sum_i\big(O_i + M_i^\text{obs}\big) = \sum_i \text{SCI}_i \cdot R_i$$
 
-$$\hat{C} = C_\text{action} + \Delta_\text{residual} \approx C_\text{reported}$$
+$$\hat{C} = C_\text{action} + \Delta_\text{residual}(t) \approx C_\text{reported}$$
+
+**Allocation layer (back to workloads):**
+
+$$w_i = (O_i + M_i^\text{obs}) / C_\text{action}$$
+
+$$C_i^\text{rec} = O_i + M_i^\text{obs} + w_i \cdot \Delta_\text{residual}(t)$$
+
+$$\text{rSCI}_i = C_i^\text{rec} / R_i$$
+
+**Key property:** $`\sum_i \text{rSCI}_i \cdot R_i = \hat{C} \approx C_\text{reported}`$
 
 Where:
 
-- $`C_\text{action}`$ is the slice-level action metric total (includes facility overhead via $`\alpha_\text{PUE}`$).
-- $`\Delta_\text{residual}`$ is residual carbon inside the slice that the action metric does not capture: idle/shared capacity, non-energy overhead, residual embodied carbon, allocation artifacts, and any remaining PUE mismatch.
+- All SCI variants (oSCI, SCI, tSCI, rSCI) are action metrics with different scope and trade-offs.
+- rSCI extends the family by reconciling to the provider-reported total: each workload's rSCI includes its fair share of unobservable residual carbon.
+- Unlike tSCI (which requires full infrastructure knowledge), rSCI learns the residual from historical slice pairs $`(C_\text{action}, C_\text{reported})`$.
+- $`\alpha_\text{PUE}(t)`$ and $`\Delta_\text{residual}(t)`$ are time-dependent (learned across months); location is fixed by the slice.
 
-We use SCI naming for $`E`$, $`I`$, $`M`$, and $`R`$; see [`references/SCI.md`](references/SCI.md).
+We use SCI naming for $`E`$, $`I`$, $`M`$, and $`R`$; see [`references/SCI.md`](references/SCI.md) and [`references/SCI_SUNK_CARBON.md`](references/SCI_SUNK_CARBON.md).
 
 ## Provider Profiles
 
@@ -146,33 +169,39 @@ When a provider improves methodology, new optimization levers become reconcilabl
 
 ### Residual Bridge
 
-The residual bridge $`\Delta_\text{residual}`$ is a single fitted scalar that captures everything the action metric does not: idle/shared capacity, non-energy overhead (Scope 1 diesel/refrigerants, other Scope 3 categories), residual embodied carbon not directly attributable from observed reservations, allocation artifacts from provider methodology, and any remaining PUE mismatch between the fitted $`\alpha_\text{PUE}`$ and reality. With monthly slice-level data, these components are not individually identifiable — the total bridge is constrained, but the breakdown is not. We therefore treat $`\Delta_\text{residual}`$ as one quantity fitted from historical slice pairs rather than pretending the components can be separated.
+The residual bridge $`\Delta_\text{residual}(t)`$ is a single fitted scalar that captures everything the action metric does not: idle/shared capacity, non-energy overhead (Scope 1 diesel/refrigerants, other Scope 3 categories), residual embodied carbon not directly attributable from observed reservations, allocation artifacts from provider methodology, and any remaining PUE mismatch between the fitted $`\alpha_\text{PUE}(t)`$ and reality. With monthly slice-level data, these components are not individually identifiable — the total bridge is constrained, but the breakdown is not. We therefore treat $`\Delta_\text{residual}(t)`$ as one quantity fitted from historical slice pairs rather than pretending the components can be separated.
 
 ### Parameter Table
 
 | Parameter | Meaning | Units / Role | Prior | Sensitivity |
 |---|---|---|---|---|
-| $`\alpha_\text{PUE}`$ | Facility/IT energy ratio | Dimensionless; scales observed IT energy to facility energy inside the action metric | ~1.1–1.3 | High |
-| $`\Delta_\text{residual}`$ | Residual bridge | tCO₂e; fitted from historical slice pairs $`(C_\text{action}, C_\text{reported})`$ | Provider profile-driven | Medium-High |
+| $`\alpha_\text{PUE}(t)`$ | Facility/IT energy ratio | Dimensionless; scales observed IT energy to facility energy inside the action metric | ~1.1–1.3 | High |
+| $`\Delta_\text{residual}(t)`$ | Residual bridge | tCO₂e; fitted from historical slice pairs $`(C_\text{action}, C_\text{reported})`$ | Provider profile-driven | Medium-High |
 
 ### Bayesian Framing
 
 $$
-C_\text{reported} \sim \mathcal{N}\big(C_\text{action}(\alpha_\text{PUE}) + \Delta_\text{residual},\;\sigma^2_\text{obs}\big)
+C_\text{reported} \sim \mathcal{N}\big(C_\text{action}(\alpha_\text{PUE}(t)) + \Delta_\text{residual}(t),\;\sigma^2_\text{obs}\big)
 $$
 
 - Monthly data strongly constrains the **total bridge**.
-- $`\alpha_\text{PUE}`$ is informed by provider-published PUE and has high sensitivity on the action metric.
-- Side information (provider profiles, methodology changes) sets the prior on $`\Delta_\text{residual}`$.
+- $`\alpha_\text{PUE}(t)`$ is informed by provider-published PUE and has high sensitivity on the action metric.
+- Side information (provider profiles, methodology changes) sets the prior on $`\Delta_\text{residual}(t)`$.
 
 ### Output Format
 
 ```text
 Provider slice: project=foo / sku=n2-standard-16 / region=europe-west4 / month=2026-02
 
-Reported estimate: 12.1 tCO2e [10.6 - 13.9, 90% CI]
-Observable action total: 8.7 tCO2e
+Reported estimate (ĉ): 12.1 tCO2e [10.6 - 13.9, 90% CI]
+Observable action total (C_action): 8.7 tCO2e
 Residual bridge (Δ_residual): 3.4 tCO2e
+
+Per workload:
+  workload-a: SCI = 0.042 tCO2e/req  |  rSCI = 0.058 tCO2e/req  (w_i = 0.38)
+  workload-b: SCI = 0.031 tCO2e/req  |  rSCI = 0.043 tCO2e/req  (w_i = 0.27)
+
+Reconciliation check: Σ rSCI_i · R_i = 12.1 tCO2e = ĉ  ✓
 
 Model maturity: 8 months
 Last residual error: +0.3 tCO2e (2.4%)
@@ -200,4 +229,5 @@ See also [`SCHEMA.md`](SCHEMA.md) for schema-specific questions.
 ├── NORMATIVE_REFERENCE_ESTIMATE.md      # normative reference estimate methodology
 ├── references/SCI.md                    # Software Carbon Intensity standard
 ├── references/SCI_AI.md                 # SCI for AI standard
+├── references/SCI_SUNK_CARBON.md        # Bashir et al. (2024) — sunk carbon fallacy, oSCI/tSCI
 ```
