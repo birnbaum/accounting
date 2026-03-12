@@ -39,7 +39,7 @@ The GSF's [Software Carbon Intensity](references/SCI.md) (SCI) was designed as a
 | oSCI | $`(E \cdot I) / R`$ | Operational only | Misses embodied entirely |
 | SCI | $`((E \cdot I) + M) / R`$ | + active server embodied | Sunk carbon fallacy (Bashir et al.) |
 | tSCI | $`(tO + tM) / R`$ | Full infrastructure, allocated proportionally | Requires bottom-up datacenter knowledge |
-| **rSCI** | $`(O + w \cdot \Delta_\text{residual}(t)) / R`$ | oSCI + learned residual (embodied, idle, overhead) | Requires historical slice pairs for calibration |
+| **rSCI** | $`\text{oSCI} \cdot \gamma`$ | oSCI + learned residual (embodied, idle, overhead) | Requires historical slice pairs for calibration |
 
 rSCI trades the need for full infrastructure knowledge (tSCI) for a reconciliation target — the provider-reported total — and learns the gap over time.
 
@@ -85,62 +85,57 @@ For now (!), we assume
 ### Indices
 
 - $`i`$ — measured workload execution, component, or reservation
-- $`t`$ — time within the reporting month
 
-We fix a single reporting slice and month (see Boundary Model), so slice and month indices are omitted below.
+We fix a single reporting slice and month (see Boundary Model), so slice, month, and time indices are omitted below.
 
 ### Inputs
 
 | Symbol | Description |
 |--------|-------------|
-| $`E_i(t)`$ | Measured IT energy for observed workload $`i`$ in kWh. |
-| $`I^\star(t)`$ | Provider-compatible location-based carbon intensity, matched to the provider's accounting resolution. |
-| $`\alpha_\text{PUE}(t)`$ | Facility/IT energy ratio, learned from provider-published PUE or calibrated from historical slice pairs; evolves over time. |
+| $`E_i`$ | Measured IT energy for observed workload $`i`$ in kWh. |
+| $`I^\star`$ | Provider-compatible location-based carbon intensity, matched to the provider's accounting resolution. |
 | $`C_\text{reported}`$ | Provider-reported carbon (reporting metric) for the slice. |
 
 ### Outputs
 
 | Symbol | Description |
 |--------|-------------|
-| $`\text{rSCI}_i = C_i^\text{rec} / R_i`$ | Action metric per workload — oSCI plus allocated residual, reconciles to provider total. |
+| $`\text{rSCI}_i = \text{oSCI}_i \cdot \gamma`$ | Action metric per workload — oSCI scaled by reconciliation factor, reconciles to provider total. |
 | $`\hat{C} = \sum_i \text{rSCI}_i \cdot R_i`$ | Estimate of the reporting metric before actuals arrive. |
 
 ### Core Equations
 
 **Action layer (per workload):**
 
-$$O_i = \alpha_\text{PUE}(t) \cdot \int E_i(t)\, I^\star(t)\, dt$$
+$$O_i = E_i \cdot I^\star$$
 
 $$\text{oSCI}_i = O_i / R_i$$
 
-PUE scales with energy, so reducing energy also reduces this overhead — it belongs in the action metric. Following Bashir et al. (2024), the action layer uses oSCI: embodied carbon is a sunk cost that should not influence scheduling decisions.
+Following Bashir et al. (2024), the action layer uses oSCI: embodied carbon is a sunk cost that should not influence scheduling decisions.
 
 **Reconciliation layer (per slice):**
 
 $$O_\text{total} = \sum_i O_i$$
 
-$$\hat{C} = O_\text{total} + \Delta_\text{residual}(t) \approx C_\text{reported}$$
+$$\hat{C} = O_\text{total} + \Delta_\text{residual} \approx C_\text{reported}$$
 
-$`\Delta_\text{residual}(t)`$ absorbs everything the action metric does not capture: embodied carbon, idle/shared capacity, non-energy overhead, allocation artifacts, and any remaining PUE mismatch.
+$`\Delta_\text{residual}`$ absorbs everything the action metric does not capture: embodied carbon, idle/shared capacity, non-energy overhead (PUE, Scope 1), allocation artifacts.
 
-**Allocation layer (back to workloads):**
+**Reconciled metric (back to workloads):**
 
-$$w_i = O_i / O_\text{total}$$
+$$\gamma = 1 + \Delta_\text{residual} / O_\text{total}$$
 
-$$C_i^\text{rec} = O_i + w_i \cdot \Delta_\text{residual}(t)$$
-
-$$\text{rSCI}_i = C_i^\text{rec} / R_i = \text{oSCI}_i \cdot (1 + \Delta_\text{residual}(t) / O_\text{total})$$
+$$\text{rSCI}_i = \text{oSCI}_i \cdot \gamma$$
 
 **Key property:** $`\sum_i \text{rSCI}_i \cdot R_i = \hat{C} \approx C_\text{reported}`$
 
-Because rSCI is a uniform rescaling of oSCI (the factor $`1 + \Delta_\text{residual}(t) / O_\text{total}`$ is constant across workloads within a slice), rSCI **always preserves oSCI ordering** — it cannot produce perverse scheduling incentives. Yet each workload's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
+Because $`\gamma`$ is a single scalar per slice, rSCI is a uniform rescaling of oSCI — it **always preserves oSCI ordering** and cannot produce perverse scheduling incentives. Yet each workload's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
 
 Where:
 
 - The action layer uses oSCI to avoid the sunk carbon fallacy (Bashir et al., 2024).
-- rSCI extends oSCI by reconciling to the provider-reported total: $`\sum_i \text{rSCI}_i \cdot R_i = \hat{C} \approx C_\text{reported}`$.
-- Unlike tSCI (which requires full infrastructure knowledge), rSCI learns the residual from historical slice pairs $`(O_\text{total}, C_\text{reported})`$.
-- $`\alpha_\text{PUE}(t)`$ and $`\Delta_\text{residual}(t)`$ are time-dependent (learned across months); location is fixed by the slice.
+- $`\gamma`$ is the reconciliation factor: the markup from observable operational carbon to the provider-reported total. Learned from historical slice pairs $`(O_\text{total}, C_\text{reported})`$.
+- Unlike tSCI (which requires full infrastructure knowledge), rSCI learns the residual from historical slice pairs.
 
 We use SCI naming for $`E`$, $`I`$, and $`R`$; see [`references/SCI.md`](references/SCI.md) and [`references/SCI_SUNK_CARBON.md`](references/SCI_SUNK_CARBON.md).
 
@@ -172,24 +167,23 @@ When a provider improves methodology, new optimization levers become reconcilabl
 
 ### Residual Bridge
 
-The residual bridge $`\Delta_\text{residual}(t)`$ is a single fitted scalar that captures everything the action metric does not: embodied carbon (hardware and buildings), idle/shared capacity, non-energy overhead (Scope 1 diesel/refrigerants, other Scope 3 categories), allocation artifacts from provider methodology, and any remaining PUE mismatch between the fitted $`\alpha_\text{PUE}(t)`$ and reality. Embodied carbon is deliberately excluded from the action layer to avoid the sunk carbon fallacy (Bashir et al., 2024) — it enters only through the residual. With monthly slice-level data, these components are not individually identifiable — the total bridge is constrained, but the breakdown is not. We therefore treat $`\Delta_\text{residual}(t)`$ as one quantity fitted from historical slice pairs rather than pretending the components can be separated.
+The residual bridge $`\Delta_\text{residual}`$ is a single fitted scalar that captures everything the action metric does not: embodied carbon (hardware and buildings), facility overhead (PUE), idle/shared capacity, non-energy overhead (Scope 1 diesel/refrigerants, other Scope 3 categories), and allocation artifacts from provider methodology. Embodied carbon is deliberately excluded from the action layer to avoid the sunk carbon fallacy (Bashir et al., 2024) — it enters only through the residual. With monthly slice-level data, these components are not individually identifiable — the total bridge is constrained, but the breakdown is not. We therefore treat $`\Delta_\text{residual}`$ as one quantity fitted from historical slice pairs rather than pretending the components can be separated.
 
 ### Parameter Table
 
 | Parameter | Meaning | Units / Role | Prior | Sensitivity |
 |---|---|---|---|---|
-| $`\alpha_\text{PUE}(t)`$ | Facility/IT energy ratio | Dimensionless; scales observed IT energy to facility energy inside the action metric | ~1.1–1.3 | High |
-| $`\Delta_\text{residual}(t)`$ | Residual bridge | tCO₂e; fitted from historical slice pairs $`(O_\text{total}, C_\text{reported})`$ | Provider profile-driven | Medium-High |
+| $`\Delta_\text{residual}`$ | Residual bridge | tCO₂e; fitted from historical slice pairs $`(O_\text{total}, C_\text{reported})`$ | Provider profile-driven | High |
+| $`\gamma`$ | Reconciliation factor | Dimensionless; $`1 + \Delta_\text{residual} / O_\text{total}`$ | Derived from $`\Delta_\text{residual}`$ | High |
 
 ### Bayesian Framing
 
 $$
-C_\text{reported} \sim \mathcal{N}\big(O_\text{total}(\alpha_\text{PUE}(t)) + \Delta_\text{residual}(t),\;\sigma^2_\text{obs}\big)
+C_\text{reported} \sim \mathcal{N}\big(O_\text{total} + \Delta_\text{residual},\;\sigma^2_\text{obs}\big)
 $$
 
 - Monthly data strongly constrains the **total bridge**.
-- $`\alpha_\text{PUE}(t)`$ is informed by provider-published PUE and has high sensitivity on the action metric.
-- Side information (provider profiles, methodology changes) sets the prior on $`\Delta_\text{residual}(t)`$.
+- Side information (provider profiles, methodology changes) sets the prior on $`\Delta_\text{residual}`$.
 
 ### Output Format
 
@@ -199,10 +193,11 @@ Provider slice: project=foo / sku=n2-standard-16 / region=europe-west4 / month=2
 Reported estimate (ĉ): 12.1 tCO2e [10.6 - 13.9, 90% CI]
 Observable operational total (O_total): 8.7 tCO2e
 Residual bridge (Δ_residual): 3.4 tCO2e
+Reconciliation factor (γ): 1.39
 
 Per workload:
-  workload-a: oSCI = 0.042 tCO2e/req  |  rSCI = 0.058 tCO2e/req  (w_i = 0.38)
-  workload-b: oSCI = 0.031 tCO2e/req  |  rSCI = 0.043 tCO2e/req  (w_i = 0.27)
+  workload-a: oSCI = 0.042 tCO2e/req  |  rSCI = 0.058 tCO2e/req
+  workload-b: oSCI = 0.031 tCO2e/req  |  rSCI = 0.043 tCO2e/req
 
 Reconciliation check: Σ rSCI_i · R_i = 12.1 tCO2e = ĉ  ✓
 
@@ -212,6 +207,8 @@ Last residual error: +0.3 tCO2e (2.4%)
 
 ## Future Work
 
+- **Time-dependent parameters:** Model $`\Delta_\text{residual}`$ and $`\gamma`$ as time-varying, learned across months. This captures seasonal effects, methodology changes, and infrastructure evolution.
+- **PUE as a learnable parameter:** Factor out $`\alpha_\text{PUE}`$ from $`\Delta_\text{residual}`$ and include it in the action layer ($`O_i = \alpha_\text{PUE} \cdot E_i \cdot I^\star`$), calibrated from provider-published PUE or historical data.
 - **Bridge decomposition:** Once sufficient historical slice pairs are available, decompose $`\Delta_\text{residual}`$ into provider-methodology-informed components (embodied carbon, PUE mismatch, idle capacity, non-energy overhead, allocation artifacts) using priors from provider profiles and Bayesian modeling. The goal is to identify whether any true unexplained residual remains after accounting for known methodology effects. This decomposition can progressively refine the residual without changing the action signal — oSCI ordering is preserved regardless of how the residual is broken down.
 
 ## Open Questions
