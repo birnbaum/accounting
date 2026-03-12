@@ -3,15 +3,19 @@
 ## Mission
 
 Metrics that make cloud carbon data auditable and comparable across organizations are not the same metrics that help individual teams reduce emissions.
+For context:
 
-- **Top-down reporting** is billing-aligned, standardized, delayed, and anchored in provider data such as utility bills, diesel consumption, refrigerant losses, and embodied hardware/building emissions.
-- **Bottom-up action metrics** are granular, near-real-time, and scoped to what a team can change: code efficiency, workload placement, resource sizing, and scheduling.
+**Bottom-up (action):** We measure workload energy as close to the hardware as possible, combine it with location-based carbon intensity, and report an SCI-style signal in near real time. This gives teams an optimization signal they can act on, but by itself it does not fully capture facility overhead, idle/shared capacity, provider-specific allocation effects, or all Scope 1/3 components.
+
+**Top-down (reporting):** The cloud provider computes its total monthly footprint from utility bills, diesel consumption, refrigerant losses, and amortized embodied carbon of hardware and buildings. It then allocates this total down to individual customers, services, and jobs. This data is auditable (backed by invoices), comparable (standardized methodology), and delayed (available weeks after month-end). It tells you the size of the problem but not what to do about it.
+
+
 
 These two signals are not, and should not be, identical. **But they must be reconcilable**: If a team improves its bottom-up signal, that improvement should be traceable through to the cloud provider's reported number at the reporting boundary the provider actually exposes. If the two diverge without explanation, users lose trust in both.
 
-> Given a real-time, physically motivated action metric, how do we map it onto the delayed, provider-allocated reporting number without hiding the mismatch?
-
-Today, GHG-style cloud accounting for customers happens through the numbers providers report. Those numbers are imperfect and provider methodologies remain heterogeneous. Better disclosure, stricter boundaries, and more unified reporting standards are still needed. But even under imperfect reporting, users need a framework that maps real-time operational action to the provider-reported number that currently governs reporting practice. A useful side effect is that this mapping makes weaknesses in provider methodologies more visible rather than hiding them behind a single delayed total.
+### Why optimizing for imperfect cloud carbon accounting methodologies?
+ 
+In practice, cloud customers' Scope 3 GHG accounting happens through the numbers providers report. Those numbers are imperfect and provider methodologies remain heterogeneous. Better disclosure, stricter boundaries, and more unified reporting standards are still needed. But even under imperfect reporting, users need a framework that maps real-time operational action to the provider-reported number that currently governs reporting practice. A useful side effect is that this mapping makes weaknesses in provider methodologies more visible rather than hiding them behind a single delayed total.
 
 This framework serves two goals:
 
@@ -22,81 +26,88 @@ We focus on **location-based accounting**. Market-based accounting is intentiona
 
 ## Problem Framing
 
-For context:
+Given:
+- **Action metric:** a bottom-up, SCI-style metric on the observable boundary that teams can optimize in real time.
+- **Reporting metric:** the top-down, provider-reported carbon for Scope 3 accounting that is delayed by weeks.
 
-**Top-down (reporting):** The cloud provider computes its total monthly footprint from utility bills, diesel consumption, refrigerant losses, and amortized embodied carbon of hardware and buildings. It then allocates this total down to individual customers, services, and jobs. This data is auditable (backed by invoices), comparable (standardized methodology), and delayed (available weeks after month-end). It tells you the size of the problem but not what to do about it.
+> How do we map action metrics onto reporting metrics while being explicit about the sources and uncertainty of the gap?
 
-**Bottom-up (action):** We measure workload energy as close to the hardware as possible, combine it with location-based carbon intensity, and report an SCI-style signal in near real time. This gives teams an optimization signal they can act on, but by itself it does not fully capture facility overhead, idle/shared capacity, provider-specific allocation effects, or all Scope 1/3 components.
 
-We call the gap between these two **reconciliation bridge**.
-That bridge has two distinct sources:
+### Boundary Model
 
-1. **Residual carbon inside a provider reporting slice** that the observable real-time metric does not directly capture.
-2. **Boundary mismatch** between what we instrument and what the provider reports.
+We differentiate between:
 
-The main design problem is not to eliminate that bridge by definition, but to make it explicit, predictable, and small enough that users can understand how action-level improvements flow into reporting-level totals.
+- **Observable boundary:** a workloads' hardware reservations/utilization that we can use to compute the action metric.
+- **Provider reporting boundary:** the finest slice at which the provider exposes the reporting metric.
 
-The primary success criterion is therefore a **calibrated month-end prediction** at the provider reporting slice, together with directional faithfulness of the main optimization levers and uncertainty that is small enough to remain actionable. We treat the provider-reported number as the reconciliation target because it governs current reporting practice, not because it is physically correct. A more defensible normative estimate is explored separately in [`NORMATIVE_REFERENCE_ESTIMATE.md`](NORMATIVE_REFERENCE_ESTIMATE.md).
-
-The canonical use case assumes **full coverage of customer-visible activity inside a declared provider reporting slice**. For example, if a customer wants to reconcile `EC2 × eu-central-1 × month`, we assume they can observe all EC2 resources they run in that region over that month with enough fidelity to reconstruct resource-time and, where needed, utilization. Under full coverage the core problem reduces to estimating the residual bridge added by provider methodology and infrastructure effects.
-
-## Boundary Model
-
-The boundary needs to be explicit.
-
-- **Observable boundary:** the workloads and hardware reservations we can instrument in near real time.
-- **Provider reporting boundary:** the finest slice at which the provider exposes carbon data to the customer.
-
-The reconciliation unit is the **provider reporting slice**, not an abstract "job." In practice this means:
+The reconciliation unit is the provider's **reporting slice**, e.g.:
 
 - **AWS:** `account × service × region × month`
 - **GCP:** `project × SKU × region × month`
 - **Azure:** `subscription × service_category × region × month`
 
-Every measured workload event must map to one or more provider reporting slices. For distributed workloads, we split the workload across slices by observed resource share. This matters because reconciling at the finest provider-exposed slice reduces uncertainty: the bridge only needs to explain residuals inside a slice, not cross-service mixing introduced by aggregating too early.
+Every measured workload event must map to one or more reporting slices. 
 
-The framework assumes the observable boundary fully covers customer-visible activity in the provider reporting slice. This is a structural requirement, not a simplifying assumption: without full coverage the residual bridge loses its interpretation as a provider-methodology effect and becomes entangled with missing-data noise.
+### Reconciliation Bridge
 
-We therefore work with the finest provider slice that is actually exposed, not the slice we wish existed. If the provider's available slice is too coarse for a reliable action signal, the framework should surface that the mapping is noisy and that optimization claims at that slice are weak.
+We call the gap between the top-down and bottom-up metric **reconciliation bridge**.
+It has two distinct sources:
+
+1. **Residual carbon inside the observable boundary**: even with perfect workload telemetry, the top-down metric includes carbon you cannot observe bottom-up: facility overhead (PUE), idle infrastructure, embodied carbon from hardware you do not own, and non-energy emissions such as diesel backup generation or refrigerant losses.
+2. **Boundary mismatch**: A provider may bundle supporting services — storage I/O, managed networking, control-plane operations — into the same reporting slice that you are only partially observing. Even if measurements are precise, a structural gap remains wherever the two boundaries do not coincide.
+   - *Example: you instrument all EC2 instances in `eu-central-1` perfectly, but the provider's `Compute` slice for that account and region also includes EBS volume activity and NAT Gateway traffic that you have not instrumented. Your action total covers only a subset of what that number reflects.*
+
+The goal is not to eliminate that bridge by definition, but to make it **explicit, predictable, and small enough** that users can understand how improving the action metric maps to improving the reporting metric.
+The primary goal is a calibrated month-end prediction at the reporting slice.
+
+### Assumptions
+
+For now (!), we assume
+- **no boundary mismatch**: the observable boundary covers all activity in the reporting slice.
+  For example, if a customer wants to reconcile `EC2 × eu-central-1 × January`, we assume they can observe all EC2 resources they run in that region over that month with enough fidelity to reconstruct resource-time/utilization.
+  This is a structural requirement, without full coverage the residual bridge loses its interpretation.
+- **one-to-one mapping**: each observed workload maps to exactly one reporting slice. This is a simplifying assumption that allows us to state the problem more clearly, but the framework should be extended to handle many-to-many mappings in practice (e.g. a workload that uses compute, storage and network or is distributed).
+- **single slice**: For simplicity, the approach currently assumes a single reporting slice: one project, one service, one region, one month.
+
 
 ## Notation
 
 ### Indices
 
 - $`i`$ — measured workload execution, component, or reservation
-- $`b`$ — provider reporting slice
-- $`t`$ — time within a reporting month
-- $`T`$ — reporting month
+- $`t`$ — time within the reporting month
+
+We fix a single reporting slice and month (see Boundary Model), so slice and month indices are omitted below.
 
 ### Inputs
 
 | Symbol | Description |
 |--------|-------------|
 | $`E_i(t)`$ | Measured IT energy for observed workload $`i`$ in kWh. |
-| $`I_b^\star(t)`$ | Provider-compatible location-based carbon intensity for slice $`b`$, matched to the provider's accounting resolution. |
-| $`M_i^\text{obs}(T)`$ | Directly attributable embodied carbon share for observed workload $`i`$ over month $`T`$. |
-| $`C_\text{reported}(b,T)`$ | Provider-reported carbon for slice $`b`$ and month $`T`$. |
+| $`I^\star(t)`$ | Provider-compatible location-based carbon intensity, matched to the provider's accounting resolution. |
+| $`M_i^\text{obs}`$ | Directly attributable embodied carbon share for observed workload $`i`$. |
+| $`C_\text{reported}`$ | Provider-reported carbon for the slice. |
 
 ### Outputs
 
 | Symbol | Description |
 |--------|-------------|
 | $`\text{SCI}_i = (O_i + M_i^\text{obs}) / R_i`$ | Action metric for an observed workload on the observable boundary. |
-| $`\hat{C}(b,T)`$ | Our estimate of the provider-reported carbon before actuals arrive. |
+| $`\hat{C}`$ | Our estimate of the provider-reported carbon before actuals arrive. |
 
-Workload-level $`\text{SCI}_i`$ is the primary user-facing intensity metric; $`C_\text{action}(b,T)`$ is the slice-level reconciliation object.
+Workload-level $`\text{SCI}_i`$ is the primary user-facing intensity metric; $`C_\text{action}`$ is the slice-level reconciliation object.
 
 ### Core Equations
 
 For each observed workload:
 
-$$O_i(T) = \int_T E_i(t)\, I_{b(i)}^\star(t)\, dt$$
+$$O_i = \int E_i(t)\, I^\star(t)\, dt$$
 
-For each provider reporting slice:
+For the slice:
 
-$$C_\text{action}(b,T) = \sum_{i \mapsto b}\big(O_i(T) + M_i^\text{obs}(T)\big)$$
+$$C_\text{action} = \sum_i\big(O_i + M_i^\text{obs}\big)$$
 
-$$\hat{C}(b,T) = C_\text{action}(b,T) + \hat{\Delta}_\text{residual}(b,T) \approx C_\text{reported}(b,T)$$
+$$\hat{C} = C_\text{action} + \hat{\Delta}_\text{residual} \approx C_\text{reported}$$
 
 Where:
 
@@ -113,7 +124,7 @@ We use SCI naming for $`E`$, $`I`$, $`M`$, and $`R`$; see [`references/SCI.md`](
 
 ### Layer 1 — Measurement and Mapping
 
-Measure workload energy as close to the hardware as possible via power telemetry, hardware counters, or calibrated models, then map each measurement to a provider reporting slice.
+Measure workload energy as close to the hardware as possible via power telemetry, hardware counters, or calibrated models, then map each measurement to a reporting slice.
 
 This layer is responsible for:
 
@@ -130,7 +141,7 @@ Estimate the gap between the observable action total and the provider-reported t
 
 This layer does **not** cleanly identify every latent component from monthly data alone. The monthly reported target mainly constrains the **total bridge**. The decomposition of that bridge into PUE, idle, non-energy overhead, residual embodied carbon, and allocation artifacts is partly data-driven and partly prior-driven.
 
-Output: $`\hat{C}(b,T)`$ with uncertainty intervals and a decomposition of the bridge annotated by confidence.
+Output: $`\hat{C}`$ with uncertainty intervals and a decomposition of the bridge annotated by confidence.
 
 ### Layer 3 — User-Facing Views
 
@@ -179,7 +190,7 @@ Key finding: **reconcilability is provider-specific.**
 
 ### Goal
 
-Estimate the residual bridge at the provider reporting slice before provider actuals arrive.
+Estimate the residual bridge at the reporting slice before provider actuals arrive.
 
 ### Residual Bridge Decomposition
 
@@ -199,17 +210,17 @@ Where:
 
 | Parameter | Meaning | Units / Role | Prior | Sensitivity |
 |---|---|---|---|---|
-| $`\alpha_\text{PUE}(b,T)`$ | Facility/IT energy ratio | Dimensionless; converts observed IT energy toward facility energy | ~1.1–1.3 | High |
-| $`E_\text{idle}(b,T)`$ | Unobserved idle/shared energy | kWh not assigned to observed workloads | ~15–30% of observed IT energy | Medium |
-| $`M_\text{resid}(b,T)`$ | Residual embodied carbon | tCO₂e not directly attributable from observed reservations | Provider LCA / profile-driven | Medium-High |
-| $`\rho_\text{ne}(b,T)`$ | Non-energy overhead ratio | Dimensionless carbon uplift for Scope 1 + other Scope 3 | ~0.03–0.15 | Low-Medium |
-| $`\beta_\text{alloc}(b,T)`$ | Allocation adjustment | Dimensionless correction for provider allocation method | Physical ~1.0; wider on usage/economic methods | High |
+| $`\alpha_\text{PUE}`$ | Facility/IT energy ratio | Dimensionless; converts observed IT energy toward facility energy | ~1.1–1.3 | High |
+| $`E_\text{idle}`$ | Unobserved idle/shared energy | kWh not assigned to observed workloads | ~15–30% of observed IT energy | Medium |
+| $`M_\text{resid}`$ | Residual embodied carbon | tCO₂e not directly attributable from observed reservations | Provider LCA / profile-driven | Medium-High |
+| $`\rho_\text{ne}`$ | Non-energy overhead ratio | Dimensionless carbon uplift for Scope 1 + other Scope 3 | ~0.03–0.15 | Low-Medium |
+| $`\beta_\text{alloc}`$ | Allocation adjustment | Dimensionless correction for provider allocation method | Physical ~1.0; wider on usage/economic methods | High |
 
 ### Bayesian Framing
 
 At the slice level:
 
-$$C_\text{reported}(b,T) \sim \mathcal{N}\big(C_\text{action}(b,T) + \hat{\Delta}_\text{residual}(b,T;\boldsymbol{\theta}),\;\sigma^2_\text{obs}\big)$$
+$$C_\text{reported} \sim \mathcal{N}\big(C_\text{action} + \hat{\Delta}_\text{residual}(\boldsymbol{\theta}),\;\sigma^2_\text{obs}\big)$$
 
 The important modeling point is:
 
