@@ -1,5 +1,8 @@
 # Reconcilable User-facing Cloud Carbon Accounting
 
+- Reconciled Actionable Carbon Estimates (RACE)
+- rSCI: Reconciled Software Carbon Intensity
+
 ## Mission
 
 Metrics that make cloud carbon data auditable and comparable across organizations are not the same metrics that help individual teams reduce emissions.
@@ -83,6 +86,7 @@ We fix a single reporting slice and month (see Boundary Model), so slice and mon
 |--------|-------------|
 | $`E_i(t)`$ | Measured IT energy for observed workload $`i`$ in kWh. |
 | $`I^\star(t)`$ | Provider-compatible location-based carbon intensity, matched to the provider's accounting resolution. |
+| $`\alpha_\text{PUE}`$ | Facility/IT energy ratio, fitted from provider-published PUE or calibrated from historical data. |
 | $`M_i^\text{obs}`$ | Directly attributable embodied carbon share for observed workload $`i`$. |
 | $`C_\text{reported}`$ | Provider-reported carbon (reporting metric) for the slice. |
 
@@ -95,20 +99,22 @@ We fix a single reporting slice and month (see Boundary Model), so slice and mon
 
 ### Core Equations
 
-For each observed workload:
+Per workload:
 
-$$O_i = \int E_i(t)\, I^\star(t)\, dt$$
+$$O_i = \alpha_\text{PUE} \cdot \int E_i(t)\, I^\star(t)\, dt$$
+
+PUE scales with energy, so reducing energy also reduces this overhead — it belongs in the action metric.
 
 For the slice:
 
 $$C_\text{action} = \sum_i\big(O_i + M_i^\text{obs}\big)$$
 
-$$\hat{C} = C_\text{action} + \hat{\Delta}_\text{residual} \approx C_\text{reported}$$
+$$\hat{C} = C_\text{action} + \Delta_\text{residual} \approx C_\text{reported}$$
 
 Where:
 
-- $`C_\text{action}`$ is the slice-level action metric total.
-- $`\hat{\Delta}_\text{residual}`$ is residual carbon inside the slice that the action metric does not directly capture.
+- $`C_\text{action}`$ is the slice-level action metric total (includes facility overhead via $`\alpha_\text{PUE}`$).
+- $`\Delta_\text{residual}`$ is residual carbon inside the slice that the action metric does not capture: idle/shared capacity, non-energy overhead, residual embodied carbon, allocation artifacts, and any remaining PUE mismatch.
 
 We use SCI naming for $`E`$, $`I`$, $`M`$, and $`R`$; see [`references/SCI.md`](references/SCI.md).
 
@@ -138,35 +144,26 @@ When a provider improves methodology, new optimization levers become reconcilabl
 
 **Goal:** estimate the residual bridge at the reporting slice before provider actuals arrive.
 
-### Residual Bridge Decomposition
+### Residual Bridge
 
-$$\hat{\Delta}_\text{residual} = \Delta_\text{PUE} + \Delta_\text{idle} + \Delta_\text{non-energy} + \Delta_\text{embodied,resid} + \Delta_\text{alloc}$$
-
-- $`\Delta_\text{PUE}`$ — facility overhead not present in measured IT energy
-- $`\Delta_\text{idle}`$ — idle/shared capacity not assigned by the observable boundary
-- $`\Delta_\text{non-energy}`$ — provider-allocated non-energy overhead (Scope 1 diesel/refrigerants plus other Scope 3 categories)
-- $`\Delta_\text{embodied,resid}`$ — embodied carbon not directly attributable from observed reservations
-- $`\Delta_\text{alloc}`$ — provider methodology effects that make the reported slice differ from a purely physical allocation
+The residual bridge $`\Delta_\text{residual}`$ is a single fitted scalar that captures everything the action metric does not: idle/shared capacity, non-energy overhead (Scope 1 diesel/refrigerants, other Scope 3 categories), residual embodied carbon not directly attributable from observed reservations, allocation artifacts from provider methodology, and any remaining PUE mismatch between the fitted $`\alpha_\text{PUE}`$ and reality. With monthly slice-level data, these components are not individually identifiable — the total bridge is constrained, but the breakdown is not. We therefore treat $`\Delta_\text{residual}`$ as one quantity fitted from historical slice pairs rather than pretending the components can be separated.
 
 ### Parameter Table
 
 | Parameter | Meaning | Units / Role | Prior | Sensitivity |
 |---|---|---|---|---|
-| $`\alpha_\text{PUE}`$ | Facility/IT energy ratio | Dimensionless; converts observed IT energy toward facility energy | ~1.1–1.3 | High |
-| $`E_\text{idle}`$ | Unobserved idle/shared energy | kWh not assigned to observed workloads | ~15–30% of observed IT energy | Medium |
-| $`M_\text{resid}`$ | Residual embodied carbon | tCO₂e not directly attributable from observed reservations | Provider LCA / profile-driven | Medium-High |
-| $`\rho_\text{ne}`$ | Non-energy overhead ratio | Dimensionless carbon uplift for Scope 1 + other Scope 3 | ~0.03–0.15 | Low-Medium |
-| $`\beta_\text{alloc}`$ | Allocation adjustment | Dimensionless correction for provider allocation method | Physical ~1.0; wider on usage/economic methods | High |
+| $`\alpha_\text{PUE}`$ | Facility/IT energy ratio | Dimensionless; scales observed IT energy to facility energy inside the action metric | ~1.1–1.3 | High |
+| $`\Delta_\text{residual}`$ | Residual bridge | tCO₂e; fitted from historical slice pairs $`(C_\text{action}, C_\text{reported})`$ | Provider profile-driven | Medium-High |
 
 ### Bayesian Framing
 
 $$
-C_\text{reported} \sim \mathcal{N}\big(C_\text{action} + \hat{\Delta}_\text{residual}(\theta),\;\sigma^2_\text{obs}\big)
+C_\text{reported} \sim \mathcal{N}\big(C_\text{action}(\alpha_\text{PUE}) + \Delta_\text{residual},\;\sigma^2_\text{obs}\big)
 $$
 
 - Monthly data strongly constrains the **total bridge**.
-- The component breakdown is only partially identifiable.
-- Side information (published PUE, methodology changes, service coverage assumptions) is required for a credible decomposition.
+- $`\alpha_\text{PUE}`$ is informed by provider-published PUE and has high sensitivity on the action metric.
+- Side information (provider profiles, methodology changes) sets the prior on $`\Delta_\text{residual}`$.
 
 ### Output Format
 
@@ -175,27 +172,22 @@ Provider slice: project=foo / sku=n2-standard-16 / region=europe-west4 / month=2
 
 Reported estimate: 12.1 tCO2e [10.6 - 13.9, 90% CI]
 Observable action total: 8.7 tCO2e
-Estimated residual bridge: 3.4 tCO2e
-
-Bridge component                         Estimate    Confidence
---------------------------------------------------------------
-Facility overhead (PUE)                 1.2 tCO2e   medium
-Idle/shared capacity                    0.8 tCO2e   low
-Non-energy overhead (S1 + other S3)     0.4 tCO2e   low-medium
-Residual embodied carbon                0.9 tCO2e   medium
-Allocation adjustment                   0.1 tCO2e   low
+Residual bridge (Δ_residual): 3.4 tCO2e
 
 Model maturity: 8 months
 Last residual error: +0.3 tCO2e (2.4%)
 ```
+
+## Future Work
+
+- **Bridge decomposition:** Once sufficient historical slice pairs are available, decompose $`\Delta_\text{residual}`$ into provider-methodology-informed components (PUE mismatch, idle capacity, non-energy overhead, residual embodied, allocation artifacts) using priors derived from provider profiles. The goal is to identify whether any true unexplained residual remains after accounting for known methodology effects.
 
 ## Open Questions
 
 1. **Actionability limits:** When a reporting slice is too coarse or too opaque, how should the framework expose that optimization claims are weak rather than presenting false precision?
 2. **Lever reconcilability:** Which user actions move the reporting metric directly, approximately, or not at all under a given provider methodology?
 3. **Minimum viable provider knowledge:** What minimum provider profile can be constructed from public documentation before the framework becomes too speculative? How many months of slice-level pairs $`(C_\text{action}, C_\text{reported})`$ are needed before the residual bridge estimate is decision-useful?
-4. **Identifiability:** Which bridge components are estimable from monthly slice-level data, and which require provider-profile priors plus side information?
-5. **Non-stationarity:** How should methodology changes trigger profile version updates and regime shifts in the model?
+4. **Non-stationarity:** How should methodology changes trigger profile version updates and regime shifts in the model?
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific questions.
 
