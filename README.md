@@ -117,29 +117,29 @@ PUE scales with energy, so reducing energy also reduces this overhead — it bel
 
 **Reconciliation layer (per slice):**
 
-$$C_\text{action} = \sum_i O_i$$
+$$O_\text{total} = \sum_i O_i$$
 
-$$\hat{C} = C_\text{action} + \Delta_\text{residual}(t) \approx C_\text{reported}$$
+$$\hat{C} = O_\text{total} + \Delta_\text{residual}(t) \approx C_\text{reported}$$
 
 $`\Delta_\text{residual}(t)`$ absorbs everything the action metric does not capture: embodied carbon, idle/shared capacity, non-energy overhead, allocation artifacts, and any remaining PUE mismatch.
 
 **Allocation layer (back to workloads):**
 
-$$w_i = O_i / C_\text{action}$$
+$$w_i = O_i / O_\text{total}$$
 
 $$C_i^\text{rec} = O_i + w_i \cdot \Delta_\text{residual}(t)$$
 
-$$\text{rSCI}_i = C_i^\text{rec} / R_i = \text{oSCI}_i \cdot (1 + \Delta_\text{residual}(t) / C_\text{action})$$
+$$\text{rSCI}_i = C_i^\text{rec} / R_i = \text{oSCI}_i \cdot (1 + \Delta_\text{residual}(t) / O_\text{total})$$
 
 **Key property:** $`\sum_i \text{rSCI}_i \cdot R_i = \hat{C} \approx C_\text{reported}`$
 
-Because rSCI is a uniform rescaling of oSCI (the factor $`1 + \Delta_\text{residual}(t) / C_\text{action}`$ is constant across workloads within a slice), rSCI **always preserves oSCI ordering** — it cannot produce perverse scheduling incentives. Yet each workload's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
+Because rSCI is a uniform rescaling of oSCI (the factor $`1 + \Delta_\text{residual}(t) / O_\text{total}`$ is constant across workloads within a slice), rSCI **always preserves oSCI ordering** — it cannot produce perverse scheduling incentives. Yet each workload's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
 
 Where:
 
 - The action layer uses oSCI to avoid the sunk carbon fallacy (Bashir et al., 2024).
 - rSCI extends oSCI by reconciling to the provider-reported total: $`\sum_i \text{rSCI}_i \cdot R_i = \hat{C} \approx C_\text{reported}`$.
-- Unlike tSCI (which requires full infrastructure knowledge), rSCI learns the residual from historical slice pairs $`(C_\text{action}, C_\text{reported})`$.
+- Unlike tSCI (which requires full infrastructure knowledge), rSCI learns the residual from historical slice pairs $`(O_\text{total}, C_\text{reported})`$.
 - $`\alpha_\text{PUE}(t)`$ and $`\Delta_\text{residual}(t)`$ are time-dependent (learned across months); location is fixed by the slice.
 
 We use SCI naming for $`E`$, $`I`$, and $`R`$; see [`references/SCI.md`](references/SCI.md) and [`references/SCI_SUNK_CARBON.md`](references/SCI_SUNK_CARBON.md).
@@ -179,12 +179,12 @@ The residual bridge $`\Delta_\text{residual}(t)`$ is a single fitted scalar that
 | Parameter | Meaning | Units / Role | Prior | Sensitivity |
 |---|---|---|---|---|
 | $`\alpha_\text{PUE}(t)`$ | Facility/IT energy ratio | Dimensionless; scales observed IT energy to facility energy inside the action metric | ~1.1–1.3 | High |
-| $`\Delta_\text{residual}(t)`$ | Residual bridge | tCO₂e; fitted from historical slice pairs $`(C_\text{action}, C_\text{reported})`$ | Provider profile-driven | Medium-High |
+| $`\Delta_\text{residual}(t)`$ | Residual bridge | tCO₂e; fitted from historical slice pairs $`(O_\text{total}, C_\text{reported})`$ | Provider profile-driven | Medium-High |
 
 ### Bayesian Framing
 
 $$
-C_\text{reported} \sim \mathcal{N}\big(C_\text{action}(\alpha_\text{PUE}(t)) + \Delta_\text{residual}(t),\;\sigma^2_\text{obs}\big)
+C_\text{reported} \sim \mathcal{N}\big(O_\text{total}(\alpha_\text{PUE}(t)) + \Delta_\text{residual}(t),\;\sigma^2_\text{obs}\big)
 $$
 
 - Monthly data strongly constrains the **total bridge**.
@@ -197,7 +197,7 @@ $$
 Provider slice: project=foo / sku=n2-standard-16 / region=europe-west4 / month=2026-02
 
 Reported estimate (ĉ): 12.1 tCO2e [10.6 - 13.9, 90% CI]
-Observable action total (C_action): 8.7 tCO2e
+Observable operational total (O_total): 8.7 tCO2e
 Residual bridge (Δ_residual): 3.4 tCO2e
 
 Per workload:
@@ -218,7 +218,7 @@ Last residual error: +0.3 tCO2e (2.4%)
 
 1. **Actionability limits:** When a reporting slice is too coarse or too opaque, how should the framework expose that optimization claims are weak rather than presenting false precision?
 2. **Lever reconcilability:** Which user actions move the reporting metric directly, approximately, or not at all under a given provider methodology?
-3. **Minimum viable provider knowledge:** What minimum provider profile can be constructed from public documentation before the framework becomes too speculative? How many months of slice-level pairs $`(C_\text{action}, C_\text{reported})`$ are needed before the residual bridge estimate is decision-useful?
+3. **Minimum viable provider knowledge:** What minimum provider profile can be constructed from public documentation before the framework becomes too speculative? How many months of slice-level pairs $`(O_\text{total}, C_\text{reported})`$ are needed before the residual bridge estimate is decision-useful?
 4. **Non-stationarity:** How should methodology changes trigger profile version updates and regime shifts in the model?
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific questions.
