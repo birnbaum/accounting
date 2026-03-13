@@ -30,19 +30,6 @@ Given:
 
 > How do we map action metrics onto reporting metrics while being explicit about the sources and uncertainty of the gap?
 
-### SCI Variant Taxonomy
-
-The GSF's [Software Carbon Intensity](references/SCI.md) (SCI) was designed as a standalone optimization signal. Bashir et al. (2024) showed that including embodied carbon — a sunk cost — in the optimization metric can lead to [perverse scheduling outcomes](references/SCI_SUNK_CARBON.md) where carbon-aware schedulers route work to older, less efficient servers. They proposed oSCI (operational only) and tSCI (total infrastructure, allocated proportionally) as alternatives. We extend the taxonomy with **rSCI** — a variant that reconciles to a provider-reported total.
-
-| Metric | Formula | Includes | Key limitation |
-|--------|---------|----------|----------------|
-| oSCI | $`(E \cdot I) / R`$ | Operational only | Misses embodied entirely |
-| SCI | $`((E \cdot I) + M) / R`$ | + active server embodied | Sunk carbon fallacy (Bashir et al.) |
-| tSCI | $`(tO + tM) / R`$ | Full infrastructure, allocated proportionally | Requires bottom-up datacenter knowledge |
-| **rSCI** | $`(O + w \cdot \Delta_\text{residual}) / R`$ | oSCI + allocated residual (embodied, idle, overhead) | Requires historical slice pairs for calibration |
-
-rSCI shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but makes it practical: instead of requiring complete bottom-up datacenter knowledge (which Bashir et al. dismiss as unrealistic), rSCI learns the gap from historical (O_total, C_reported) pairs. It is also strictly broader in scope — where tSCI only adds idle server operational and embodied carbon, rSCI's residual captures *everything* between the observable operational total and the provider-reported number: embodied carbon, idle capacity, PUE, Scope 1 emissions (diesel, refrigerants), allocation artifacts, and any other overhead the provider includes.
-
 ### Boundary Model
 
 We differentiate between:
@@ -80,62 +67,89 @@ For now (!), we assume
 - **single slice**: For simplicity, the approach currently assumes a single reporting slice: one project, one service, one region, one month.
 
 
+## Action Metrics
+
+The GSF's [Software Carbon Intensity](references/SCI.md) (SCI) was designed as an actionable optimization signal $$SCI = C / R,$$ which describes the carbon $C$ per unit of work $R$ (e.g., per request, per hour, per GB).
+In their original formulation, carbon is the sum of operational carbon $`O`$ (energy $`E`$ × carbon intensity $`I`$) and amortized embodied carbon:
+$$C = O + M$$
+$$C = E \cdot I + M$$
+
+[Bashir et al. (2024)](https://arxiv.org/abs/2410.15087) showed that including embodied carbon $`M`$ in the optimization metric can lead to perverse scheduling outcomes where carbon-aware schedulers route work to older, less efficient servers. 
+They proposed 
+- oSCI (operational only), which is the current state of the art for actionable carbon metrics and according to the authors, the best metric for carbon-aware scheduling.
+- tSCI (where overhead of idle server are attributed to $`O`$ and $`M`$), but consider it impractical because it requires comprehensive datacenter-level information that cloud customers do not have access to.
+
+Overview:
+
+| Metric | $`C`$                                           | Includes                                             | Key limitation                               |
+|--------|-------------------------------------------------|------------------------------------------------------|----------------------------------------------|
+| SCI | $`E \cdot I + M`$                               | Operational + active embodied                        | Sunk carbon fallacy (Bashir et al.)          |
+| oSCI | $`E \cdot I`$                                   | Operational only                                     | Misses embodied and other overheads entirely |
+| tSCI | $`E \cdot I + O_\text{idle-infra} + M + M_\text{idle-infra}`$ | Full infrastructure, allocated proportionally        | Requires bottom-up datacenter knowledge      |
+| **rSCI** | $`E \cdot I + w \cdot \Delta_\text{residual}`$     | oSCI + allocated residual (embodied, idle, overhead) | ✨ (some historical data)                     |
+
+We extend the taxonomy with **rSCI**: a variant that reconciles to a provider-reported total. rSCI 
+- shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but makes it practical: instead of requiring complete bottom-up datacenter knowledge, rSCI learns the gap from historical (O_total, C_reported) pairs. 
+- is also strictly broader in scope: where tSCI only adds idle server operational and embodied carbon, rSCI's residual captures *everything* between the observable operational total and the provider-reported number: embodied carbon, idle capacity, PUE, Scope 1 emissions (diesel, refrigerants), allocation artifacts, and any other overhead the provider includes. 
+- always preserves oSCI ordering: since rSCI = oSCI · γ (residual factor), reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives.
+
+
 ## Notation
 
 ### Indices
 
-- $`i`$ — measured workload execution, component, or reservation
+- $`t`$ — time window (e.g., 5 min) for the real-time action signal
+- $`m`$ — individual machine/instance serving the workload (used inside the power model)
 
-We fix a single reporting slice and month (see Boundary Model), so slice, month, and time indices are omitted below.
+We fix a single reporting slice, single service, and month (see Boundary Model). The service index $`i`$ is omitted — it returns when multi-service slices are introduced.
 
 ### Inputs
 
 | Symbol | Description |
 |--------|-------------|
-| $`E_i`$ | Measured IT energy for observed workload $`i`$ in kWh. |
-| $`I^\star`$ | Provider-compatible location-based carbon intensity, matched to the provider's accounting resolution. |
-| $`C_\text{reported}`$ | Provider-reported carbon (reporting metric) for the slice. |
+| $`E(t)`$ | Aggregate measured IT energy across all machines in time window $`t`$, in kWh. Computed as $`E(t) = \sum_m P_m(t) \cdot \Delta t`$ where $`P_m(t)`$ is the estimated power draw of machine $`m`$. |
+| $`I^\star(t)`$ | Provider-compatible location-based carbon intensity for time window $`t`$, matched to the provider's accounting resolution. |
+| $`C_\text{reported}`$ | Provider-reported carbon (reporting metric) for the slice (monthly). |
 
 ### Outputs
 
 | Symbol | Description |
 |--------|-------------|
-| $`\text{rSCI}_i`$ | Action metric per workload — oSCI plus allocated residual, reconciles to provider total. |
-| $`\hat{C} = \sum_i \text{rSCI}_i \cdot R_i`$ | Estimate of the reporting metric before actuals arrive. |
+| $`\text{rSCI}(t)`$ | Action metric per time window — oSCI plus allocated residual, reconciles to provider total. |
+| $`\text{rSCI}_\text{monthly} = C_\text{reported} / R_\text{total}`$ | Monthly aggregate: the reconciled metric over the full reporting period. |
 
 ### Core Equations
 
-**Action layer (per workload):**
+**Action layer (per time window):**
 
-$$O_i = E_i \cdot I^\star$$
+$$O(t) = \sum_m P_m(t) \cdot \Delta t \cdot I^\star(t)$$
 
-$$\text{oSCI}_i = O_i / R_i$$
+$$\text{oSCI}(t) = O(t) / R(t)$$
 
 Following Bashir et al. (2024), the action layer uses oSCI: embodied carbon is a sunk cost that should not influence scheduling decisions.
 
-**Reconciliation layer (per slice):**
+**Reconciliation layer (per slice, monthly):**
 
-$$O_\text{total} = \sum_i O_i$$
+$$O_\text{total} = \sum_t O(t)$$
 
-$$\hat{C} = O_\text{total} + \Delta_\text{residual} \approx C_\text{reported}$$
+$$\Delta_\text{residual} = C_\text{reported} - O_\text{total}$$
 
 $`\Delta_\text{residual}`$ absorbs everything the action metric does not capture: embodied carbon, idle/shared capacity, non-energy overhead (PUE, Scope 1), allocation artifacts.
 
-**Reconciled metric (back to workloads):**
+**Reconciled metric:**
 
-$$w_i = O_i / O_\text{total}$$
+$$\text{rSCI} = (O_\text{total} + \Delta_\text{residual}) / R_\text{total} = C_\text{reported} / R_\text{total}$$
 
-$$\text{rSCI}_i = (O_i + w_i \cdot \Delta_\text{residual}) / R_i$$
+**Key property:** $`\sum_t \text{rSCI}(t) \cdot R(t) = C_\text{reported}`$
 
-**Key property:** $`\sum_i \text{rSCI}_i \cdot R_i = \hat{C} \approx C_\text{reported}`$
-
-Each workload's rSCI is its operational intensity plus its proportional share of the residual. Because $`w_i \propto O_i`$, rSCI **always preserves oSCI ordering** — reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives. Yet each workload's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
+The reconciled metric distributes the full provider-reported footprint across time windows in proportion to their operational carbon. Because the residual is allocated proportionally to $`O(t)`$, rSCI **always preserves oSCI ordering** — reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives. Yet each time window's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
 
 Where:
 
 - The action layer uses oSCI to avoid the sunk carbon fallacy (Bashir et al., 2024).
 - $`\Delta_\text{residual}`$ is learned from historical slice pairs $`(O_\text{total}, C_\text{reported})`$.
 - Unlike tSCI (which requires full infrastructure knowledge), rSCI learns the residual from the provider-reported total.
+- The service index $`i`$ (partitioning within a slice) returns when the single-service assumption is relaxed.
 
 We use SCI naming for $`E`$, $`I`$, and $`R`$; see [`references/SCI.md`](references/SCI.md) and [`references/SCI_SUNK_CARBON.md`](references/SCI_SUNK_CARBON.md).
 
@@ -197,7 +211,7 @@ Per workload:
   workload-a: oSCI = 0.042 tCO2e/req  |  rSCI = 0.058 tCO2e/req
   workload-b: oSCI = 0.031 tCO2e/req  |  rSCI = 0.043 tCO2e/req
 
-Reconciliation check: Σ rSCI_i · R_i = 12.1 tCO2e = ĉ  ✓
+Reconciliation check: Σ_t rSCI(t) · R(t) = 12.1 tCO2e = ĉ  ✓
 
 Model maturity: 8 months
 Last residual error: +0.3 tCO2e (2.4%)
@@ -210,6 +224,7 @@ Main issue: instability across months
 - **Time-dependent parameters:** Model $`\Delta_\text{residual}`$ as time-varying, learned across months. This captures seasonal effects, methodology changes, and infrastructure evolution.
 - **PUE as a learnable parameter:** Factor out $`\alpha_\text{PUE}`$ from $`\Delta_\text{residual}`$ and include it in the action layer ($`O_i = \alpha_\text{PUE} \cdot E_i \cdot I^\star`$), calibrated from provider-published PUE or historical data.
 - **Bridge decomposition:** Once sufficient historical slice pairs are available, decompose $`\Delta_\text{residual}`$ into provider-methodology-informed components (embodied carbon, PUE mismatch, idle capacity, non-energy overhead, allocation artifacts) using priors from provider profiles and Bayesian modeling. The goal is to identify whether any true unexplained residual remains after accounting for known methodology effects. This decomposition can progressively refine the residual without changing the action signal — oSCI ordering is preserved regardless of how the residual is broken down.
+- Location dependant too!!!
 
 ## Open Questions
 
