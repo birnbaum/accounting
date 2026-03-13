@@ -98,7 +98,7 @@ We extend the taxonomy with **rSCI**: a variant that reconciles to a provider-re
 
 ### Indices
 
-- $`t`$ — time window (e.g., 5 min) for the real-time action signal
+- $`t`$ — evaluation period: a fixed time window (e.g., 5 min) for interactive workloads, or the job's duration for batch workloads. All per-period quantities ($`E`$, $`I^\star`$, $`R`$, $`O`$, oSCI, rSCI) are defined over one $`t`$.
 - $`m`$ — individual machine/instance serving the workload (used inside the power model)
 
 We fix a single reporting slice, single service, and month (see Boundary Model). The service index $`i`$ is omitted — it returns when multi-service slices are introduced.
@@ -107,30 +107,28 @@ We fix a single reporting slice, single service, and month (see Boundary Model).
 
 | Symbol | Description |
 |--------|-------------|
-| $`E(t)`$ | Aggregate measured IT energy across all machines in time window $`t`$, in kWh. Computed as $`E(t) = \sum_m P_m(t) \cdot \Delta t`$ where $`P_m(t)`$ is the estimated power draw of machine $`m`$. |
-| $`I^\star(t)`$ | Provider-compatible location-based carbon intensity for time window $`t`$, matched to the provider's accounting resolution. |
+| $`E`$ | Aggregate measured IT energy over $`t`$, in kWh. $`E = \sum_m P_m \cdot \Delta t`$ where $`P_m`$ is the estimated power draw of machine $`m`$. |
+| $`I^\star`$ | Provider-compatible location-based carbon intensity for $`t`$. For short windows this is instantaneous; for batch jobs it is the time-weighted average over the run. |
 | $`C_\text{reported}`$ | Provider-reported carbon (reporting metric) for the slice (monthly). |
 
 ### Outputs
 
 | Symbol | Description |
 |--------|-------------|
-| $`\text{rSCI}(t)`$ | Action metric per time window — oSCI plus allocated residual, reconciles to provider total. |
+| $`\text{rSCI}`$ | Action metric per $`t`$ — oSCI plus allocated residual, reconciles to provider total. |
 | $`\text{rSCI}_\text{monthly} = C_\text{reported} / R_\text{total}`$ | Monthly aggregate: the reconciled metric over the full reporting period. |
 
 ### Core Equations
 
-**Action layer (per time window):**
+**Action layer (per $`t`$):**
 
-$$O(t) = \sum_m P_m(t) \cdot \Delta t \cdot I^\star(t)$$
-
-$$\text{oSCI}(t) = O(t) / R(t)$$
+$$O = E \cdot I^\star, \quad \text{oSCI} = O \;/\; R$$
 
 Following Bashir et al. (2024), the action layer uses oSCI: embodied carbon is a sunk cost that should not influence scheduling decisions.
 
 **Reconciliation layer (per slice, monthly):**
 
-$$O_\text{total} = \sum_t O(t)$$
+$$O_\text{total} = \sum_t O$$
 
 $$\Delta_\text{residual} = C_\text{reported} - O_\text{total}$$
 
@@ -140,9 +138,9 @@ $`\Delta_\text{residual}`$ absorbs everything the action metric does not capture
 
 $$\text{rSCI} = (O_\text{total} + \Delta_\text{residual}) / R_\text{total} = C_\text{reported} / R_\text{total}$$
 
-**Key property:** $`\sum_t \text{rSCI}(t) \cdot R(t) = C_\text{reported}`$
+**Key property:** $`\sum_t \text{rSCI} \cdot R = C_\text{reported}`$
 
-The reconciled metric distributes the full provider-reported footprint across time windows in proportion to their operational carbon. Because the residual is allocated proportionally to $`O(t)`$, rSCI **always preserves oSCI ordering** — reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives. Yet each time window's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
+The reconciled metric distributes the full provider-reported footprint across periods in proportion to their operational carbon. Because the residual is allocated proportionally to $`O`$, rSCI **always preserves oSCI ordering** — reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives. Yet each period's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
 
 Where:
 
@@ -208,10 +206,10 @@ Observable operational total (O_total): 8.7 tCO2e
 Residual bridge (Δ_residual): 3.4 tCO2e
 
 Per workload:
-  workload-a: oSCI = 0.042 tCO2e/req  |  rSCI = 0.058 tCO2e/req
-  workload-b: oSCI = 0.031 tCO2e/req  |  rSCI = 0.043 tCO2e/req
+  web-api (interactive):  oSCI = 0.042 kgCO2e/req   |  rSCI = 0.058 kgCO2e/req
+  ml-training (batch):    oSCI = 8.7 kgCO2e/job      |  rSCI = 12.1 kgCO2e/job
 
-Reconciliation check: Σ_t rSCI(t) · R(t) = 12.1 tCO2e = ĉ  ✓
+Reconciliation check: Σ_t rSCI · R = 12.1 tCO2e = ĉ  ✓
 
 Model maturity: 8 months
 Last residual error: +0.3 tCO2e (2.4%)
