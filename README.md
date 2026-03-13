@@ -1,4 +1,4 @@
-# Reconcilable User-facing Cloud Carbon Accounting
+# rSCI: Reconciled Software Carbon Intensity
 
 ## Mission
 
@@ -39,7 +39,7 @@ The GSF's [Software Carbon Intensity](references/SCI.md) (SCI) was designed as a
 | oSCI | $`(E \cdot I) / R`$ | Operational only | Misses embodied entirely |
 | SCI | $`((E \cdot I) + M) / R`$ | + active server embodied | Sunk carbon fallacy (Bashir et al.) |
 | tSCI | $`(tO + tM) / R`$ | Full infrastructure, allocated proportionally | Requires bottom-up datacenter knowledge |
-| **rSCI** | $`(O + w \cdot \Delta_\text{residual}) / R`$ | oSCI + learned residual (embodied, idle, overhead) | Requires historical slice pairs for calibration |
+| **rSCI** | $`(O + w \cdot \Delta_\text{residual}) / R`$ | oSCI + allocated residual (embodied, idle, overhead) | Requires historical slice pairs for calibration |
 
 rSCI shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but makes it practical: instead of requiring complete bottom-up datacenter knowledge (which Bashir et al. dismiss as unrealistic), rSCI learns the gap from historical (O_total, C_reported) pairs. It is also strictly broader in scope — where tSCI only adds idle server operational and embodied carbon, rSCI's residual captures *everything* between the observable operational total and the provider-reported number: embodied carbon, idle capacity, PUE, Scope 1 emissions (diesel, refrigerants), allocation artifacts, and any other overhead the provider includes.
 
@@ -129,7 +129,7 @@ $$\text{rSCI}_i = (O_i + w_i \cdot \Delta_\text{residual}) / R_i$$
 
 **Key property:** $`\sum_i \text{rSCI}_i \cdot R_i = \hat{C} \approx C_\text{reported}`$
 
-Because $`w_i`$ is proportional to $`O_i`$, this simplifies to $`\text{rSCI}_i = \text{oSCI}_i \cdot \gamma`$ where $`\gamma = 1 + \Delta_\text{residual} / O_\text{total}`$ is a single scalar per slice. rSCI is therefore a uniform rescaling of oSCI — it **always preserves oSCI ordering** and cannot produce perverse scheduling incentives. Yet each workload's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
+Each workload's rSCI is its operational intensity plus its proportional share of the residual. Because $`w_i \propto O_i`$, rSCI **always preserves oSCI ordering** — reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives. Yet each workload's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
 
 Where:
 
@@ -205,7 +205,7 @@ Last residual error: +0.3 tCO2e (2.4%)
 
 ## Future Work
 
-Main issue: γ instability across months
+Main issue: instability across months
 
 - **Time-dependent parameters:** Model $`\Delta_\text{residual}`$ as time-varying, learned across months. This captures seasonal effects, methodology changes, and infrastructure evolution.
 - **PUE as a learnable parameter:** Factor out $`\alpha_\text{PUE}`$ from $`\Delta_\text{residual}`$ and include it in the action layer ($`O_i = \alpha_\text{PUE} \cdot E_i \cdot I^\star`$), calibrated from provider-published PUE or historical data.
@@ -217,8 +217,8 @@ Main issue: γ instability across months
 2. **Lever reconcilability:** Which user actions move the reporting metric directly, approximately, or not at all under a given provider methodology?
 3. **Minimum viable provider knowledge:** What minimum provider profile can be constructed from public documentation before the framework becomes too speculative? How many months of slice-level pairs $`(O_\text{total}, C_\text{reported})`$ are needed before the residual bridge estimate is decision-useful?
 4. **Non-stationarity:** How should methodology changes trigger profile version updates and regime shifts in the model?
-5. Cold start
-6. Provider methodology opacity
+5. **Cold start:** Without historical slice pairs, $`\Delta_\text{residual}`$ is unknown and rSCI degrades to oSCI. The reconciliation claim is empty until calibrated. How should the framework communicate this? Options include: reporting confidence intervals that widen with fewer data points, falling back to provider-profile-derived priors (e.g., published PUE × typical embodied ratios), or explicitly labeling the estimate as "uncalibrated" until a minimum number of months are available. What is the minimum number of slice pairs needed before the residual estimate is decision-useful — and does this differ by provider methodology quality?
+6. **Provider methodology opacity:** rSCI reconciles to whatever the provider reports. If the provider's methodology is flawed (e.g., uses economic allocation that doesn't reflect physical reality, or applies uniform emission factors across regions with different grid mixes), rSCI faithfully reconciles to a misleading number. The framework makes this visible — a persistently large or volatile $`\Delta_\text{residual}`$ signals methodology weakness — but it cannot correct for it. How should the framework distinguish "high residual because provider methodology is coarse" from "high residual because we are missing observable activity"? Should provider methodology quality scores inform how the residual estimate is presented to users?
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific questions.
 
