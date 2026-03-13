@@ -223,6 +223,7 @@ Main issue: instability across months
 - **PUE as a learnable parameter:** Factor out $`\alpha_\text{PUE}`$ from $`\Delta_\text{residual}`$ and include it in the action layer ($`O_i = \alpha_\text{PUE} \cdot E_i \cdot I^\star`$), calibrated from provider-published PUE or historical data.
 - **Bridge decomposition:** Once sufficient historical slice pairs are available, decompose $`\Delta_\text{residual}`$ into provider-methodology-informed components (embodied carbon, PUE mismatch, idle capacity, non-energy overhead, allocation artifacts) using priors from provider profiles and Bayesian modeling. The goal is to identify whether any true unexplained residual remains after accounting for known methodology effects. This decomposition can progressively refine the residual without changing the action signal — oSCI ordering is preserved regardless of how the residual is broken down.
 - Location dependant too!!!
+- **Normative reference estimate:** a second, more methodologically complete estimate (covering omitted Scope 3 categories, questionable amortization, coarse allocation, provider-specific flaws) that makes visible the gap between what providers report and what a fuller methodology would report — comparative, not substitutive, and explicitly separate from the core reconciliation framework.
 
 ## Open Questions
 
@@ -241,7 +242,6 @@ See also [`SCHEMA.md`](SCHEMA.md) for schema-specific questions.
 ├── README.md                            # this file
 ├── HYPERSCALER_CARBON_ACCOUNTING.md     # detailed provider methodology comparison
 ├── SCHEMA.md                            # provider profile schema and populated profiles
-├── NORMATIVE_REFERENCE_ESTIMATE.md      # normative reference estimate methodology
 ├── references/SCI.md                    # Software Carbon Intensity standard
 ├── references/SCI_AI.md                 # SCI for AI standard
 ├── references/SCI_SUNK_CARBON.md        # Bashir et al. (2024) — sunk carbon fallacy, oSCI/tSCI

@@ -36,13 +36,13 @@ Three provider methodology dimensions can break known optimization levers:
 
 Current provider status:
 
-| Lever | GCP | AWS | Azure |
-|---|---|---|---|
-| **Compute efficiency** (reduce utilization) | Reconciles (physical allocation) | Partially (time-based for foundational) | Weak (economic allocation) |
-| **Temporal shifting** (run when grid is cleaner) | Reconciles (hourly Electricity Maps) | Doesn't reconcile (monthly/annual factors) | Doesn't reconcile (monthly/annual factors) |
-| **Spatial shifting** (run in cleaner region) | Reconciles | Reconciles | Reconciles |
-| **Hardware efficiency** (newer instance type) | Reconciles (less energy drawn) | Partially (less time, but same hourly rate) | May not reconcile (newer instances can cost more) |
-| **Right-sizing** (smaller instance) | Reconciles | Reconciles (less time or lower rate) | Reconciles (lower cost) |
+| Lever | GCP                                  | AWS                                    | Azure |
+|---|--------------------------------------|----------------------------------------|---|
+| **Compute efficiency** (reduce utilization) | ✅ (physical allocation)              | ⚠️ (time-based for foundational) | ❌ (economic allocation) |
+| **Temporal shifting** (run when grid is cleaner) | ✅ (hourly Electricity Maps) | ❌ (monthly/annual factors)             | ❌ (monthly/annual factors) |
+| **Spatial shifting** (run in cleaner region) | ✅                           | ✅                                      | ✅ |
+| **Hardware efficiency** (newer instance type) | ✅ (less energy drawn)       | ⚠️ (less time, but same hourly rate)   | ❌ (newer instances can cost more) |
+| **Right-sizing** (smaller instance) | ✅                           | ✅ (less time or lower cost)            | ✅ (lower cost) |
 
 ## Example Workloads
 
