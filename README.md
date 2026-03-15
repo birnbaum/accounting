@@ -153,7 +153,7 @@ We use SCI naming for $`E`$, $`I`$, and $`R`$; see [`references/SCI.md`](referen
 
 ## Provider Profiles
 
-Not all optimization levers reconcile equally across providers. Temporal shifting only reconciles if the provider uses sub-monthly emission factors; compute efficiency reconciles most directly under physical allocation; spatial shifting is broadly reconcilable because all three providers use regional factors. The framework therefore needs provider-specific configuration.
+Not all optimization levers reconcile equally across providers. Temporal shifting only reconciles if the provider uses sub-monthly emission factors; compute efficiency (reducing CPU utilization) is not rewarded by any provider at the customer level since all three use usage allocation (resource-time, not resource-load); spatial shifting is broadly reconcilable because all three providers use regional factors. The framework therefore needs provider-specific configuration.
 
 A provider profile captures:
 
@@ -167,8 +167,8 @@ Schema: [`SCHEMA.md`](SCHEMA.md).
 
 Summary by provider:
 
-- **GCP:** strongest direct alignment for electricity-related signals — allocation is physical and granular.
-- **AWS:** strong for foundational services, weaker where economic allocation is used.
+- **GCP:** strongest alignment for electricity-related signals at the aggregate level — internal allocation is physical and granular. However, the customer-facing step distributes energy across SKUs using price-based proportionality and allocates by usage units (e.g., vCPU-hours), so individual customer CPU utilization is not reflected in the reported number (Schneider & Mattia 2024, §3.6.1). Temporal shifting reconciles internally (hourly Electricity Maps) but only monthly data is exposed to customers.
+- **AWS:** strong for foundational services (usage allocation tracks instance-hours), weaker where economic allocation is used for non-foundational services.
 - **Azure:** directionally aligned for many actions, but confidence is limited by usage-factor opacity and coarser service granularity.
 
 When a provider improves methodology, new optimization levers become reconcilable. Making that visible is part of the point.

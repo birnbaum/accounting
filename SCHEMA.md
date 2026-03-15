@@ -68,23 +68,31 @@ These parameters determine whether **compute efficiency** optimizations reconcil
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `primary_allocation_method` | enum: `physical`, `economic`, `hybrid`, `usage_based` | How datacenter-level energy is attributed to customers |
-| `physical_allocation_basis` | string \| null | e.g. "CPU utilization, memory, storage I/O, network" |
+| `primary_allocation_method` | enum: `usage`, `economic` | How datacenter-level energy is attributed to customers. `usage` = proportional to resource-time (vCPU-hours, instance-hours, usage time); `economic` = proportional to spend/revenue |
+| `fallback_allocation_method` | enum: `usage`, `economic` \| null | Secondary method used where the primary method is unavailable |
+| `fallback_allocation_scope` | string \| null | Which services or emission categories use the fallback method |
+| `usage_allocation_unit` | string \| null | The resource-time unit used for usage allocation, e.g. "vCPU-hours per SKU", "instance-hours per service" |
 | `economic_allocation_basis` | string \| null | e.g. "normalized cost metrics", "revenue share" |
-| `hybrid_allocation_split` | object \| null | Which services use which method (if hybrid) |
-| `hybrid_split_disclosed` | boolean | Whether the split is publicly documented |
 | `allocation_granularity` | enum: `sku`, `service`, `service_category` | Finest unit of allocation |
 | `idle_capacity_treatment` | enum: `allocated_proportionally`, `excluded`, `undisclosed` | How idle/unused capacity is handled |
 | `allocation_uncertainty_pct` | range \| null | Estimated uncertainty range of allocation |
+
+**Provider terminology mapping:**
+
+| Our term | Provider term | Who uses it |
+|----------|-------------|-------------|
+| **Usage** | "Physical allocation" | GCP (Schneider & Mattia 2024), AWS (foundational) |
+| **Usage** | "Usage-based allocation" | Azure |
+| **Economic** | "Economic allocation" / "Revenue share" | GCP (when physical data unavailable), AWS (non-foundational) |
+
+All three providers measure power internally and allocate to customers by usage (resource-time). GCP and AWS call this "physical" — but the customer sees vCPU-hours or instance-hours, not watts. Azure more accurately self-describes as "usage-based." We use **usage** because it describes what determines the customer-reported number.
 
 **Reconcilability rules:**
 
 | `primary_allocation_method` | Reconcilability | Implication |
 |-----------------------------|----------------|-------------|
-| `physical` | `direct` | Bottom-up energy ≈ allocated energy. Compute efficiency gains reconcile. |
-| `hybrid` | `approximate` | Reconcilable for physically-allocated services; gap for economically-allocated ones. |
-| `usage_based` | `approximate` | Usage factors (compute, storage, network time) are correlated with but not identical to energy. Reconciliation gap exists but is bounded. Better than economic, less certain than physical. |
-| `economic` | `structural_mismatch` | Bottom-up energy has no guaranteed relationship to allocated carbon. Reducing kWh may not reduce reported tCO₂e if cost doesn't change proportionally. |
+| `usage` | `approximate` | Resource-time (vCPU-hours, instance-hours) is correlated with energy but does not capture utilization. Reducing resource-time reconciles; reducing CPU utilization does not. This is the method all three providers use at the customer level. |
+| `economic` | `structural_mismatch` | Bottom-up energy has no guaranteed relationship to allocated carbon. Reducing kWh may not reduce reported tCO₂e if cost doesn't change proportionally. AWS non-foundational uses this. |
 
 ### 4. Overhead and Shared Infrastructure
 
@@ -92,7 +100,7 @@ These parameters determine whether **compute efficiency** optimizations reconcil
 |-------|------|-------------|
 | `pue_type` | enum: `time_varying`, `annual_average`, `undisclosed` | How Power Usage Effectiveness is applied |
 | `pue_granularity` | enum: `per_datacenter`, `per_region`, `global`, `undisclosed` | Spatial granularity of PUE |
-| `scope1_allocation_method` | enum: `physical`, `economic`, `usage_based`, `undisclosed` | How diesel, refrigerants etc. are allocated to customers |
+| `scope1_allocation_method` | enum: `usage`, `economic`, `undisclosed` | How diesel, refrigerants etc. are allocated to customers |
 | `cooling_allocation_method` | enum: `included_in_pue`, `separate`, `undisclosed` | How cooling overhead is handled |
 | `networking_overhead_included` | boolean \| null | Whether network infrastructure energy is included |
 
@@ -110,7 +118,7 @@ These are slow-moving parameters — outside the user's optimization loop but re
 | `building_lifetime_years` | integer \| null | Amortization period for buildings |
 | `non_it_infrastructure_included` | boolean | UPS, cooling equipment, etc. |
 | `end_of_life_included` | boolean | Recycling, disposal, refurbishment |
-| `embodied_carbon_allocation_method` | enum: `physical`, `proportional_to_energy`, `economic`, `usage_based` | How embodied carbon is allocated to customers |
+| `embodied_carbon_allocation_method` | enum: `usage`, `proportional_to_energy`, `economic` | How embodied carbon is allocated to customers |
 | `lca_data_source` | string | e.g. "Supplier EPDs", "Component-level LCA", "AI-augmented" |
 | `embodied_uncertainty_pct` | range \| null | Estimated uncertainty |
 
@@ -123,7 +131,7 @@ These are slow-moving parameters — outside the user's optimization loop but re
 | `waste_included` | boolean | Category 5 |
 | `business_travel_included` | boolean | Category 6 |
 | `employee_commuting_included` | boolean | Category 7 |
-| `other_scope3_allocation_method` | enum: `physical`, `proportional_to_energy`, `economic`, `usage_based` | How these are allocated to customers |
+| `other_scope3_allocation_method` | enum: `usage`, `proportional_to_energy`, `economic` | How these are allocated to customers |
 
 ### 7. Verification and Trust
 
@@ -161,13 +169,11 @@ emission_factor_source_fallback: "IEA annual"
 grid_region_mapping: provider_region
 
 # Energy Allocation
-primary_allocation_method: hybrid
-physical_allocation_basis: "CPU utilization, memory, storage I/O, network throughput"
+primary_allocation_method: usage
+fallback_allocation_method: economic
+fallback_allocation_scope: "Non-foundational services (Lambda, SageMaker, Athena, Redshift — full list not disclosed)"
+usage_allocation_unit: "instance-hours per service"
 economic_allocation_basis: "Revenue share (non-foundational services)"
-hybrid_allocation_split:
-  physical: "Foundational services (EC2, S3, RDS, etc.)"
-  economic: "Non-foundational services (Lambda, SageMaker, Athena, Redshift, managed services)"
-hybrid_split_disclosed: false  # list of non-foundational services not public
 allocation_granularity: service
 idle_capacity_treatment: undisclosed
 allocation_uncertainty_pct: "5-10% (physical), 20-40% (economic)"
@@ -175,7 +181,7 @@ allocation_uncertainty_pct: "5-10% (physical), 20-40% (economic)"
 # Overhead
 pue_type: undisclosed
 pue_granularity: undisclosed
-scope1_allocation_method: physical
+scope1_allocation_method: usage
 cooling_allocation_method: undisclosed
 networking_overhead_included: null
 
@@ -188,7 +194,7 @@ building_embodied_included: true  # added Oct 2024
 building_lifetime_years: 50
 non_it_infrastructure_included: true
 end_of_life_included: false
-embodied_carbon_allocation_method: physical  # for foundational; economic for non-foundational
+embodied_carbon_allocation_method: usage  # for foundational; economic for non-foundational
 lca_data_source: "Supplier EPDs; AI/LLM estimation fallback"
 embodied_uncertainty_pct: "10-15% (EPD-backed), 20-50% (AI/LLM fallback)"
 
@@ -198,7 +204,7 @@ upstream_transport_included: true
 waste_included: true
 business_travel_included: false
 employee_commuting_included: false
-other_scope3_allocation_method: physical  # same hybrid as above
+other_scope3_allocation_method: usage  # same as above; economic for non-foundational
 
 # Verification
 third_party_assurance: true
@@ -211,11 +217,11 @@ methodology_publicly_available: true  # partial
 
 | Lever | Reconcilable? | Notes |
 |-------|--------------|-------|
-| Compute efficiency (reduce kWh) | ✅ Direct (foundational) / ⚠️ Approximate (non-foundational) | Physical allocation tracks kWh for EC2 etc. Economic fallback breaks this for managed services. |
+| Compute efficiency (reduce CPU utilization) | ❌ Not rewarded (foundational) / ❌ Not rewarded (non-foundational) | Foundational services use usage allocation (instance-hours); utilization not reflected. Economic fallback for non-foundational is even more decoupled. |
 | Temporal shifting | ❌ Not rewarded | Monthly emission factors average out intra-day variation. |
 | Spatial shifting (region choice) | ✅ Direct | Monthly regional emission factors differ across regions. |
-| Right-sizing / eliminate waste | ✅ Direct (foundational) | Fewer resources → less allocated energy → less carbon. |
-| Architecture choice (e.g. Graviton) | ⚠️ Approximate | Reflected in physical allocation; unclear for managed services. |
+| Right-sizing / eliminate waste | ✅ Direct (foundational) | Fewer instance-hours → less allocated energy → less carbon. |
+| Architecture choice (e.g. Graviton) | ⚠️ Approximate (foundational) | Only reconciles if the more efficient instance completes the job faster (fewer instance-hours). Same duration = same carbon regardless of instance efficiency. Unclear for non-foundational (economic allocation). |
 
 ---
 
@@ -242,11 +248,11 @@ emission_factor_source_fallback: "IEA annual"
 grid_region_mapping: provider_region  # hourly CFE per region
 
 # Energy Allocation
-primary_allocation_method: physical
-physical_allocation_basis: "Machine-level power telemetry (dynamic + idle decomposition)"
-economic_allocation_basis: null
-hybrid_allocation_split: null
-hybrid_split_disclosed: true  # full methodology published
+primary_allocation_method: usage
+fallback_allocation_method: economic
+fallback_allocation_scope: "Minor shared services without granular resource usage data (~1/3 of shared service energy; Schneider & Mattia 2024, §3.4.2)"
+usage_allocation_unit: "vCPU-hours per SKU (price-derived energy factor; Schneider & Mattia 2024, Eq. 10)"
+economic_allocation_basis: "Price-based proportionality across SKUs (Schneider & Mattia 2024, Eq. 10)"
 allocation_granularity: sku
 idle_capacity_treatment: allocated_proportionally
 allocation_uncertainty_pct: "5-15%"
@@ -254,7 +260,7 @@ allocation_uncertainty_pct: "5-15%"
 # Overhead
 pue_type: undisclosed  # likely time-varying given hourly data, but not confirmed
 pue_granularity: undisclosed
-scope1_allocation_method: physical
+scope1_allocation_method: usage
 cooling_allocation_method: undisclosed
 networking_overhead_included: null
 
@@ -290,11 +296,11 @@ methodology_publicly_available: true
 
 | Lever | Reconcilable? | Notes |
 |-------|--------------|-------|
-| Compute efficiency (reduce kWh) | ✅ Direct | Machine-level power telemetry; SKU-level allocation. Best-in-class. |
+| Compute efficiency (reduce CPU utilization) | ❌ Not rewarded | Customer-facing allocation is usage-based: vCPU-hours × price-derived energy factor (Schneider & Mattia 2024, Eq. 10). A VM at 5% CPU and one at 95% receive the same allocation for the same vCPU-hours. Internal physical measurement captures utilization at the team level but this signal is washed out at the customer boundary. |
 | Temporal shifting | ⚠️ Internally yes, customer-facing no | GCP uses hourly internally but exposes monthly. If GCP exposes hourly data or confirms hourly accounting in reported figures, this becomes directly reconcilable. Currently the monthly aggregation washes it out for reporting purposes. |
 | Spatial shifting (region choice) | ✅ Direct | Hourly CFE per region; clear regional differences. |
-| Right-sizing / eliminate waste | ✅ Direct | Physical allocation at SKU level tracks resource consumption tightly. |
-| Architecture choice (GPU vs CPU) | ✅ Direct | SKU-level granularity captures hardware differences. |
+| Right-sizing / eliminate waste | ✅ Direct | Reducing vCPU-hours (smaller instances, turning off idle VMs) directly reduces usage units and thus allocated carbon. |
+| Architecture choice (GPU vs CPU) | ⚠️ Approximate | SKU-level granularity exists, but per-SKU energy allocation is price-proportional, not physical. A cheaper SKU with the same energy draw gets less allocated carbon; a pricier SKU gets more. Price is correlated with but not identical to energy. |
 | Embodied carbon (hardware choice) | ⚠️ Approximate | Proportional-to-energy allocation is a proxy; GPU-heavy workloads may be under/over-attributed. |
 
 ---
@@ -322,11 +328,11 @@ emission_factor_source_fallback: "IEA annual"
 grid_region_mapping: provider_region
 
 # Energy Allocation
-primary_allocation_method: usage_based
-physical_allocation_basis: "Compute, storage, and data transfer usage time per datacenter region"
-economic_allocation_basis: null  # source doc describes usage-based, not cost-based
-hybrid_allocation_split: null
-hybrid_split_disclosed: true  # partial — method disclosed, usage factor derivation not
+primary_allocation_method: usage
+fallback_allocation_method: null
+fallback_allocation_scope: null
+usage_allocation_unit: "compute, storage, and data transfer time per region (derivation not disclosed)"
+economic_allocation_basis: null
 allocation_granularity: service_category
 idle_capacity_treatment: undisclosed
 allocation_uncertainty_pct: "15-30%"
@@ -334,7 +340,7 @@ allocation_uncertainty_pct: "15-30%"
 # Overhead
 pue_type: undisclosed
 pue_granularity: undisclosed
-scope1_allocation_method: usage_based  # "usage time in compute, storage, or network categories"
+scope1_allocation_method: usage  # "usage time in compute, storage, or network categories"
 cooling_allocation_method: undisclosed
 networking_overhead_included: null
 
@@ -347,7 +353,7 @@ building_embodied_included: false
 building_lifetime_years: null
 non_it_infrastructure_included: false
 end_of_life_included: true
-embodied_carbon_allocation_method: usage_based  # consistent with overall usage-factor approach
+embodied_carbon_allocation_method: usage  # consistent with overall usage-based allocation approach
 lca_data_source: "Component-level LCA via CHEM; AI-augmented for scale"
 embodied_uncertainty_pct: "10-20% (LCA-backed), 15-30% (AI-augmented)"
 
@@ -357,7 +363,7 @@ upstream_transport_included: true  # partial; Azure source explicitly lists Cat.
 waste_included: false  # Azure lists Cat. 5 in scope but refers to hardware end-of-life, not operational waste
 business_travel_included: false
 employee_commuting_included: false
-other_scope3_allocation_method: usage_based
+other_scope3_allocation_method: usage
 
 # Verification
 third_party_assurance: true
@@ -370,37 +376,41 @@ methodology_publicly_available: true  # partial
 
 | Lever | Reconcilable? | Notes |
 |-------|--------------|-------|
-| Compute efficiency (reduce kWh) | ⚠️ Approximate | Usage-based allocation (compute, storage, network time) correlates with energy but the exact relationship is undisclosed. Reducing usage time should reduce allocated carbon, but the mapping is not transparent enough to confirm 1:1. |
+| Compute efficiency (reduce CPU utilization) | ❌ Not rewarded | Usage allocation (compute, storage, network time). Utilization not reflected — same usage time = same carbon. |
 | Temporal shifting | ❌ Not rewarded | Monthly emission factors. |
-| Spatial shifting (region choice) | ⚠️ Approximate | Regional emission factors differ; usage-factor approach preserves regional signal. |
-| Right-sizing / eliminate waste | ⚠️ Approximate | Reducing usage (compute/storage/network) should reduce the usage factor and thus allocated carbon. |
-| Architecture choice | ⚠️ Approximate | More efficient hardware using less compute time → lower usage factor, but the granularity of the usage factor (service category, not SKU) may not capture all efficiency gains. |
-| Reduce usage time | ✅ Direct | Azure's usage factor is based on compute, storage, and data transfer time — directly reducing these reduces allocated carbon. |
+| Spatial shifting (region choice) | ⚠️ Approximate | Regional emission factors differ; usage-based approach preserves regional signal. |
+| Right-sizing / eliminate waste | ✅ Direct | Reducing usage time (compute/storage/network) directly reduces allocated carbon. |
+| Architecture choice | ⚠️ Approximate | Only reconciles if the more efficient hardware completes the job faster (less usage time). Same duration = same carbon. Service-category granularity (not SKU) may not capture all differences. |
+| Eliminate idle resources | ✅ Direct | Azure's allocation is based on compute, storage, and data transfer time — turning off idle resources directly reduces allocated carbon. |
 
 ---
 
 ## Cross-Provider Analysis: What Can We Actually Reward?
 
-| Optimization Lever | AWS (foundational) | AWS (non-foundational) | GCP | Azure |
-|--------------------|-------------------|----------------------|-----|-------|
-| **Compute efficiency** | ✅ direct | ⚠️ approximate | ✅ direct | ⚠️ approximate |
-| **Temporal shifting** | ❌ | ❌ | ⚠️ internal only | ❌ |
-| **Spatial shifting** | ✅ direct | ⚠️ approximate | ✅ direct | ⚠️ approximate |
-| **Right-sizing** | ✅ direct | ⚠️ approximate | ✅ direct | ⚠️ approximate |
-| **Architecture choice** | ✅ direct | ❌ mismatch | ✅ direct | ⚠️ approximate |
-| **Eliminate idle resources** | ✅ direct | ⚠️ approximate | ✅ direct | ⚠️ approximate |
+| Optimization Lever | GCP | AWS | Azure | Depends on |
+|--------------------|-----|-----|-------|------------|
+| **Compute efficiency** (reduce CPU utilization) | ❌ not rewarded | ❌ not rewarded | ❌ not rewarded | Allocation method — all three use usage allocation at customer level |
+| **Temporal shifting** | ⚠️ internal only | ❌ | ❌ | Emission factor temporal resolution |
+| **Spatial shifting** | ✅ direct | ✅ direct | ✅ direct | Emission factor spatial resolution — all three use regional factors |
+| **Right-sizing** (fewer resource-time units) | ✅ direct (fewer vCPU-hours) | ✅ direct (fewer instance-hours) | ✅ direct (less usage time) | Allocation method — fewer resource-time units |
+| **Hardware efficiency** (newer instance type) | ⚠️ only if fewer vCPU-hours | ⚠️ only if fewer instance-hours | ⚠️ only if less usage time | Allocation method — reconciles only if job finishes faster |
+| **Eliminate idle resources** | ✅ direct (reduces vCPU-hours) | ✅ direct (reduces instance-hours) | ✅ direct (reduces usage time) | Allocation method — fewer resource-time units |
 
 ### Universally safe to reward (reconcilable across all three):
 - **Spatial shifting** (all three use regional emission factors)
-- **Eliminate idle resources** (reduces energy, usage time, and cost across all allocation methods)
-- **Right-sizing** (reduces resource usage, which is tracked by all three providers)
+- **Eliminate idle resources** (reduces resource-time: vCPU-hours, instance-hours, usage time — across all allocation methods)
+- **Right-sizing** (reduces resource-time, which all three providers track)
+
+### Not rewarded by any provider at the customer level:
+- **Compute efficiency** (reducing CPU utilization) — all three providers use usage allocation at the customer level: GCP allocates by vCPU-hours, AWS foundational by instance-hours, Azure by usage time. No provider's customer-facing methodology reflects whether a VM is at 5% or 95% CPU. The only way to reduce the reported number is to reduce resource-time (run for less time, use fewer/smaller instances, turn off idle VMs).
 
 ### Conditionally reconcilable:
-- **Compute efficiency** — direct on GCP and AWS foundational services; approximate on Azure (usage-based allocation correlates with but is not identical to energy)
-- **Architecture choice** — direct on GCP (SKU-level) and AWS foundational (physical allocation); approximate on Azure (service-category granularity may not capture hardware-level differences)
+- **Architecture choice** — approximate on GCP (price-based SKU distribution correlates with but is not identical to energy); approximate on AWS foundational (usage-based); approximate on Azure (service-category granularity may not capture hardware-level differences)
 - **Temporal shifting** — only if provider uses sub-monthly emission factors (currently: GCP internally, none customer-facing)
 
-### Key uncertainty:
+### Key findings:
+- **CPU utilization is invisible to all three customer-facing methodologies.** This is the most important practical implication: a VM running idle and a VM at full load report the same carbon for the same duration and SKU. All three use usage allocation at the customer level. Only reducing resource-time (turning off VMs, right-sizing, running for less time) moves the reported number.
+- **GCP's internal physical measurement is best-in-class but does not reach the customer boundary.** The price-based SKU distribution step (Schneider & Mattia 2024, Eq. 10) converts physical energy into price-proportional allocation per SKU, then allocates to customers by resource-time (vCPU-hours). The physically-measured total is preserved, but individual customer-level attribution is usage-based.
 - Azure's usage-factor approach is better than pure cost-based allocation but the undisclosed derivation of the usage factor limits confidence. The reconciliation gap is bounded (correlated with physical usage) but not precisely quantifiable without more disclosure from Microsoft.
 
 ---
@@ -410,7 +420,7 @@ methodology_publicly_available: true  # partial
 Based on this analysis, these are the **minimum parameters** a provider must disclose (or we must be able to determine) for the framework to generate reconcilable actionable signals:
 
 ### Required (framework cannot function without):
-1. `primary_allocation_method` — physical vs usage-based vs economic determines whether and how well energy-based signals reconcile
+1. `primary_allocation_method` — usage vs economic determines whether and how well energy-based signals reconcile
 2. `emission_factor_temporal_resolution` — determines which time-based optimizations are valid
 3. `customer_reporting_dimensions` and `recommended_reconciliation_unit` — determine the exact slice at which reconciliation should happen
 4. `allocation_granularity` — determines at what level we can provide physically meaningful action signals
@@ -423,7 +433,7 @@ Based on this analysis, these are the **minimum parameters** a provider must dis
 9. `pue_type` and `pue_granularity` — needed to bridge raw energy to facility energy
 
 ### Desirable (improves accuracy but framework degrades gracefully without):
-10. `hybrid_allocation_split` — which services are physically vs economically allocated
+10. `fallback_allocation_scope` — which services use the fallback allocation method
 11. `idle_capacity_treatment` — affects accuracy of per-slice attribution
 12. `lca_data_source` — affects embodied carbon confidence bounds
 13. `emission_factor_source` — affects Scope 2 accuracy
@@ -432,7 +442,7 @@ Based on this analysis, these are the **minimum parameters** a provider must dis
 
 ## Open Questions
 
-1. **How should the framework handle usage-based allocation with undisclosed parameters?** Azure's usage-factor approach correlates with physical usage but the exact derivation is undisclosed. Options: (a) treat as `approximate` and provide reconcilable signals with wider confidence intervals, (b) require Microsoft to disclose usage factor derivation before claiming reconcilability, (c) empirically determine the correlation by comparing bottom-up estimates with top-down actuals over multiple months.
+1. **How should the framework handle usage allocation with undisclosed parameters?** Azure's usage-factor approach correlates with physical usage but the exact derivation is undisclosed. Options: (a) treat as `approximate` and provide reconcilable signals with wider confidence intervals, (b) require Microsoft to disclose usage factor derivation before claiming reconcilability, (c) empirically determine the correlation by comparing bottom-up estimates with top-down actuals over multiple months.
 
 2. **How to handle GCP's hourly-internal / monthly-external gap?** GCP computes hourly but reports monthly. If a user shifts load to low-carbon hours, the internal accounting captures it but the customer-facing report doesn't show it at that granularity. Do we reward it (because it's real) or not (because the customer can't verify it in their report)?
 

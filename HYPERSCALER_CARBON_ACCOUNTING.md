@@ -19,7 +19,7 @@ Based on:
 | **Tool name** | Customer Carbon Footprint Tool (CCFT) | Google Cloud Carbon Footprint | Emissions Impact Dashboard (EID) |
 | **Launched** | 2022 | 2021 | 2020 |
 | **Scope 3 added** | April 2024 (IT hardware); expanded Oct 2024 (buildings, non-IT, waste, transport) | 2021 (embodied carbon included from launch) | 2021 (methodology whitepaper) |
-| **Primary calculation approach** | Hybrid: physical allocation for foundational services; economic (revenue) fallback for non-foundational services | Bottom-up: machine-level power telemetry + per-SKU carbon intensity factors | LCA-based embodied carbon (CHEM) + usage-based allocation via customer usage factors per datacenter region |
+| **Primary calculation approach** | Usage allocation for foundational services (instance-hours); economic (revenue) fallback for non-foundational services | Two-stage: physical measurement internally (machine-level power telemetry) → usage allocation at customer boundary (vCPU-hours × price-derived SKU factor) | LCA-based embodied carbon (CHEM) + usage allocation via customer usage factors per datacenter region |
 | **Claimed GHG standard** | GHG Protocol Corporate Standard + Scope 3 Standard | GHG Protocol Corporate Standard + Scope 3 Standard | GHG Protocol Corporate Standard + Scope 3 Standard |
 | **Third-party verified** | Yes — limited scope | No — academic critical review only | Yes — limited scope |
 | **Verifier** | Apex Companies, LLC | Fraunhofer IZM (ISO 14040/14044 critical review) | WSP USA |
@@ -41,12 +41,12 @@ All three providers include Scope 1 in their customer-facing tools. Scope 1 sour
 | **Stationary combustion included** | Yes | Yes | Yes |
 | **Fugitive refrigerant emissions included** | Yes | Yes | Yes |
 | **Mobile combustion (fleet)** | Unclear | Yes | Unclear |
-| **Allocation method to customers** | Physical (resource utilization) | Physical (resource utilization) | Usage-based (customer usage factors per datacenter region) |
+| **Allocation method to customers** | Usage (resource utilization described as physical) | Usage at customer level (physical measurement internally; price-based SKU distribution + vCPU-hours to customers) | Usage (customer usage factors per datacenter region) |
 | **Scope 1 independently verified** | No | No | No |
 
-**GHG Protocol position:** The GHG Protocol Corporate Standard requires all owned/controlled combustion and fugitive sources. All three comply on coverage. On allocation, the GHG Protocol guidance prefers physical allocation — AWS and GCP comply; Azure uses economic allocation, which is a divergence from best practice (though not an explicit violation, as the Protocol does not mandate a specific method).
+**GHG Protocol position:** The GHG Protocol Corporate Standard requires all owned/controlled combustion and fugitive sources. All three comply on coverage. On allocation, the GHG Protocol guidance prefers physical allocation. All three providers use usage allocation at the customer level for Scope 1: GCP's internal physical measurement feeds into a usage-based customer-facing step; AWS describes its method as physical but customer-facing granularity is consistent with usage allocation; Azure uses a usage-factor approach.
 
-**Key difference:** AWS and GCP use explicit physical (resource utilization) allocation for Scope 1. Azure describes a usage-factor approach ("usage time in compute, storage, or network categories helps attribute Scope 1 and 2 emissions"), but the detailed allocation parameters are not fully disclosed, making independent verification difficult.
+**Key difference:** GCP measures power physically internally (machine-level telemetry) but the customer-facing step distributes by resource-time. AWS describes physical allocation but does not disclose whether individual customer utilization is reflected. Azure describes a usage-factor approach ("usage time in compute, storage, or network categories helps attribute Scope 1 and 2 emissions"), but the detailed allocation parameters are not fully disclosed, making independent verification difficult.
 
 ---
 
@@ -102,46 +102,50 @@ The GHG Protocol Scope 3 Standard defines 15 upstream and downstream categories.
 
 Allocation is the most technically complex and consequential methodological choice. It determines how data-center-level emissions are attributed to individual customer workloads.
 
-### 5.1 AWS — Hybrid Physical/Economic Allocation
+### 5.1 AWS — Usage Allocation with Economic Fallback
 
 AWS uses a two-tier allocation cascade:
 
-**Tier 1 (foundational services — EC2, S3, RDS, etc.):** Physical allocation based on resource utilization metrics: CPU utilization, memory usage, storage I/O, and network throughput. Emissions flow from cluster → rack (by power draw) → cloud service (by utilization) → customer account. This is the most accurate approach and aligns with GHG Protocol guidance.
+**Tier 1 (foundational services — EC2, S3, RDS, etc.):** AWS describes this as physical allocation based on resource utilization metrics (CPU utilization, memory usage, storage I/O, network throughput). However, at the customer level the allocation unit is instance-hours — usage allocation. Whether internal physical telemetry (actual CPU utilization) feeds into the per-instance-hour factor, or whether all instances of the same type receive the same hourly rate regardless of utilization, is not publicly disclosed. The methodology document describes the approach as physical, but the customer-facing granularity (per service per region per account, monthly) is consistent with usage allocation.
 
 **Tier 2 (non-foundational services — Lambda, SageMaker, Athena, Redshift, and many managed services):** Economic allocation based on the service's relative revenue contribution (equivalent revenue share). Revenue is used as a proxy for resource consumption.
 
 **Critical weakness:** The list of non-foundational services is not publicly disclosed. The proportion of total emissions subject to economic allocation is not disclosed. Revenue is a poor proxy for resource consumption — a high-margin service may consume fewer resources than a low-margin one yet be allocated more emissions. Estimated uncertainty for non-foundational service allocation: ~20–40%.
 
-### 5.2 GCP — Bottom-Up Physical Allocation
+### 5.2 GCP — Usage Allocation with Economic Fallback
 
-GCP uses the most granular approach of the three providers:
+GCP uses the most granular approach of the three providers, but it operates in two distinct stages with different allocation methods:
 
-**Electricity-related emissions:** Machine-level power monitoring at rack level. Each physical machine's power draw is decomposed into dynamic power (workload-driven) and idle power (baseline). This is aggregated to service type and then to customer SKU usage. Uncertainty: ~5–15%.
+**Stage 1 — Internal allocation (physical):** Machine-level power monitoring at rack level. Each physical machine's power draw is decomposed into dynamic power (workload-driven, allocated proportional to GCU usage) and idle power (allocated by resource-weighted shares). Shared internal services (Colossus, Spanner, Bigtable) are reallocated from service providers to end-user teams via resource-based or cost-based methods. This stage is genuinely physical and best-in-class. Uncertainty: ~5–15%.
+
+**Stage 2 — Customer-facing allocation (price-based + usage units):** Each internal team's total energy is distributed across customer-facing SKUs using **price-based proportionality** (Schneider & Mattia 2024, Eq. 10): energy per usage unit for a SKU is set proportional to that SKU's list price. Customers are then allocated based on their **usage units** (e.g., vCPU-hours for Compute Engine, GiB-months for storage). This means a VM at 5% CPU utilization and one at 95% receive identical carbon allocation for the same vCPU-hours and SKU. The physical signal from Stage 1 is preserved at the aggregate level (the Compute Engine team's total reflects real energy) but is washed out at the individual customer level.
 
 **Non-electricity Scope 3 emissions (embodied carbon, FERA, transport):** Allocated using a proportional ratio: customer electricity use / total GCP electricity use. This is a simplification assuming non-electricity emissions are proportional to electricity consumption. Uncertainty: ~20–35%.
 
-**Strength:** Machine-level power monitoring is the most accurate approach for electricity-related emissions. The SKU-level carbon intensity factor approach is highly granular.
+**Strength:** Internal machine-level power monitoring is the most accurate approach for electricity-related emissions. The two-stage methodology paper (Schneider & Mattia 2024) is fully published, making GCP the most transparent provider.
 
-**Weakness:** The proportional allocation for non-electricity Scope 3 is a proxy that may not accurately reflect the actual distribution of embodied carbon across customers with different workload types (e.g., GPU-heavy AI workloads vs. CPU-only compute).
+**Weakness:** The price-based SKU distribution step means customer-facing allocation does not reflect actual CPU utilization — only usage units (time × size). The paper explicitly acknowledges this: "Cost-based allocation doesn't signal actual efficiency differences." The proportional allocation for non-electricity Scope 3 is a proxy that may not accurately reflect the actual distribution of embodied carbon across customers with different workload types (e.g., GPU-heavy AI workloads vs. CPU-only compute).
 
-### 5.3 Azure — Usage-Based Allocation
+### 5.3 Azure — Usage Allocation
 
-Azure uses usage-based allocation via customer usage factors:
+Azure uses usage allocation via customer usage factors:
 
 **Azure IaaS/PaaS:** Emissions are allocated based on a customer's relative Azure usage in a given datacenter region. An algorithm calculates a usage factor (emissions per unit of customer usage in a specific region) and applies it directly. Usage is calculated from compute, storage, and data transfer. The methodology is described as consistent across Scope 1, 2, and 3. The precise definition of the "usage factor" units and how they are derived are not fully disclosed in the public methodology document, limiting independent verification. Uncertainty: ~15–30%.
 
-**GHG Protocol position on allocation:** The Scope 3 Standard prefers physical allocation. Azure's usage-factor approach is closer to physical allocation than a pure cost-based method. However, without full disclosure of how the usage factor is computed, it is not possible to confirm alignment with the GHG Protocol hierarchy. AWS uses explicit physical allocation (resource telemetry) as its primary method with economic allocation as a fallback. GCP uses machine-level power telemetry throughout for electricity-related emissions.
+**GHG Protocol position on allocation:** The Scope 3 Standard prefers physical allocation. All three providers use usage allocation at the customer level: GCP allocates by vCPU-hours (per SKU), AWS foundational by instance-hours (per service), and Azure by usage time (per region). GCP's internal pipeline measures power physically (machine-level power telemetry), but the customer-facing step introduces price-based proportionality (Schneider & Mattia 2024, Eq. 10). Without full disclosure of how AWS's per-instance-hour rate or Azure's usage factor are derived, it is not possible to confirm precise GHG Protocol alignment for any provider at the customer boundary.
 
 ### 5.4 Allocation Comparison Table
 
 | Dimension | AWS | GCP | Azure |
 |---|---|---|---|
-| **Primary method** | Physical (foundational) | Physical (electricity) | Usage-based (customer usage factor per region) |
+| **Internal method** | Described as physical (foundational) | Physical (machine-level power telemetry, GCU-proportional) | Not disclosed |
+| **Customer-facing method** | Usage (foundational: instance-hours) | Usage (vCPU-hours × price-derived energy factor per SKU) | Usage (customer usage factor per region) |
 | **Fallback method** | Economic (non-foundational) | Proportional ratio (non-electricity Scope 3) | None |
 | **Allocation granularity** | Service + region + account | SKU + region + account | Service category + region + account |
-| **Idle capacity allocation** | Not disclosed | Allocated to services proportionally | Not disclosed |
-| **Allocation parameters disclosed** | Partial | Full (methodology paper) | Partial (usage factor definition not fully disclosed) |
-| **GHG Protocol alignment** | Partial | Full | Partial (usage-based aligns with GHG Protocol intent; parameters undisclosed) |
+| **Idle capacity allocation** | Not disclosed | Allocated to services proportionally (internal) | Not disclosed |
+| **CPU utilization reflected in customer allocation** | No (usage allocation) | No (usage allocation; price-proportional SKU distribution) | No (usage allocation) |
+| **Allocation parameters disclosed** | Partial | Full (methodology paper: Schneider & Mattia 2024) | Partial (usage factor definition not fully disclosed) |
+| **GHG Protocol alignment** | Partial | Partial (internal is physical/best-in-class; customer-facing introduces price-based step) | Partial (usage allocation aligns with GHG Protocol intent; parameters undisclosed) |
 
 ---
 
@@ -222,7 +226,7 @@ AWS's use of AI/LLM estimation as a fallback for components without supplier EPD
 | Hardware component LCA factor (EPD-backed) | Component-level LCA (CHEM) | Low–Medium (~10–20%) | With CHEM updates | Yes (12-mo window) |
 | Hardware component LCA factor (AI-augmented) | AI-augmented CHEM (2026) | Medium–High (~15–30%) | With CHEM updates | Yes (12-mo window) |
 | **Equipment lifetime — IT hardware** | Azure internal assumption (6 yr, zero after) | **High — systematic error** | Rarely | Yes (12-mo window) |
-| **Normalized cost metric (Azure IaaS/PaaS)** | Azure billing data | **High (~15–30%)** | Monthly | Yes (12-mo window) |
+| **Usage factor (Azure IaaS/PaaS)** | Azure internal data (compute, storage, data transfer time) | **High (~15–30%)** | Monthly | Yes (12-mo window) |
 | Regional electricity emission factor | Regional grid operators; IEA | Medium (~5–15%) | Annually | Yes (12-mo window) |
 | End-of-life disposition factor | Microsoft disposition programs | Medium (~10–20%) | With CHEM updates | Yes (12-mo window) |
 
@@ -363,7 +367,7 @@ These are areas where the GHG Protocol does not fully specify the correct approa
 
 | Under-Specified Area | AWS Interpretation | GCP Interpretation | Azure Interpretation |
 |---|---|---|---|
-| Allocation of shared cloud infrastructure | Physical for foundational; economic fallback | Physical (electricity); proportional ratio (non-electricity Scope 3) | Economic throughout |
+| Allocation of shared cloud infrastructure | Usage for foundational (instance-hours); economic fallback for non-foundational | Physical measurement internally; usage at customer boundary (vCPU-hours × price-derived factor); proportional ratio (non-electricity Scope 3) | Usage throughout (usage factors; parameters undisclosed) |
 | Equipment lifetime assumption | 6 yr (IT); 50 yr (buildings) | 4 yr (IT, financial accounting standard) | 6 yr (IT) |
 | EAC/PPA temporal matching | Not disclosed | Hourly CFE reported | Not disclosed |
 | Building embodied carbon inclusion | Included (Oct 2024) | Included in customer tool | Excluded from customer tool |
@@ -458,7 +462,7 @@ The following table assesses each provider against a set of gold standard requir
 | **SCOPE 1** | | | | |
 | Include all stationary combustion sources | Full | Full | Full | |
 | Include fugitive refrigerant emissions | Full | Full | Full | |
-| Use physical allocation to customers | Full | Full | Not Met | Azure uses economic allocation |
+| Use physical allocation to customers | Partial | Partial | Not Met | All three use usage allocation at customer level; GCP measures physically internally; AWS describes as physical but customer-facing is instance-hours; Azure uses usage factors |
 | Independent verification of Scope 1 | Not Met | Not Met | Not Met | No provider verifies Scope 1 |
 | **SCOPE 2** | | | | |
 | Report both LBM and MBM | Full | Full | Full | |
@@ -482,8 +486,8 @@ The following table assesses each provider against a set of gold standard requir
 | Include business travel (Cat. 6) | Not Met | Full | Not Met | GCP only |
 | Include employee commuting (Cat. 7) | Not Met | Full | Not Met | GCP only |
 | **ALLOCATION** | | | | |
-| Use physical allocation as primary method | Partial | Full | Partial | Azure: usage-factor approach; parameters undisclosed |
-| Disclose allocation methodology and parameters | Partial | Full | Partial | Azure: usage factor definition not fully disclosed |
+| Use physical allocation as primary method | Partial | Partial | Partial | GCP: physical measurement internally, but customer-facing uses price-based SKU distribution + usage units; Azure: usage-factor approach, parameters undisclosed |
+| Disclose allocation methodology and parameters | Partial | Full | Partial | GCP is most transparent (full methodology published); Azure: usage factor definition not fully disclosed |
 | Disclose which services use economic allocation | Not Met | Full | N/A | AWS does not disclose non-foundational list; Azure does not use cost-based allocation |
 | **REPORTING** | | | | |
 | Report with ≤1 month lag | Full | Full | Full | All three now comply |
@@ -505,13 +509,13 @@ The following table assesses each provider against a set of gold standard requir
 
 | Dimension | AWS | Google Cloud | Azure |
 |---|---|---|---|
-| **Overall approach** | Hybrid physical/economic | Bottom-up physical | LCA + economic |
-| **Scope 1 coverage** | Full | Full | Full (economic allocation) |
+| **Overall approach** | Usage with economic fallback | Physical measurement internally; usage at customer boundary | LCA + usage |
+| **Scope 1 coverage** | Full | Full | Full (usage allocation) |
 | **Scope 2 granularity** | Monthly | Hourly (internal) / Monthly (customer) | Monthly |
 | **Scope 3 category count** | 4 of 15 | 3–4 of 15 | 2 of 15 |
 | **Building embodied carbon** | Yes (Oct 2024) | Yes | No |
 | **End-of-life hardware** | No | No | Yes (with error) |
-| **Allocation method** | Physical + economic fallback | Physical + proportional proxy | Usage-based (customer usage factor; parameters undisclosed) |
+| **Allocation method** | Usage (foundational) + economic fallback | Physical measurement internally; usage at customer level (vCPU-hours × price-derived factor) + proportional proxy for non-electricity Scope 3 | Usage (customer usage factor; parameters undisclosed) |
 | **Equipment lifetime flaw** | None | None | Critical (zero after 6 yr) |
 | **Reporting delay** | ≤21 days | ~15 days | ~15 days |
 | **Historical recasting** | Full (to Jan 2020) | Full (unlimited) | 12-month window |
@@ -533,13 +537,15 @@ The following table assesses each provider against a set of gold standard requir
 
 **3. Verification claims are narrower than they appear.** All three providers make verification claims that are technically accurate but potentially misleading. AWS's "third-party verified" claim covers only 3 of 15 Scope 3 categories, excludes Scope 1, and does not cover the most recent methodology expansion. Azure's WSP USA review covers a methodology document, not the tool. GCP's Fraunhofer review covers LCA methodology, not the customer tool. No provider has had its full customer-facing tool independently audited.
 
-**4. Azure's allocation parameters are undisclosed, preventing verification.** AWS uses economic allocation only as a fallback for non-foundational services (and does not disclose which services). GCP uses physical allocation for electricity-related emissions and a proportional proxy for non-electricity Scope 3. Azure describes a usage-factor approach ("relative Azure usage per datacenter region") for all emission types, which is directionally closer to physical allocation than a pure cost-based method — but the internal derivation of the usage factor is not publicly disclosed, making independent verification impossible. The previously assumed "normalized cost metrics" characterization is not supported by the public methodology document.
+**4. All three providers use usage allocation at the customer level; Azure's parameters are undisclosed.** GCP measures power physically internally (machine-level telemetry) but the customer-facing step distributes energy by price-proportional SKU factors and resource-time (vCPU-hours), making it usage-based at the customer boundary. AWS foundational uses instance-hours (usage). Azure describes a usage-factor approach ("relative Azure usage per datacenter region") for all emission types — also usage-based. The key differences are transparency (GCP published its full methodology; AWS and Azure have not) and what the usage unit captures (GCP: vCPU-hours per SKU; AWS: instance-hours per service; Azure: undisclosed usage factor per region). None reflects CPU utilization in the customer-reported number.
 
 **5. Azure's 6-year equipment lifetime cutoff is a unique methodological error.** This is not a gap (a missing category) but an error (an incorrect calculation). It creates a systematic underestimation of Scope 3 embodied carbon for long-lived equipment and a perverse incentive against hardware lifetime extension. It is the only clear methodological error (as opposed to gap) identified across the three providers.
 
-**6. GCP has the most transparent and granular methodology but notable Scope 3 gaps.** GCP's machine-level power monitoring and SKU-level allocation are best-in-class. Its hourly Electricity Maps integration is best-in-class for Scope 2. It includes building embodied carbon in the customer tool (alongside AWS), which is best practice. However, it excludes end-of-life hardware and operational waste — categories that AWS includes. GCP's 4-year amortization assumption (vs. AWS's 6-year) also means higher reported annual embodied carbon per asset.
+**6. GCP has the most transparent and granular methodology but the physical signal does not reach customers.** GCP's internal machine-level power monitoring is best-in-class. Its hourly Electricity Maps integration is best-in-class for Scope 2. It includes building embodied carbon in the customer tool (alongside AWS), which is best practice. However, the customer-facing allocation step distributes energy across SKUs using price-based proportionality and allocates to customers by resource-time (vCPU-hours), making it usage-based at the customer boundary — the same category as AWS foundational and Azure (Schneider & Mattia 2024, §3.6.1). CPU utilization is not reflected in the customer-reported number. GCP also excludes end-of-life hardware and operational waste — categories that AWS includes. GCP's 4-year amortization assumption (vs. AWS's 6-year) also means higher reported annual embodied carbon per asset.
 
 **7. AWS has the broadest Scope 3 coverage but the most opaque allocation.** AWS and GCP both include building embodied carbon. AWS is the only provider to also include non-IT equipment, operational waste, and a more complete upstream transport scope. But its economic allocation fallback for non-foundational services — affecting an undisclosed proportion of total emissions — is the largest single source of opacity in any of the three tools.
+
+**8. CPU utilization is invisible to all three customer-facing methodologies.** All three providers use usage allocation at the customer level: GCP (vCPU-hours), AWS foundational (instance-hours), Azure (usage time). A VM running idle and a VM at full load report the same carbon for the same duration and SKU. Only reducing resource-time (turning off VMs, right-sizing, running for less time) moves the reported number. This is the most important practical finding for users trying to reduce their reported footprint through compute efficiency.
 
 ---
 
