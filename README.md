@@ -44,6 +44,13 @@ We extend the taxonomy with **rSCI** (reconciled SCI): a variant that reconciles
 | tSCI | $`E \cdot I + O_\text{idle-infra} + M + M_\text{idle-infra}`$ | Full infrastructure, allocated proportionally        | Requires bottom-up datacenter knowledge      |
 | **rSCI** | $`E \cdot I + w \cdot \Delta_\text{residual}`$     | oSCI + allocated residual (embodied, idle, overhead) | ✨ (some historical data)                     |
 
+where $`\Delta_\text{residual}`$ is the **residual bridge**: the differece between the reported carbon and the sum over all bottom-up aggregated signals: 
+
+$$\Delta_\text{residual} = C_\text{reported} - O_\text{agg}$$
+
+It absorbs embodied carbon, idle capacity, PUE, Scope 1/3, allocation artifacts, and any estimation error for operational emissions $`\varepsilon_O`$.
+
+
 **Benefits of rSCI**
 - it shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but makes it practical: instead of requiring complete bottom-up datacenter knowledge, rSCI learns the gap from historical ($`O_{total}`$, $`C_{reported}`$) pairs.
 - it is also more comprehensive in scope: where tSCI only adds idle server operational and embodied carbon, rSCI's residual captures *everything* between the observable operational total and the provider-reported number: embodied carbon, idle capacity, PUE, Scope 1 emissions (diesel, refrigerants), allocation artifacts, and any other overhead the provider includes.
@@ -52,11 +59,9 @@ We extend the taxonomy with **rSCI** (reconciled SCI): a variant that reconciles
 
 ## Problem Framing
 
-Given:
+### Metric Terminology
 - **Reporting metric:** the top-down, provider-reported carbon for Scope 3 accounting that is delayed by weeks.
 - **Action metric:** a bottom-up, rSCI metric on the observable boundary that teams can optimize in real time.
-
-> How do we map action metrics onto reporting metrics while being explicit about the sources and uncertainty of the gap?
 
 ### Boundary Model
 
@@ -73,17 +78,20 @@ Providers report carbon emissions $`C_\text{reported}`$ at a certain level of gr
 
 Every measured workload event must map to one (or eventually also multiple) reporting slices.
 
-### Reconciliation Bridge
+### Residual Bridge
 
-We call the gap between the top-down and bottom-up metric **reconciliation bridge**.
+We call the gap between the top-down and bottom-up metric residual bridge.
 It has two distinct sources:
 
 1. **Residual carbon inside the observable boundary**: even with perfect workload telemetry, the top-down metric includes carbon you cannot observe bottom-up: facility overhead (PUE), idle infrastructure, embodied carbon from hardware you do not own, and non-energy emissions such as diesel backup generation or refrigerant losses.
 2. **Boundary mismatch**: A provider may bundle supporting services — storage I/O, managed networking, control-plane operations — into the same reporting slice that you are only partially observing. Even if measurements are precise, a structural gap remains wherever the two boundaries do not coincide.
    - *Example: you instrument all EC2 instances in `eu-central-1` perfectly, but the provider's `Compute` slice for that account and region also includes EBS volume activity and NAT Gateway traffic that you have not instrumented. Your action total covers only a subset of what that number reflects.*
 
-The goal is to make the bridge **explicit, predictable, and small enough** that users can understand how improving the action metric maps to improving the reporting metric.
-The primary goal is a calibrated month-end prediction at the reporting slice.
+The goal is to make the bridge for each reporting slice **explicit** that users can understand how improving the action metric maps to improving the reporting metric.
+
+Later, we will try to make the bridge as small as possible, by decomposing the residual into known components using prior knowledge / estimates (e.g., PUE, embodied carbon).
+This could lead to a 1) more transparent and predictable action metric. Also, we could better quantify actual residual carbon (could be missing carbon!) by the cloud provider that cannot be explained by their methodology.
+
 
 ### Assumptions
 
