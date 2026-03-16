@@ -7,24 +7,27 @@
 
 These two signals cannot be identical. **But they must be reconcilable**: If a team improves its bottom-up signal, that improvement should be traceable through to the cloud provider's reported number at the reporting boundary the provider actually exposes. If the two diverge without explanation, users lose trust in both.
 
+Note: We focus on **location-based accounting**. Market-based accounting is decoupled from physical consumption and therefore weak as an energy/carbon efficiency signal.
+
 <details>
 
 <summary>Why optimize toward imperfect accounting methodologies?</summary>
 
 In practice, cloud customers' Scope 3 GHG accounting happens through the numbers providers report. Those numbers are imperfect and provider methodologies remain heterogeneous and partially opaque. Better standards are still needed, but even under imperfect reporting, users need a framework that maps actionable signals to the provider-reported number that governs reporting practice.
 
-- **For users:** provide an SCI-style metric per workload that roughly sums up to the provider's delayed GHG report and makes uncertainties explicit.
-- **For the ecosystem:** make provider methodology quality visible by showing which optimization levers are directly rewarded, only approximately rewarded, or structurally blocked by provider accounting choices.
-
-We focus on **location-based accounting**. Market-based accounting is intentionally excluded from the action metric because it is decoupled from physical consumption and therefore weak as an operational signal.
+Goals of this framework:
+- **For users:** provide an SCI-style metric per workload that sums up to the provider's delayed GHG report and makes uncertainties explicit.
+- **For the ecosystem:** make GHG methodology quality visible by showing which energy/carbon efficiency optimization levers are rewarded, only approximately rewarded, or structurally blocked by provider accounting choices. This can inform/pressure better provider practices.
 </details>
 
 
-## 2. Background
+## Motivation
 
-The GSF's [Software Carbon Intensity](references/SCI.md) (SCI) was designed as an actionable optimization signal $$SCI = C / R,$$ which describes the carbon $C$ per unit of work $R$ (e.g., per request, per hour, per GB).
+The GSF's Software Carbon Intensity was designed as an actionable optimization signal $$SCI = C / R,$$ which describes the carbon $C$ per unit of work $R$ (e.g., per request, per hour, per GB).
 In their original formulation, carbon is the sum of operational carbon $`O`$ (energy $`E`$ × carbon intensity $`I`$) and amortized embodied carbon:
+
 $$C = O + M$$
+
 $$C = E \cdot I + M$$
 
 [Bashir et al. (2024)](https://arxiv.org/abs/2410.15087) showed that including embodied carbon $`M`$ in the optimization metric can lead to perverse scheduling outcomes where carbon-aware schedulers route work to older, less efficient servers.
@@ -32,10 +35,7 @@ They proposed
 - oSCI (operational only), which is the current state of the art for actionable carbon metrics and according to the authors, the best metric for carbon-aware scheduling.
 - tSCI (where overhead of idle server are attributed to $`O`$ and $`M`$), but consider it impractical because it requires comprehensive datacenter-level information that cloud customers do not have access to.
 
-We extend the taxonomy with **rSCI**: a variant that reconciles to a provider-reported total. rSCI
-- shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but makes it practical: instead of requiring complete bottom-up datacenter knowledge, rSCI learns the gap from historical (O_total, C_reported) pairs.
-- is also strictly broader in scope: where tSCI only adds idle server operational and embodied carbon, rSCI's residual captures *everything* between the observable operational total and the provider-reported number: embodied carbon, idle capacity, PUE, Scope 1 emissions (diesel, refrigerants), allocation artifacts, and any other overhead the provider includes.
-- always preserves oSCI ordering: since rSCI = oSCI · γ (residual factor), reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives.
+We extend the taxonomy with **rSCI** (reconciled SCI): a variant that reconciles to the provider-reported total. 
 
 | Metric | $`C`$                                           | Includes                                             | Key limitation                               |
 |--------|-------------------------------------------------|------------------------------------------------------|----------------------------------------------|
@@ -44,43 +44,13 @@ We extend the taxonomy with **rSCI**: a variant that reconciles to a provider-re
 | tSCI | $`E \cdot I + O_\text{idle-infra} + M + M_\text{idle-infra}`$ | Full infrastructure, allocated proportionally        | Requires bottom-up datacenter knowledge      |
 | **rSCI** | $`E \cdot I + w \cdot \Delta_\text{residual}`$     | oSCI + allocated residual (embodied, idle, overhead) | ✨ (some historical data)                     |
 
-This section motivates *why* rSCI exists before defining it formally: the existing SCI variants either ignore overhead entirely (oSCI) or require infeasible datacenter knowledge (tSCI). rSCI bridges this gap by learning the residual from provider-reported totals.
+**Benefits of rSCI**
+- it shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but makes it practical: instead of requiring complete bottom-up datacenter knowledge, rSCI learns the gap from historical ($`O_{total}`$, $`C_{reported}`$) pairs.
+- it is also more comprehensive in scope: where tSCI only adds idle server operational and embodied carbon, rSCI's residual captures *everything* between the observable operational total and the provider-reported number: embodied carbon, idle capacity, PUE, Scope 1 emissions (diesel, refrigerants), allocation artifacts, and any other overhead the provider includes.
+- it does **not** suffer from the sunk carbon fallacy (Bashir et al.): Since rSCI = oSCI · $`\gamma`$ (where $`\gamma = C_\text{reported} / O_\text{total}`$ is the residual factor), the allocation of overhead is proportional to operational emissions at a specific time and location. The ordering between scheduling alternatives is always identical to oSCI within a slice.
+- but it **does** reward scheduling toward lower-overhead infrastructure. Because $`\gamma`$ differs across slices (a region with older hardware, higher PUE, or more idle capacity carries a larger $`\gamma`$) rSCI incentivizes placing work on nodes with lower embodied emissions and facility overhead. $`\gamma`$ also changes over time, e.g., fluctuating PUE, hardware refresh cycles. oSCI is blind to these factors.
 
-
-## 3. Notation
-
-### Indices
-
-- $`t`$ — evaluation period: a fixed time window (e.g., 5 min) for interactive workloads, or the job's duration for batch workloads. All per-period quantities ($`E`$, $`I`$, $`R`$, $`O`$, oSCI, rSCI) are defined over one $`t`$.
-- $`m`$ — individual machine/instance serving the workload (used inside the power model)
-
-We fix a single reporting slice, single service, and month (see Boundary Model). The service index $`i`$ is omitted — it returns when multi-service slices are introduced.
-
-### Symbols
-
-| Symbol | Description |
-|--------|-------------|
-| $`E`$ | Aggregate measured IT energy over $`t`$, in kWh. $`E = \sum_m P_m \cdot \Delta t`$ where $`P_m`$ is the estimated power draw of machine $`m`$. |
-| $`I`$ | Location-based carbon intensity for $`t`$. For short windows this is instantaneous; for batch jobs it is the time-weighted average over the run. |
-| $`O`$ | Operational carbon: $`O = E \cdot I`$ |
-| $`R`$ | Functional unit (e.g., requests, jobs, GB processed) — chosen by the user. |
-| $`P_m`$ | Estimated power draw of machine $`m`$: $`P_m = \sum_r \text{count}_{m,r} \times P_r`$ where $`r`$ indexes resource types (vCPU, GPU, disk, network). |
-| $`C_\text{reported}`$ | Provider-reported carbon (reporting metric) for the slice (monthly). |
-| $`\Delta_\text{residual}`$ | Residual bridge: $`C_\text{reported} - O_\text{total}`$. Absorbs embodied carbon, idle capacity, PUE, Scope 1, allocation artifacts, and estimation error $`\varepsilon_O`$. |
-| $`\gamma`$ | Reconciliation factor: $`\gamma = C_\text{reported} / O_\text{total}`$. Scales oSCI to rSCI. |
-
-### Outputs
-
-| Symbol | Description |
-|--------|-------------|
-| $`\text{oSCI} = O / R`$ | Operational action metric per $`t`$. |
-| $`\text{rSCI}`$ | Reconciled action metric per $`t`$ — oSCI plus allocated residual, reconciles to provider total. |
-| $`\text{rSCI}_\text{monthly} = C_\text{reported} / R_\text{total}`$ | Monthly aggregate: the reconciled metric over the full reporting period. |
-
-We use SCI naming for $`E`$, $`I`$, and $`R`$; see [`references/SCI.md`](references/SCI.md) and [`references/SCI_SUNK_CARBON.md`](references/SCI_SUNK_CARBON.md).
-
-
-## 4. Problem Framing
+## Problem Framing
 
 Given:
 - **Reporting metric:** the top-down, provider-reported carbon for Scope 3 accounting that is delayed by weeks.
@@ -95,13 +65,13 @@ We differentiate between:
 - **Observable boundary:** a workloads' hardware reservations/utilization that we can use to compute the action metric.
 - **Provider reporting boundary:** the finest slice at which the provider exposes the reporting metric.
 
-The reconciliation unit is the provider's **reporting slice**, e.g.:
+Providers report carbon emissions $`C_\text{reported}`$ at a certain level of granularity, which we call the **reporting slice**, e.g.:
 
 - **AWS:** `account × service × region × month`
 - **GCP:** `project × SKU × region × month`
 - **Azure:** `subscription × service_category × region × month`
 
-Every measured workload event must map to one or more reporting slices.
+Every measured workload event must map to one (or eventually also multiple) reporting slices.
 
 ### Reconciliation Bridge
 
@@ -125,11 +95,14 @@ For now (!), we assume
 - **single slice**: For simplicity, the approach currently assumes a single reporting slice: one project, one service, one region, one month.
 
 
-## 5. Method
+## Method
+
+We define an evaluation period $`t`$ as a fixed time window (e.g., 5 min) for interactive workloads, or the job's duration for batch workloads. All per-period quantities ($`E`$, $`I`$, $`R`$, $`O`$, oSCI, rSCI) are defined over one $`t`$.
+Let $`m`$ be the individual machine/instance serving the workload.
 
 ### Power Model
 
-For any evaluation period $`t`$, the aggregate energy across all machines $`m`$:
+For any $`t`$, the aggregate energy across all machines $`m`$:
 
 $$E = \sum_m P_m \cdot \Delta t, \quad \text{where } P_m = \sum_r \text{count}_{m,r} \times P_r$$
 
@@ -190,7 +163,7 @@ Where:
 - The service index $`i`$ (partitioning within a slice) returns when the single-service assumption is relaxed.
 
 
-## 6. Estimation
+## Estimation
 
 **Goal:** estimate the residual bridge at the reporting slice before provider actuals arrive.
 
@@ -231,7 +204,7 @@ Last residual error: +0.3 tCO2e (2.4%)
 ```
 
 
-## 7. Open Questions
+## Open Questions
 
 1. **Actionability limits:** When a reporting slice is too coarse or too opaque, how should the framework expose that optimization claims are weak rather than presenting false precision?
 2. **Lever reconcilability:** Which user actions move the reporting metric directly, approximately, or not at all under a given provider methodology?
@@ -248,6 +221,7 @@ Last residual error: +0.3 tCO2e (2.4%)
 13. **Idle capacity attribution:** Should warm-fleet idle energy be split out in the action metric, or left in the residual?
 14. **Power model granularity:** How granular should $`P_r`$ estimates be? Per instance family? Per chip generation? Source: TDP, measured average, or provider-published?
 15. **Utilization in the action metric:** Should oSCI include utilization (as a finer-grained optimization signal) even though it doesn't reconcile? Or keep the action metric usage-based to match what providers reward, and treat utilization as a separate diagnostic?
+16. **Allocation of residual to heterogeneous workloads:** When the one-to-one assumption is relaxed and multiple heterogeneous workloads share a slice, how should the residual be allocated?
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific and provider-profile questions.
 
