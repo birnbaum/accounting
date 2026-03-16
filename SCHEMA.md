@@ -83,15 +83,15 @@ These parameters determine whether **compute efficiency** optimizations reconcil
 |----------|-------------|-------------|
 | **Usage** | "Physical allocation" | GCP (Schneider & Mattia 2024), AWS (foundational) |
 | **Usage** | "Usage-based allocation" | Azure |
-| **Economic** | "Economic allocation" / "Revenue share" | GCP (when physical data unavailable), AWS (non-foundational) |
+| **Economic** | "Economic allocation" / "Revenue share" / "Back-charged costs" | GCP (internal shared services without sufficient usage data; price-based SKU distribution), AWS (non-foundational) |
 
-All three providers measure power internally and allocate to customers by usage (resource-time). GCP and AWS call this "physical" — but the customer sees vCPU-hours or instance-hours, not watts. Azure more accurately self-describes as "usage-based." We use **usage** because it describes what determines the customer-reported number.
+All three providers measure power internally and allocate to customers by usage (resource-time). GCP and AWS call this "physical" — but the customer sees vCPU-hours or instance-hours, not watts. Azure more accurately self-describes as "usage-based." We use **usage** because it describes what determines the customer-reported number. Both GCP and AWS use economic/cost-based allocation as a fallback for some services (GCP: internal shared services without sufficient usage data; AWS: non-foundational services). Azure's fallback approach is not disclosed.
 
 **Reconcilability rules:**
 
 | `primary_allocation_method` | Reconcilability | Implication |
 |-----------------------------|----------------|-------------|
-| `usage` | `approximate` | Resource-time (vCPU-hours, instance-hours) is correlated with energy but does not capture utilization. Reducing resource-time reconciles; reducing CPU utilization does not. This is the method all three providers use at the customer level. |
+| `usage` | `approximate` | Resource-time (vCPU-hours, instance-hours) is correlated with energy but does not capture utilization. Reducing resource-time reconciles; reducing compute utilization does not. This is the method all three providers use at the customer level. |
 | `economic` | `structural_mismatch` | Bottom-up energy has no guaranteed relationship to allocated carbon. Reducing kWh may not reduce reported tCO₂e if cost doesn't change proportionally. AWS non-foundational uses this. |
 
 ### 4. Overhead and Shared Infrastructure
