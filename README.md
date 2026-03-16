@@ -96,11 +96,11 @@ This could lead to a 1) more transparent and predictable action metric. Also, we
 ### Assumptions
 
 For now (!), we assume
-- **no boundary mismatch**: the observable boundary covers all activity in the reporting slice.
+1. **no boundary mismatch**: the observable boundary covers all activity in the reporting slice.
   For example, if a customer wants to reconcile `EC2 × eu-central-1 × January`, we assume they can observe all EC2 resources they run in that region over that month with enough fidelity to reconstruct resource-time/utilization.
   This is a structural requirement, without full coverage the residual bridge loses its interpretation.
-- **one-to-one mapping**: each observed workload maps to exactly one reporting slice. This is a simplifying assumption that allows us to state the problem more clearly, but the framework should be extended to handle many-to-many mappings in practice (e.g. a workload that uses compute, storage and network or is distributed).
-- **single slice**: For simplicity, the approach currently assumes a single reporting slice: one project, one service, one region, one month.
+2. **one-to-one mapping**: each observed workload maps to exactly one reporting slice. This is a simplifying assumption that allows us to state the problem more clearly, but the framework should be extended to handle many-to-many mappings in practice (e.g. a workload that uses compute, storage and network or is distributed).
+3. **single slice**: For simplicity, the approach currently assumes a single reporting slice: one project, one service, one region, one month.
 
 
 ## Method
