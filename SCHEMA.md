@@ -4,6 +4,26 @@
 
 This schema defines the parameters needed to configure a bottom-up carbon measurement framework so that its actionable signals are **reconcilable** with a provider's top-down reported carbon footprint (GHG Protocol, location-based).
 
+### Provider Profiles Overview
+
+Not all optimization levers reconcile equally across providers. Temporal shifting only reconciles if the provider uses sub-monthly emission factors; compute efficiency (reducing CPU utilization) is not rewarded by any provider at the customer level since all three use usage allocation (resource-time, not resource-load); spatial shifting is broadly reconcilable because all three providers use regional factors. The framework therefore needs provider-specific configuration.
+
+A provider profile captures:
+
+- reporting dimensions and recommended reporting slice
+- allocation method and granularity
+- temporal resolution of emission factors
+- embodied-carbon treatment
+- overhead and verification metadata
+
+Summary by provider:
+
+- **GCP:** strongest alignment for electricity-related signals at the aggregate level — internal allocation is physical and granular. However, the customer-facing step distributes energy across SKUs using price-based proportionality and allocates by usage units (e.g., vCPU-hours), so individual customer CPU utilization is not reflected in the reported number (Schneider & Mattia 2024, §3.6.1). Temporal shifting reconciles internally (hourly Electricity Maps) but only monthly data is exposed to customers.
+- **AWS:** strong for foundational services (usage allocation tracks instance-hours), weaker where economic allocation is used for non-foundational services.
+- **Azure:** directionally aligned for many actions, but confidence is limited by usage-factor opacity and coarser service granularity.
+
+When a provider improves methodology, new optimization levers become reconcilable. Making that visible is part of the point.
+
 ### How We Derived It
 
 We compiled a detailed comparison of the carbon accounting methodologies of the three major hyperscalers (AWS, GCP, Azure) covering their customer-facing tools (CCFT, Cloud Carbon Footprint, EID), allocation methods, Scope 1/2/3 coverage, emission factor sources, temporal granularity, embodied carbon treatment, verification status, and reporting practices. The full comparison is in `HYPERSCALER_CARBON_ACCOUNTING.md`.
