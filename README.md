@@ -1,31 +1,30 @@
 # rSCI: Reconciled Software Carbon Intensity
 
-Metrics that make cloud carbon data auditable and comparable across organizations are not the same metrics that help individual teams reduce emissions.
+**Problem**: Metrics that are reported by cloud providers for Scope 3 GHG reporting are not the same metrics that help individual teams reduce emissions. See e.g. [Measuring for Reporting vs. Measuring for Action](https://greensoftware.foundation/articles/measuring-for-reporting-vs-measuring-for-action).
 
-For context:
+- **Top-down methodology (reporting):** The cloud provider computes its total monthly footprint from utility bills, diesel consumption, refrigerant losses, and amortized embodied carbon of hardware and buildings. It then allocates this total down to individual customers, services, and jobs. This data is auditable (backed by invoices), comparable (not yet due to underspecified parts in the GHG protocol, but hopefully at some point), but coarse (usually one number per customer x service x region x month) and delayed (available 2-3 weeks after month-end). It tells you the size of the problem but not what to do about it.
+- **Bottom-up methodology (action):** We measure (or model based on proxies) workload energy as close to the hardware as possible, combine it with location-based carbon intensity, and report some kind of [SCI (Software Carbon Intensity)](https://sci.greensoftware.foundation/) signal in near real time. This gives teams an optimization signal they can act on, but by itself it does not fully capture facility overhead, idle/shared capacity, provider-specific allocation effects, or all Scope 1/3 components.
 
-**Bottom-up (action):** We measure workload energy as close to the hardware as possible, combine it with location-based carbon intensity, and report an rSCI signal (reconciled Software Carbon Intensity) in near real time. This gives teams an optimization signal they can act on, but by itself it does not fully capture facility overhead, idle/shared capacity, provider-specific allocation effects, or all Scope 1/3 components.
+These two signals cannot be identical. **But they must be reconcilable**: If a team improves its bottom-up signal, that improvement should be traceable through to the cloud provider's reported number at the reporting boundary the provider actually exposes. If the two diverge without explanation, users lose trust in both.
 
-**Top-down (reporting):** The cloud provider computes its total monthly footprint from utility bills, diesel consumption, refrigerant losses, and amortized embodied carbon of hardware and buildings. It then allocates this total down to individual customers, services, and jobs. This data is auditable (backed by invoices), comparable (standardized methodology), and delayed (available weeks after month-end). It tells you the size of the problem but not what to do about it.
+<details>
 
-These two signals are not, and should not be, identical. **But they must be reconcilable**: If a team improves its bottom-up signal, that improvement should be traceable through to the cloud provider's reported number at the reporting boundary the provider actually exposes. If the two diverge without explanation, users lose trust in both.
+<summary>Why optimize toward imperfect accounting methodologies?</summary>
 
-### Why optimizing for imperfect cloud carbon accounting methodologies?
- 
-In practice, cloud customers' Scope 3 GHG accounting happens through the numbers providers report. Those numbers are imperfect and provider methodologies remain heterogeneous. Better disclosure, stricter boundaries, and more unified reporting standards are still needed. But even under imperfect reporting, users need a framework that maps real-time operational action to the provider-reported number that currently governs reporting practice. A useful side effect is that this mapping makes weaknesses in provider methodologies more visible rather than hiding them behind a single delayed total.
+In practice, cloud customers' Scope 3 GHG accounting happens through the numbers providers report. Those numbers are imperfect and provider methodologies remain heterogeneous and partially opaque. Better standards are still needed, but even under imperfect reporting, users need a framework that maps actionable signals to the provider-reported number that governs reporting practice.
 
-This framework serves two goals:
-
-- **For users:** provide an rSCI action metric per workload and per provider-aligned service slice, then reconcile that signal to the provider's delayed GHG-style report.
+- **For users:** provide an SCI-style metric per workload that roughly sums up to the provider's delayed GHG report and makes uncertainties explicit.
 - **For the ecosystem:** make provider methodology quality visible by showing which optimization levers are directly rewarded, only approximately rewarded, or structurally blocked by provider accounting choices.
 
 We focus on **location-based accounting**. Market-based accounting is intentionally excluded from the action metric because it is decoupled from physical consumption and therefore weak as an operational signal.
+</details>
+
 
 ## Problem Framing
 
 Given:
-- **Action metric:** a bottom-up, rSCI metric on the observable boundary that teams can optimize in real time.
 - **Reporting metric:** the top-down, provider-reported carbon for Scope 3 accounting that is delayed by weeks.
+- **Action metric:** a bottom-up, rSCI metric on the observable boundary that teams can optimize in real time.
 
 > How do we map action metrics onto reporting metrics while being explicit about the sources and uncertainty of the gap?
 
@@ -97,7 +96,7 @@ We extend the taxonomy with **rSCI**: a variant that reconciles to a provider-re
 
 ### Indices
 
-- $`t`$ — evaluation period: a fixed time window (e.g., 5 min) for interactive workloads, or the job's duration for batch workloads. All per-period quantities ($`E`$, $`I^\star`$, $`R`$, $`O`$, oSCI, rSCI) are defined over one $`t`$.
+- $`t`$ — evaluation period: a fixed time window (e.g., 5 min) for interactive workloads, or the job's duration for batch workloads. All per-period quantities ($`E`$, $`I`$, $`R`$, $`O`$, oSCI, rSCI) are defined over one $`t`$.
 - $`m`$ — individual machine/instance serving the workload (used inside the power model)
 
 We fix a single reporting slice, single service, and month (see Boundary Model). The service index $`i`$ is omitted — it returns when multi-service slices are introduced.
@@ -107,7 +106,7 @@ We fix a single reporting slice, single service, and month (see Boundary Model).
 | Symbol | Description |
 |--------|-------------|
 | $`E`$ | Aggregate measured IT energy over $`t`$, in kWh. $`E = \sum_m P_m \cdot \Delta t`$ where $`P_m`$ is the estimated power draw of machine $`m`$. |
-| $`I^\star`$ | Provider-compatible location-based carbon intensity for $`t`$. For short windows this is instantaneous; for batch jobs it is the time-weighted average over the run. |
+| $`I`$ | Location-based carbon intensity for $`t`$. For short windows this is instantaneous; for batch jobs it is the time-weighted average over the run. |
 | $`C_\text{reported}`$ | Provider-reported carbon (reporting metric) for the slice (monthly). |
 
 ### Outputs
@@ -121,7 +120,7 @@ We fix a single reporting slice, single service, and month (see Boundary Model).
 
 **Action layer (per $`t`$):**
 
-$$O = E \cdot I^\star, \quad \text{oSCI} = O \;/\; R$$
+$$O = E \cdot I, \quad \text{oSCI} = O \;/\; R$$
 
 Following Bashir et al. (2024), the action layer uses oSCI: embodied carbon is a sunk cost that should not influence scheduling decisions.
 
@@ -131,7 +130,7 @@ $$O_\text{total} = \sum_t O$$
 
 $$\Delta_\text{residual} = C_\text{reported} - O_\text{total}$$
 
-$`\Delta_\text{residual}`$ absorbs everything the action metric does not capture: embodied carbon, idle/shared capacity, non-energy overhead (PUE, Scope 1), allocation artifacts.
+$`\Delta_\text{residual}`$ absorbs everything the action metric does not capture: embodied carbon, idle/shared capacity, non-energy overhead (PUE, Scope 1), allocation artifacts — and the estimation error in $`O`$ itself. In the cloud, $`O`$ is not measured but estimated: $`E`$ comes from power models (TDP-based, not metered), and $`I`$ is a grid-average approximation. The residual therefore includes $`\varepsilon_O = O_\text{true} - O_\text{estimated}`$. This is acceptable as long as the estimation error is approximately proportional across workloads — the reconciliation factor $`\gamma`$ absorbs any systematic bias. However, once the one-to-one assumption is relaxed and heterogeneous workloads share a slice, proportionality of $`\varepsilon_O`$ can no longer be assumed: a GPU instance's power model error differs structurally from a small CPU instance's. Without some bottom-up signal, there is no basis for distinguishing their contributions, and the residual allocation becomes arbitrary.
 
 **Reconciled metric:**
 
@@ -219,7 +218,7 @@ Last residual error: +0.3 tCO2e (2.4%)
 Main issue: instability across months
 
 - **Time-dependent parameters:** Model $`\Delta_\text{residual}`$ as time-varying, learned across months. This captures seasonal effects, methodology changes, and infrastructure evolution.
-- **PUE as a learnable parameter:** Factor out $`\alpha_\text{PUE}`$ from $`\Delta_\text{residual}`$ and include it in the action layer ($`O_i = \alpha_\text{PUE} \cdot E_i \cdot I^\star`$), calibrated from provider-published PUE or historical data.
+- **PUE as a learnable parameter:** Factor out $`\alpha_\text{PUE}`$ from $`\Delta_\text{residual}`$ and include it in the action layer ($`O_i = \alpha_\text{PUE} \cdot E_i \cdot I`$), calibrated from provider-published PUE or historical data.
 - **Bridge decomposition:** Once sufficient historical slice pairs are available, decompose $`\Delta_\text{residual}`$ into provider-methodology-informed components (embodied carbon, PUE mismatch, idle capacity, non-energy overhead, allocation artifacts) using priors from provider profiles and Bayesian modeling. The goal is to identify whether any true unexplained residual remains after accounting for known methodology effects. This decomposition can progressively refine the residual without changing the action signal — oSCI ordering is preserved regardless of how the residual is broken down.
 - Location dependant too!!!
 - **Normative reference estimate:** a second, more methodologically complete estimate (covering omitted Scope 3 categories, questionable amortization, coarse allocation, provider-specific flaws) that makes visible the gap between what providers report and what a fuller methodology would report — comparative, not substitutive, and explicitly separate from the core reconciliation framework.

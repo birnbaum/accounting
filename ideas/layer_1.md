@@ -35,7 +35,7 @@ The structural distinction is **batch vs interactive** — it determines the eva
 | **Batch** | Job duration (start to finish) | ML training, ETL pipeline, CI build | 1 (the job), GB processed, images generated |
 | **Interactive** | Fixed window (e.g., 5 min) | Web API, LLM inference, database serving | requests, tokens, queries |
 
-Both use the same formula: $`\text{oSCI} = E \cdot I^\star / R`$. What differs is how $`t`$ is defined and which $`P_m`$ terms are observable (GPU, CPU, IO). Unobservable components (e.g., IO energy) increase the residual.
+Both use the same formula: $`\text{oSCI} = E \cdot I / R`$. What differs is how $`t`$ is defined and which $`P_m`$ terms are observable (GPU, CPU, IO). Unobservable components (e.g., IO energy) increase the residual.
 
 Key tension for interactive workloads: idle capacity (warm fleet consuming energy but not producing $`R`$) drives up oSCI in low-utilization windows. Whether to split this out or leave it in the residual is an open question.
 

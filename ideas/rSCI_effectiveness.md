@@ -31,7 +31,7 @@ rSCI_i = (O_i + w_i · Δ_residual) / R_i          (reconciled metric)
 
 **rSCI exposure: low.** rSCI requires:
 - Workload energy telemetry (E_i) — same as oSCI
-- Carbon intensity data (I*) — same as oSCI
+- Carbon intensity data (I) — same as oSCI
 - Provider-reported carbon per slice (C_reported) — available from provider dashboards/APIs, delayed by weeks
 - Historical (O_total, C_reported) pairs to learn Δ_residual — minimum ~3-6 months
 

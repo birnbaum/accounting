@@ -113,7 +113,7 @@ These are slow-moving parameters — outside the user's optimization loop but re
 | `it_hardware_included` | boolean | Servers, networking, storage |
 | `it_hardware_lca_boundary` | enum: `cradle_to_gate`, `cradle_to_grave` | LCA scope for hardware |
 | `it_hardware_lifetime_years` | integer | Amortization period |
-| `it_hardware_lifetime_treatment` | enum: `amortize_then_stop`, `amortize_then_zero`, `undisclosed` | What happens after amortization period |
+| `it_hardware_lifetime_treatment` | enum: `amortize_then_zero`, `undisclosed` | What happens after amortization period. All three providers report zero embodied carbon for equipment past its amortization window. |
 | `building_embodied_included` | boolean | Data center buildings |
 | `building_lifetime_years` | integer \| null | Amortization period for buildings |
 | `non_it_infrastructure_included` | boolean | UPS, cooling equipment, etc. |
@@ -189,7 +189,7 @@ networking_overhead_included: null
 it_hardware_included: true
 it_hardware_lca_boundary: cradle_to_gate
 it_hardware_lifetime_years: 6
-it_hardware_lifetime_treatment: amortize_then_stop
+it_hardware_lifetime_treatment: amortize_then_zero  # zero after 6 years; same as Azure
 building_embodied_included: true  # added Oct 2024
 building_lifetime_years: 50
 non_it_infrastructure_included: true
@@ -217,7 +217,7 @@ methodology_publicly_available: true  # partial
 
 | Lever | Reconcilable? | Notes |
 |-------|--------------|-------|
-| Compute efficiency (reduce CPU utilization) | ❌ Not rewarded (foundational) / ❌ Not rewarded (non-foundational) | Foundational services use usage allocation (instance-hours); utilization not reflected. Economic fallback for non-foundational is even more decoupled. |
+| Compute efficiency (reduce compute utilization) | ❌ Not rewarded (foundational) / ❌ Not rewarded (non-foundational) | Foundational services use usage allocation (instance-hours); compute utilization not reflected. Economic fallback for non-foundational is even more decoupled. |
 | Temporal shifting | ❌ Not rewarded | Monthly emission factors average out intra-day variation. |
 | Spatial shifting (region choice) | ✅ Direct | Monthly regional emission factors differ across regions. |
 | Right-sizing / eliminate waste | ✅ Direct (foundational) | Fewer instance-hours → less allocated energy → less carbon. |
@@ -250,7 +250,7 @@ grid_region_mapping: provider_region  # hourly CFE per region
 # Energy Allocation
 primary_allocation_method: usage
 fallback_allocation_method: economic
-fallback_allocation_scope: "Minor shared services without granular resource usage data (~1/3 of shared service energy; Schneider & Mattia 2024, §3.4.2)"
+fallback_allocation_scope: "Internal shared services without sufficient usage data use back-charged costs (~1/3 of shared service energy; Schneider & Mattia 2024, §3.4.2); SKU-level allocation uses price-based proportionality (usage × list price)"
 usage_allocation_unit: "vCPU-hours per SKU (price-derived energy factor; Schneider & Mattia 2024, Eq. 10)"
 economic_allocation_basis: "Price-based proportionality across SKUs (Schneider & Mattia 2024, Eq. 10)"
 allocation_granularity: sku
@@ -268,7 +268,7 @@ networking_overhead_included: null
 it_hardware_included: true
 it_hardware_lca_boundary: cradle_to_gate
 it_hardware_lifetime_years: 4  # GCP uses financial accounting standard; actual lifetimes are longer
-it_hardware_lifetime_treatment: amortize_then_stop
+it_hardware_lifetime_treatment: amortize_then_zero  # "dropping those at the 4-year mark"
 building_embodied_included: true  # included in customer-facing tool per methodology docs
 building_lifetime_years: null  # included but amortization period not publicly specified
 non_it_infrastructure_included: true  # partial
@@ -296,7 +296,7 @@ methodology_publicly_available: true
 
 | Lever | Reconcilable? | Notes |
 |-------|--------------|-------|
-| Compute efficiency (reduce CPU utilization) | ❌ Not rewarded | Customer-facing allocation is usage-based: vCPU-hours × price-derived energy factor (Schneider & Mattia 2024, Eq. 10). A VM at 5% CPU and one at 95% receive the same allocation for the same vCPU-hours. Internal physical measurement captures utilization at the team level but this signal is washed out at the customer boundary. |
+| Compute efficiency (reduce compute utilization) | ❌ Not rewarded | Customer-facing allocation is usage-based: vCPU-hours × price-derived energy factor (Schneider & Mattia 2024, Eq. 10). A VM at 5% utilization and one at 95% receive the same allocation for the same vCPU-hours. Internal physical measurement captures utilization at the team level but this signal is washed out at the customer boundary. |
 | Temporal shifting | ⚠️ Internally yes, customer-facing no | GCP uses hourly internally but exposes monthly. If GCP exposes hourly data or confirms hourly accounting in reported figures, this becomes directly reconcilable. Currently the monthly aggregation washes it out for reporting purposes. |
 | Spatial shifting (region choice) | ✅ Direct | Hourly CFE per region; clear regional differences. |
 | Right-sizing / eliminate waste | ✅ Direct | Reducing vCPU-hours (smaller instances, turning off idle VMs) directly reduces usage units and thus allocated carbon. |
@@ -329,10 +329,10 @@ grid_region_mapping: provider_region
 
 # Energy Allocation
 primary_allocation_method: usage
-fallback_allocation_method: null
-fallback_allocation_scope: null
+fallback_allocation_method: null  # not disclosed; Azure does not describe any explicit fallback
+fallback_allocation_scope: null  # not disclosed
 usage_allocation_unit: "compute, storage, and data transfer time per region (derivation not disclosed)"
-economic_allocation_basis: null
+economic_allocation_basis: null  # not disclosed
 allocation_granularity: service_category
 idle_capacity_treatment: undisclosed
 allocation_uncertainty_pct: "15-30%"
@@ -348,7 +348,7 @@ networking_overhead_included: null
 it_hardware_included: true
 it_hardware_lca_boundary: cradle_to_grave
 it_hardware_lifetime_years: 6
-it_hardware_lifetime_treatment: amortize_then_zero  # ERROR: drops to zero after 6 years
+it_hardware_lifetime_treatment: amortize_then_zero  # zero after 6 years; same as AWS
 building_embodied_included: false
 building_lifetime_years: null
 non_it_infrastructure_included: false
@@ -376,7 +376,7 @@ methodology_publicly_available: true  # partial
 
 | Lever | Reconcilable? | Notes |
 |-------|--------------|-------|
-| Compute efficiency (reduce CPU utilization) | ❌ Not rewarded | Usage allocation (compute, storage, network time). Utilization not reflected — same usage time = same carbon. |
+| Compute efficiency (reduce compute utilization) | ❌ Not rewarded | Usage allocation (compute, storage, network time). Compute utilization not reflected — same usage time = same carbon. |
 | Temporal shifting | ❌ Not rewarded | Monthly emission factors. |
 | Spatial shifting (region choice) | ⚠️ Approximate | Regional emission factors differ; usage-based approach preserves regional signal. |
 | Right-sizing / eliminate waste | ✅ Direct | Reducing usage time (compute/storage/network) directly reduces allocated carbon. |
@@ -389,7 +389,7 @@ methodology_publicly_available: true  # partial
 
 | Optimization Lever | GCP | AWS | Azure | Depends on |
 |--------------------|-----|-----|-------|------------|
-| **Compute efficiency** (reduce CPU utilization) | ❌ not rewarded | ❌ not rewarded | ❌ not rewarded | Allocation method — all three use usage allocation at customer level |
+| **Compute efficiency** (reduce compute utilization) | ❌ not rewarded | ❌ not rewarded | ❌ not rewarded | Allocation method — all three use usage allocation at customer level |
 | **Temporal shifting** | ⚠️ internal only | ❌ | ❌ | Emission factor temporal resolution |
 | **Spatial shifting** | ✅ direct | ✅ direct | ✅ direct | Emission factor spatial resolution — all three use regional factors |
 | **Right-sizing** (fewer resource-time units) | ✅ direct (fewer vCPU-hours) | ✅ direct (fewer instance-hours) | ✅ direct (less usage time) | Allocation method — fewer resource-time units |
@@ -402,15 +402,15 @@ methodology_publicly_available: true  # partial
 - **Right-sizing** (reduces resource-time, which all three providers track)
 
 ### Not rewarded by any provider at the customer level:
-- **Compute efficiency** (reducing CPU utilization) — all three providers use usage allocation at the customer level: GCP allocates by vCPU-hours, AWS foundational by instance-hours, Azure by usage time. No provider's customer-facing methodology reflects whether a VM is at 5% or 95% CPU. The only way to reduce the reported number is to reduce resource-time (run for less time, use fewer/smaller instances, turn off idle VMs).
+- **Compute efficiency** (reducing compute utilization) — all three providers use usage allocation at the customer level: GCP allocates by vCPU-hours, AWS foundational by instance-hours, Azure by usage time. No provider's customer-facing methodology reflects whether a VM or GPU instance is at 5% or 95% utilization. The only way to reduce the reported number is to reduce resource-time (run for less time, use fewer/smaller instances, turn off idle VMs).
 
 ### Conditionally reconcilable:
 - **Architecture choice** — approximate on GCP (price-based SKU distribution correlates with but is not identical to energy); approximate on AWS foundational (usage-based); approximate on Azure (service-category granularity may not capture hardware-level differences)
 - **Temporal shifting** — only if provider uses sub-monthly emission factors (currently: GCP internally, none customer-facing)
 
 ### Key findings:
-- **CPU utilization is invisible to all three customer-facing methodologies.** This is the most important practical implication: a VM running idle and a VM at full load report the same carbon for the same duration and SKU. All three use usage allocation at the customer level. Only reducing resource-time (turning off VMs, right-sizing, running for less time) moves the reported number.
-- **GCP's internal physical measurement is best-in-class but does not reach the customer boundary.** The price-based SKU distribution step (Schneider & Mattia 2024, Eq. 10) converts physical energy into price-proportional allocation per SKU, then allocates to customers by resource-time (vCPU-hours). The physically-measured total is preserved, but individual customer-level attribution is usage-based.
+- **Compute utilization is invisible to all three customer-facing methodologies.** This is the most important practical implication: a VM or GPU instance running idle and one at full load report the same carbon for the same duration and SKU. All three use usage allocation at the customer level. Only reducing resource-time (turning off instances, right-sizing, running for less time) moves the reported number.
+- **All three providers use usage-based allocation at the customer boundary.** GCP's internal physical measurement is best-in-class, but the customer-facing step distributes energy by price-proportional SKU factors and resource-time (vCPU-hours). AWS foundational uses instance-hours. Azure uses usage time. The physically-measured total may be preserved at the aggregate level, but individual customer-level attribution is usage-based across all three. GCP and AWS both use economic/cost-based fallbacks for some services (GCP: internal shared services; AWS: non-foundational services); Azure's fallback approach is not disclosed.
 - Azure's usage-factor approach is better than pure cost-based allocation but the undisclosed derivation of the usage factor limits confidence. The reconciliation gap is bounded (correlated with physical usage) but not precisely quantifiable without more disclosure from Microsoft.
 
 ---
