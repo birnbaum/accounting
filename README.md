@@ -76,7 +76,7 @@ Providers report carbon emissions $`C_\text{reported}`$ at a certain level of gr
 - **GCP:** `project × SKU × region × month`
 - **Azure:** `subscription × service_category × region × month`
 
-Every measured workload event must map to one (or eventually also multiple) reporting slices.
+Every measured workload event maps to one or more reporting slices.
 
 ### Residual Bridge
 
@@ -99,35 +99,45 @@ For now (!), we assume
 1. **no boundary mismatch**: the observable boundary covers all activity in the reporting slice.
   For example, if a customer wants to reconcile `EC2 × eu-central-1 × January`, we assume they can observe all EC2 resources they run in that region over that month with enough fidelity to reconstruct resource-time/utilization.
   This is a structural requirement, without full coverage the residual bridge loses its interpretation.
-2. **one-to-one mapping**: each observed workload maps to exactly one reporting slice. This is a simplifying assumption that allows us to state the problem more clearly, but the framework should be extended to handle many-to-many mappings in practice (e.g. a workload that uses compute, storage and network or is distributed).
-3. **single slice**: For simplicity, the approach currently assumes a single reporting slice: one project, one service, one region, one month.
+2. **one-to-many mapping**: each observed workload maps to one or more reporting slices (e.g., a workload may consume compute, storage, and network resources, each reported under a different provider slice). Each workload's contribution to each slice is unambiguous. We explicitly defer the many-to-many case, where attribution between workloads and slices is ambiguous (e.g., shared storage volumes consumed by multiple workloads).
 
 
 ## Method
 
 We define an evaluation period $`t`$ as a fixed time window (e.g., 5 min) for interactive workloads, or the job's duration for batch workloads. All per-period quantities ($`E`$, $`I`$, $`R`$, $`O`$, oSCI, rSCI) are defined over one $`t`$.
-Let $`m`$ be the individual machine/instance serving the workload.
 
-### Power Model
+### Energy Model
 
-For any $`t`$, the aggregate energy across all machines $`m`$:
+For any evaluation period $`t`$, the total energy consumed by the workload:
 
-$$E = \sum_m P_m \cdot \Delta t, \quad \text{where } P_m = \sum_r \text{count}_{m,r} \times P_r$$
+$$E = \sum_r \text{qty}_r \times \varepsilon_r \quad [\text{Wh}]$$
 
-Here $`m`$ indexes individual machines/instances, $`r`$ indexes resource types (vCPU, GPU, disk, network, ...), and $`P_r`$ is the rated power per unit of resource $`r`$ (e.g., TDP, a measured average, or a provider-published figure). The monthly total is $`E_\text{total} = \sum_t E`$.
+Where $`r`$ indexes resource types, $`\text{qty}_r`$ is the quantity of resource $`r`$ consumed during $`t`$, and $`\varepsilon_r`$ is the energy coefficient per unit of resource $`r`$ (Wh/unit).
 
-This is a usage-based power model: $`P_m`$ depends on what you have provisioned (count × rated power), not on how hard you use it. It matches what all three providers allocate by at the customer level.
+| Resource type | Unit ($`\text{qty}_r`$) | $`\varepsilon_r`$ | Note |
+|---|---|---|---|
+| vCPU | vCPU-hours | Wh/vCPU-h (= W) | Reservation-based: $`\varepsilon_r`$ equals TDP / rated power in watts |
+| GPU | GPU-hours | Wh/GPU-h (= W) | Same — Wh per hour of reservation equals watts |
+| Network transfer | GB transferred | Wh/GB | Event-based: no persistent reservation |
+| Disk I/O | IO operations | Wh/IO-op | Event-based |
+| Storage | GB-hours | Wh/GB-h | Reservation-based (provisioned capacity × time) |
 
-A more physical model would be $`P_m = \text{count} \times \text{util} \times P_r`$, but since no provider rewards utilization at the customer boundary, the utilization term does not help reconciliation.
+For reservation-based resources (vCPU, GPU, storage), $`\varepsilon_r`$ equals the power draw in watts, since Wh per hour of reservation = W. For event-based resources (network transfer, disk I/O), there is no persistent reservation — $`\varepsilon_r`$ is the energy per discrete unit consumed.
+
+The monthly total is $`E_\text{total} = \sum_t E`$.
+
+This is a usage-based energy model: $`E`$ depends on what you have provisioned or consumed (qty × energy coefficient), not on how hard you drive the resource. It matches what all three providers allocate by at the customer level.
+
+A more physical model would scale by utilization ($`\text{qty}_r \times \text{util} \times \varepsilon_r`$), but since no provider rewards utilization at the customer boundary, the utilization term does not help reconciliation.
 
 We define:
-- **Usage** — how many resources for how long (vCPU-hours, instance-hours, GPU-hours). This is what providers allocate by.
+- **Usage** — how many resources for how long, or how many units consumed (vCPU-hours, GB transferred, IO operations). This is what providers allocate by.
 - **Utilization** — how hard you work the resource (CPU at 5% vs 95%). No provider reflects this in the customer-reported number.
 
 The action metric (oSCI) captures both. The provider-reported number captures only usage. Utilization improvements are real (they reduce physical energy) but invisible to provider accounting (they fall into the residual).
 
 In practice, not all resource types are observable.
-Unobservable components (e.g., IO energy) increase the residual.
+Unobservable components increase the residual.
 The more components we can specify/derive, the smaller and more certain the residual becomes.
 
 **Batch vs interactive workloads.** The structural distinction determines the evaluation period $`t`$. The choice of $`R`$ (functional unit) is independent and up to the user.
@@ -137,7 +147,7 @@ The more components we can specify/derive, the smaller and more certain the resi
 | **Batch** | Job duration (start to finish) | ML training, ETL pipeline, CI build | 1 (the job), GB processed, images generated |
 | **Interactive** | Fixed window (e.g., 5 min) | Web API, LLM inference, database serving | requests, tokens, queries |
 
-Both use the same formula: $`\text{oSCI} = E \cdot I / R`$. What differs is how $`t`$ is defined and which $`P_m`$ terms are observable (GPU, CPU, IO). Unobservable components (e.g., IO energy) increase the residual.
+Both use the same formula: $`\text{oSCI} = E \cdot I / R`$. What differs is how $`t`$ is defined and which resource types are observable. Unobservable components increase the residual.
 
 Key tension for interactive workloads: idle capacity (warm fleet consuming energy but not producing $`R`$) drives up oSCI in low-utilization windows. Whether to split this out or leave it in the residual is an open question.
 
@@ -149,26 +159,31 @@ Following Bashir et al. (2024), the action layer uses oSCI: embodied carbon is a
 
 ### Reconciliation
 
-$$O_\text{total} = \sum_t O$$
+Since a workload may span multiple reporting slices $`s`$ (e.g., compute, storage, networking), reconciliation is performed **per slice**:
 
-$$\Delta_\text{residual} = C_\text{reported} - O_\text{total}$$
+$$O_{\text{total},s} = \sum_t O_{t,s}$$
 
-$`\Delta_\text{residual}`$ absorbs everything the action metric does not capture: embodied carbon, idle/shared capacity, non-energy overhead (PUE, Scope 1), allocation artifacts — and the estimation error in $`O`$ itself. In the cloud, $`O`$ is not measured but estimated: $`E`$ comes from power models (TDP-based, not metered), and $`I`$ is a grid-average approximation. The residual therefore includes $`\varepsilon_O = O_\text{true} - O_\text{estimated}`$. This is acceptable as long as the estimation error is approximately proportional across workloads — the reconciliation factor $`\gamma`$ absorbs any systematic bias. However, once the one-to-one assumption is relaxed and heterogeneous workloads share a slice, proportionality of $`\varepsilon_O`$ can no longer be assumed: a GPU instance's power model error differs structurally from a small CPU instance's. Without some bottom-up signal, there is no basis for distinguishing their contributions, and the residual allocation becomes arbitrary.
+$$\Delta_{\text{residual},s} = C_{\text{reported},s} - O_{\text{total},s}$$
+
+Each $`\Delta_{\text{residual},s}`$ absorbs everything the action metric does not capture within that slice: embodied carbon, idle/shared capacity, non-energy overhead (PUE, Scope 1), allocation artifacts — and the estimation error in $`O`$ itself. In the cloud, $`O`$ is not measured but estimated: $`E`$ comes from energy models (TDP-based, not metered), and $`I`$ is a grid-average approximation. The residual therefore includes $`\varepsilon_O = O_\text{true} - O_\text{estimated}`$. This is acceptable as long as the estimation error is approximately proportional across workloads within a slice — the reconciliation factor $`\gamma_s`$ absorbs any systematic bias. However, when heterogeneous workloads share a slice, proportionality of $`\varepsilon_O`$ can no longer be assumed: a GPU instance's energy model error differs structurally from a small CPU instance's. Without some bottom-up signal, there is no basis for distinguishing their contributions, and the residual allocation becomes arbitrary.
 
 ### rSCI
 
-$$\text{rSCI} = (O_\text{total} + \Delta_\text{residual}) / R_\text{total} = C_\text{reported} / R_\text{total}$$
+A workload's rSCI sums its reconciled contributions across all slices it touches:
 
-**Key property:** $`\sum_t \text{rSCI} \cdot R = C_\text{reported}`$
+$$\text{rSCI} = \frac{1}{R} \sum_s \left( O_s + w_s \cdot \Delta_{\text{residual},s} \right)$$
 
-The reconciled metric distributes the full provider-reported footprint across periods in proportion to their operational carbon. Because the residual is allocated proportionally to $`O`$, rSCI **always preserves oSCI ordering** — reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives. Yet each period's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
+where $`w_s`$ is the workload's share of operational carbon within slice $`s`$.
+
+**Key property (per slice):** $`\sum_{\text{workloads}} w_s \cdot \Delta_{\text{residual},s} = \Delta_{\text{residual},s}`$, therefore $`\sum_{\text{workloads}} \text{rSCI} \cdot R = \sum_s C_{\text{reported},s}`$.
+
+The reconciled metric distributes the full provider-reported footprint across workloads in proportion to their operational carbon within each slice. Because the residual is allocated proportionally to $`O`$, rSCI **always preserves oSCI ordering** — reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives. Yet each workload's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
 
 Where:
 
 - The action layer uses oSCI to avoid the sunk carbon fallacy (Bashir et al., 2024).
-- $`\Delta_\text{residual}`$ is learned from historical slice pairs $`(O_\text{total}, C_\text{reported})`$.
-- Unlike tSCI (which requires full infrastructure knowledge), rSCI learns the residual from the provider-reported total.
-- The service index $`i`$ (partitioning within a slice) returns when the single-service assumption is relaxed.
+- $`\Delta_{\text{residual},s}`$ is learned from historical slice pairs $`(O_{\text{total},s}, C_{\text{reported},s})`$.
+- Unlike tSCI (which requires full infrastructure knowledge), rSCI learns the residual from the provider-reported totals.
 
 
 ## Estimation
@@ -177,38 +192,40 @@ Where:
 
 ### Residual Bridge
 
-The residual bridge $`\Delta_\text{residual}`$ is a single fitted scalar that captures everything the action metric does not: embodied carbon (hardware and buildings), facility overhead (PUE), idle/shared capacity, non-energy overhead (Scope 1 diesel/refrigerants, other Scope 3 categories), and allocation artifacts from provider methodology. Embodied carbon is deliberately excluded from the action layer to avoid the sunk carbon fallacy (Bashir et al., 2024) — it enters only through the residual. With monthly slice-level data, these components are not individually identifiable — the total bridge is constrained, but the breakdown is not. We therefore treat $`\Delta_\text{residual}`$ as one quantity fitted from historical slice pairs rather than pretending the components can be separated.
+Each per-slice residual bridge $`\Delta_{\text{residual},s}`$ is a fitted scalar that captures everything the action metric does not within that slice: embodied carbon (hardware and buildings), facility overhead (PUE), idle/shared capacity, non-energy overhead (Scope 1 diesel/refrigerants, other Scope 3 categories), and allocation artifacts from provider methodology. Embodied carbon is deliberately excluded from the action layer to avoid the sunk carbon fallacy (Bashir et al., 2024) — it enters only through the residual. With monthly slice-level data, these components are not individually identifiable — the total bridge is constrained, but the breakdown is not. We therefore treat $`\Delta_{\text{residual},s}`$ as one quantity per slice fitted from historical pairs rather than pretending the components can be separated.
 
 | Parameter | Meaning | Units / Role | Prior | Sensitivity |
 |---|---|---|---|---|
-| $`\Delta_\text{residual}`$ | Residual bridge | tCO₂e; fitted from historical slice pairs $`(O_\text{total}, C_\text{reported})`$ | Provider profile-driven | High |
+| $`\Delta_{\text{residual},s}`$ | Residual bridge for slice $`s`$ | tCO₂e; fitted from historical slice pairs $`(O_{\text{total},s}, C_{\text{reported},s})`$ | Provider profile-driven | High |
 
 ### Bayesian Framing
 
 $$
-C_\text{reported} \sim \mathcal{N}\big(O_\text{total} + \Delta_\text{residual},\;\sigma^2_\text{obs}\big)
+C_{\text{reported},s} \sim \mathcal{N}\big(O_{\text{total},s} + \Delta_{\text{residual},s},\;\sigma^2_{\text{obs},s}\big)
 $$
 
-- Monthly data strongly constrains the **total bridge**.
-- Side information (provider profiles, methodology changes) sets the prior on $`\Delta_\text{residual}`$.
+- Monthly data strongly constrains the **per-slice bridge**.
+- Side information (provider profiles, methodology changes) sets the prior on $`\Delta_{\text{residual},s}`$.
 
 ### Output Format
 
 ```text
-Provider slice: project=foo / sku=n2-standard-16 / region=europe-west4 / month=2026-02
+Workload: web-api / region=europe-west4 / month=2026-02
 
-Reported estimate (ĉ): 12.1 tCO2e [10.6 - 13.9, 90% CI]
-Observable operational total (O_total): 8.7 tCO2e
-Residual bridge (Δ_residual): 3.4 tCO2e
+Slices touched:
+  Compute (n2-standard-16):  O = 6.2 tCO2e  |  Δ_residual = 2.1 tCO2e  |  C_reported = 10.8 tCO2e
+  Networking (vpc-egress):   O = 0.4 tCO2e  |  Δ_residual = 0.2 tCO2e  |  C_reported = 1.3 tCO2e
 
 Per workload:
   web-api (interactive):  oSCI = 0.042 kgCO2e/req   |  rSCI = 0.058 kgCO2e/req
   ml-training (batch):    oSCI = 8.7 kgCO2e/job      |  rSCI = 12.1 kgCO2e/job
 
-Reconciliation check: Σ_t rSCI · R = 12.1 tCO2e = ĉ  ✓
+Reconciliation check (per slice):
+  Compute:    Σ rSCI_compute · R = 10.8 tCO2e = C_reported,compute    ✓
+  Networking: Σ rSCI_network · R =  1.3 tCO2e = C_reported,networking  ✓
 
 Model maturity: 8 months
-Last residual error: +0.3 tCO2e (2.4%)
+Last residual error: Compute +0.3 tCO2e (2.4%), Networking +0.05 tCO2e (3.8%)
 ```
 
 
@@ -225,9 +242,9 @@ Last residual error: +0.3 tCO2e (2.4%)
 9. **Bridge decomposition:** Once sufficient historical slice pairs are available, decompose $`\Delta_\text{residual}`$ into provider-methodology-informed components (embodied carbon, PUE mismatch, idle capacity, non-energy overhead, allocation artifacts) using priors from provider profiles and Bayesian modeling. The goal is to identify whether any true unexplained residual remains after accounting for known methodology effects. This decomposition can progressively refine the residual without changing the action signal — oSCI ordering is preserved regardless of how the residual is broken down.
 10. **Location dependence:** How should regional variation in residual composition (e.g., different PUE, grid mix, hardware vintages across regions) be modeled?
 11. **Normative reference estimate:** a second, more methodologically complete estimate (covering omitted Scope 3 categories, questionable amortization, coarse allocation, provider-specific flaws) that makes visible the gap between what providers report and what a fuller methodology would report — comparative, not substitutive, and explicitly separate from the core reconciliation framework.
-12. **IO energy modeling:** How to handle IO energy — proxy model per service type, or accept it in the residual?
+12. **Energy coefficient data sources:** Where to source reliable $`\varepsilon_r`$ values for each resource type? For reservation-based resources (vCPU, GPU), TDP and published benchmarks provide reasonable proxies. For event-based resources (network transfer, disk I/O), empirical data is scarce and provider-specific. How sensitive is the residual to $`\varepsilon_r`$ estimation error?
 13. **Idle capacity attribution:** Should warm-fleet idle energy be split out in the action metric, or left in the residual?
-14. **Power model granularity:** How granular should $`P_r`$ estimates be? Per instance family? Per chip generation? Source: TDP, measured average, or provider-published?
+14. **Energy coefficient granularity:** How granular should $`\varepsilon_r`$ estimates be? Per instance family? Per chip generation? Source: TDP, measured average, or provider-published?
 15. **Utilization in the action metric:** Should oSCI include utilization (as a finer-grained optimization signal) even though it doesn't reconcile? Or keep the action metric usage-based to match what providers reward, and treat utilization as a separate diagnostic?
 16. **Allocation of residual to heterogeneous workloads:** When the one-to-one assumption is relaxed and multiple heterogeneous workloads share a slice, how should the residual be allocated?
 
