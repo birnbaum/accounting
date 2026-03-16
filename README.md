@@ -104,31 +104,32 @@ For now (!), we assume
 
 ## Method
 
-We define an evaluation period $`t`$ as a fixed time window (e.g., 5 min) for interactive workloads, or the job's duration for batch workloads. All per-period quantities ($`E`$, $`I`$, $`R`$, $`O`$, oSCI, rSCI) are defined over one $`t`$.
+Let $`i`$ index workloads. Each workload has an evaluation period $`t_i`$: a fixed time window (e.g., 5 min) for interactive workloads, or the job's duration for batch workloads. All per-workload quantities ($`E`$, $`I`$, $`R`$, $`O`$, oSCI, rSCI) are defined over one $`i`$.
 
 ### Energy Model
 
-For any evaluation period $`t`$, the total energy consumed by the workload:
+For workload $`i`$:
 
-$$E = \sum_r \text{qty}_r \times \varepsilon_r \quad [\text{Wh}]$$
+$$E_i = \sum_r q_r \times \varepsilon_r \quad [\text{Wh}]$$
 
-Where $`r`$ indexes resource types, $`\text{qty}_r`$ is the quantity of resource $`r`$ consumed during $`t`$, and $`\varepsilon_r`$ is the energy coefficient per unit of resource $`r`$ (Wh/unit).
+Where $`r`$ indexes resource types, $`q_r`$ is the quantity of resource $`r`$ consumed during $`t_i`$, and $`\varepsilon_r`$ is the energy coefficient per unit of resource $`r`$ (Wh/unit).
 
-| Resource type | Unit ($`\text{qty}_r`$) | $`\varepsilon_r`$ | Note |
-|---|---|---|---|
-| vCPU | vCPU-hours | Wh/vCPU-h (= W) | Reservation-based: $`\varepsilon_r`$ equals TDP / rated power in watts |
-| GPU | GPU-hours | Wh/GPU-h (= W) | Same — Wh per hour of reservation equals watts |
-| Network transfer | GB transferred | Wh/GB | Event-based: no persistent reservation |
-| Disk I/O | IO operations | Wh/IO-op | Event-based |
-| Storage | GB-hours | Wh/GB-h | Reservation-based (provisioned capacity × time) |
+| Resource type | Unit ($`q_r`$) | $`\varepsilon_r`$    | Note |
+|---|---|----------------------|---|
+| vCPU | vCPU-hours | Wh/vCPU-h (= W/vCPU) | Reservation-based: $`\varepsilon_r`$ equals TDP / rated power in watts |
+| GPU | GPU-hours | Wh/GPU-h (= W/GPU)   | Same |
+| Storage | GB-hours | Wh/GB-h              | Reservation-based (provisioned capacity × time) |
+| Disk I/O | IO operations | Wh/IO-op             | Event-based |
+| Network transfer | GB transferred | Wh/GB                | Event-based: no persistent reservation |
 
-For reservation-based resources (vCPU, GPU, storage), $`\varepsilon_r`$ equals the power draw in watts, since Wh per hour of reservation = W. For event-based resources (network transfer, disk I/O), there is no persistent reservation — $`\varepsilon_r`$ is the energy per discrete unit consumed.
+For reservation-based resources (vCPU, GPU, storage), $`\varepsilon_r`$ equals the power draw in watts, since Wh per hour of reservation = W.
+For event-based resources (network transfer, disk I/O), there is no persistent reservation. $`\varepsilon_r`$ is the energy per discrete unit consumed.
 
-The monthly total is $`E_\text{total} = \sum_t E`$.
+The total energy within a slice $`s`$ is $`E_{\text{total},s} = \sum_i E_{i,s}`$, summing over all workloads that touch that slice.
 
-This is a usage-based energy model: $`E`$ depends on what you have provisioned or consumed (qty × energy coefficient), not on how hard you drive the resource. It matches what all three providers allocate by at the customer level.
+This is a usage-based energy model: $`E`$ depends on what you have provisioned or consumed ($`q \times \varepsilon`$), not on how hard you drive the resource. It matches what all three providers allocate by at the customer level.
 
-A more physical model would scale by utilization ($`\text{qty}_r \times \text{util} \times \varepsilon_r`$), but since no provider rewards utilization at the customer boundary, the utilization term does not help reconciliation.
+A more physical model would scale by utilization ($`q_r \times \text{util} \times \varepsilon_r`$), but since no provider rewards utilization at the customer boundary, the utilization term does not help reconciliation.
 
 We define:
 - **Usage** — how many resources for how long, or how many units consumed (vCPU-hours, GB transferred, IO operations). This is what providers allocate by.
@@ -147,13 +148,13 @@ The more components we can specify/derive, the smaller and more certain the resi
 | **Batch** | Job duration (start to finish) | ML training, ETL pipeline, CI build | 1 (the job), GB processed, images generated |
 | **Interactive** | Fixed window (e.g., 5 min) | Web API, LLM inference, database serving | requests, tokens, queries |
 
-Both use the same formula: $`\text{oSCI} = E \cdot I / R`$. What differs is how $`t`$ is defined and which resource types are observable. Unobservable components increase the residual.
+Both use the same formula: $`\text{oSCI}_i = E_i \cdot I / R_i`$. What differs is how the evaluation period is defined and which resource types are observable. Unobservable components increase the residual.
 
 Key tension for interactive workloads: idle capacity (warm fleet consuming energy but not producing $`R`$) drives up oSCI in low-utilization windows. Whether to split this out or leave it in the residual is an open question.
 
 ### Operational Carbon
 
-$$O = E \cdot I, \quad \text{oSCI} = O \;/\; R$$
+$$O_i = E_i \cdot I, \quad \text{oSCI}_i = O_i \;/\; R_i$$
 
 Following Bashir et al. (2024), the action layer uses oSCI: embodied carbon is a sunk cost that should not influence scheduling decisions.
 
@@ -161,7 +162,7 @@ Following Bashir et al. (2024), the action layer uses oSCI: embodied carbon is a
 
 Since a workload may span multiple reporting slices $`s`$ (e.g., compute, storage, networking), reconciliation is performed **per slice**:
 
-$$O_{\text{total},s} = \sum_t O_{t,s}$$
+$$O_{\text{total},s} = \sum_i O_{i,s}$$
 
 $$\Delta_{\text{residual},s} = C_{\text{reported},s} - O_{\text{total},s}$$
 
@@ -169,13 +170,13 @@ Each $`\Delta_{\text{residual},s}`$ absorbs everything the action metric does no
 
 ### rSCI
 
-A workload's rSCI sums its reconciled contributions across all slices it touches:
+Workload $`i`$'s rSCI sums its reconciled contributions across all slices it touches:
 
-$$\text{rSCI} = \frac{1}{R} \sum_s \left( O_s + w_s \cdot \Delta_{\text{residual},s} \right)$$
+$$\text{rSCI}_i = \frac{1}{R_i} \sum_s \left( O_{i,s} + w_{i,s} \cdot \Delta_{\text{residual},s} \right)$$
 
-where $`w_s`$ is the workload's share of operational carbon within slice $`s`$.
+where $`w_{i,s} = O_{i,s} / O_{\text{total},s}`$ is workload $`i`$'s share of operational carbon within slice $`s`$.
 
-**Key property (per slice):** $`\sum_{\text{workloads}} w_s \cdot \Delta_{\text{residual},s} = \Delta_{\text{residual},s}`$, therefore $`\sum_{\text{workloads}} \text{rSCI} \cdot R = \sum_s C_{\text{reported},s}`$.
+**Key property (per slice):** $`\sum_i w_{i,s} \cdot \Delta_{\text{residual},s} = \Delta_{\text{residual},s}`$, therefore $`\sum_i \text{rSCI}_i \cdot R_i = \sum_s C_{\text{reported},s}`$.
 
 The reconciled metric distributes the full provider-reported footprint across workloads in proportion to their operational carbon within each slice. Because the residual is allocated proportionally to $`O`$, rSCI **always preserves oSCI ordering** — reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives. Yet each workload's rSCI reflects its fair share of the full reported footprint, including embodied carbon and overhead.
 
