@@ -8,4 +8,7 @@ dependencies = [
     "azure-identity>=1.25.3",
     "azure-mgmt-carbonoptimization>=1.0.0",
     "python-dateutil>=2.9.0.post0",
+    "jupyter>=1.1.1",
+    "pandas>=2.2.0",
+    "matplotlib>=3.9.0",
 ]
