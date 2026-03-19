@@ -1,0 +1,22 @@
+[
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/speech/providers/microsoft.storage/storageaccounts/kiassistentspeicher",
+    "resourceGroup": "speech",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "west europe",
+    "resourceName": "kiassistentspeicher",
+    "scope1": 1.69635292539254e-06,
+    "scope2": 0.0,
+    "scope3": 0.000230442986065939
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/cc/providers/microsoft.storage/storageaccounts/ccws24",
+    "resourceGroup": "cc",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "west europe",
+    "resourceName": "ccws24",
+    "scope1": 3.81059303914065e-08,
+    "scope2": 0.0,
+    "scope3": 5.17654330933788e-06
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/jonathan-rau-student-rg/providers/microsoft.cognitiveservices/accounts/test-models-dos",
+    "resourceGroup": "jonathan-rau-student-rg",
+    "resourceType": "microsoft.cognitiveservices/accounts",
+    "location": "sweden central",
+    "resourceName": "test-models-dos",
+    "scope1": 8.61316830058954e-05,
+    "scope2": 0.0,
+    "scope3": 0.00290707628230565
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/monitoringfunctionapp/providers/microsoft.operationalinsights/workspaces/workspace-monitoringfunctionapp",
+    "resourceGroup": "monitoringfunctionapp",
+    "resourceType": "microsoft.operationalinsights/workspaces",
+    "location": "germany west central",
+    "resourceName": "workspace-monitoringfunctionapp",
+    "scope1": 1.62371999890726e-06,
+    "scope2": 0.0,
+    "scope3": 0.000122932405876488
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/student-monitoring-rg/providers/microsoft.storage/storageaccounts/studentmonitoringrga2f4",
+    "resourceGroup": "student-monitoring-rg",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "germany west central",
+    "resourceName": "studentmonitoringrga2f4",
+    "scope1": 4.06563223428441e-07,
+    "scope2": 0.0,
+    "scope3": 3.07810430558189e-05
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/speech/providers/microsoft.storage/storageaccounts/kiassistentspeicher",
+    "resourceGroup": "speech",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "west europe",
+    "resourceName": "kiassistentspeicher",
+    "scope1": 1.96693785000286e-07,
+    "scope2": 0.0,
+    "scope3": 2.5897734536365e-05
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/monitoringfunctionapp/providers/microsoft.web/sites/monitoring-function-app",
+    "resourceGroup": "monitoringfunctionapp",
+    "resourceType": "microsoft.web/sites",
+    "location": "germany west central",
+    "resourceName": "monitoring-function-app",
+    "scope1": 6.55044353072022e-08,
+    "scope2": 0.0,
+    "scope3": 4.95936358073711e-06
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/monitoringfunctionapp/providers/microsoft.storage/storageaccounts/monitoringfunctionapp",
+    "resourceGroup": "monitoringfunctionapp",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "germany west central",
+    "resourceName": "monitoringfunctionapp",
+    "scope1": 5.2624576286545e-08,
+    "scope2": 0.0,
+    "scope3": 3.98422497443494e-06
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/cc/providers/microsoft.storage/storageaccounts/ccws24",
+    "resourceGroup": "cc",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "west europe",
+    "resourceName": "ccws24",
+    "scope1": 2.42035434639941e-08,
+    "scope2": 0.0,
+    "scope3": 3.1867653747625e-06
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/jonathan-rau-student-rg/providers/microsoft.insights/actiongroups/budgetalertactiongroup",
+    "resourceGroup": "jonathan-rau-student-rg",
+    "resourceType": "microsoft.insights/actiongroups",
+    "location": "west us 2",
+    "resourceName": "budgetalertactiongroup",
+    "scope1": 2.23651554792106e-08,
+    "scope2": 0.0,
+    "scope3": 1.62624902209966e-06
+  }
+]

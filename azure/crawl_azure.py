@@ -1,4 +1,4 @@
-"""Export per-resource Azure carbon emission data (all scopes, categories, months)."""
+"""Export per-resource Azure carbon emission data (all scopes, per month)."""
 
 import json
 import logging
@@ -25,13 +25,6 @@ OUTPUT_DIR = Path("carbon_export")
 PAGE_SIZE = 5000
 
 SCOPES = [EmissionScopeEnum.SCOPE1, EmissionScopeEnum.SCOPE2, EmissionScopeEnum.SCOPE3]
-CATEGORY_TYPES = [
-    CategoryTypeEnum.RESOURCE,
-    CategoryTypeEnum.RESOURCE_GROUP,
-    CategoryTypeEnum.RESOURCE_TYPE,
-    CategoryTypeEnum.LOCATION,
-    CategoryTypeEnum.SUBSCRIPTION,
-]
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -61,40 +54,63 @@ def generate_months(start_date: str, end_date: str) -> list[date]:
     return months
 
 
-def export_item_details(carbon, available_range):
-    """Query ItemDetailsReport per month × scope × category with full pagination."""
+def paginate_query(carbon, query_filter):
+    """Paginate through all results for a given query filter."""
+    items = []
+    while True:
+        result = safe_request(carbon.query_carbon_emission_reports, query_filter)
+        if result.value:
+            items.extend(result.value)
+        if not result.skip_token:
+            break
+        query_filter.skip_token = result.skip_token
+    return items
+
+
+def export_emissions(carbon, available_range):
+    """Query resource-level emissions per month, merge scopes, write one JSON per month."""
     months = generate_months(available_range.start_date, available_range.end_date)
 
-    for scope in SCOPES:
-        for category in CATEGORY_TYPES:
-            cat_name = category.value.lower()
-            for month in months:
-                outfile = OUTPUT_DIR / f"item_details_{cat_name}_{scope.value}_{month.isoformat()}.jsonl"
-                log.info(f"ItemDetails | {scope.value} | {cat_name} | {month}")
+    for month in months:
+        month_key = month.strftime("%Y-%m")
+        outfile = OUTPUT_DIR / f"{month_key}.json"
+        if outfile.exists():
+            log.info(f"Skipping {month_key} (already exists)")
+            continue
 
-                query_filter = ItemDetailsQueryFilter(
-                    date_range=DateRange(start=month, end=month),
-                    subscription_list=SUBSCRIPTION_IDS,
-                    carbon_scope_list=[scope],
-                    category_type=category,
-                    order_by=OrderByColumnEnum.LATEST_MONTH_EMISSIONS,
-                    sort_direction=SortDirectionEnum.DESC,
-                    page_size=PAGE_SIZE,
-                )
+        resources = {}  # resourceId -> record dict
+        for scope in SCOPES:
+            scope_field = scope.value.lower()  # "scope1", "scope2", "scope3"
+            log.info(f"{month_key} | {scope.value}")
 
-                total = 0
-                while True:
-                    result = safe_request(carbon.query_carbon_emission_reports, query_filter)
-                    if result.value:
-                        with open(outfile, "a") as f:
-                            for item in result.value:
-                                f.write(json.dumps(item.as_dict(), default=str) + "\n")
-                        total += len(result.value)
-                    if not result.skip_token:
-                        break
-                    query_filter.skip_token = result.skip_token
+            query_filter = ItemDetailsQueryFilter(
+                date_range=DateRange(start=month, end=month),
+                subscription_list=SUBSCRIPTION_IDS,
+                carbon_scope_list=[scope],
+                category_type=CategoryTypeEnum.RESOURCE,
+                order_by=OrderByColumnEnum.LATEST_MONTH_EMISSIONS,
+                sort_direction=SortDirectionEnum.DESC,
+                page_size=PAGE_SIZE,
+            )
 
-                log.info(f"  -> {total} items")
+            items = paginate_query(carbon, query_filter)
+            for item in items:
+                rid = item.resource_id
+                if rid not in resources:
+                    resources[rid] = {
+                        "resourceId": rid,
+                        "resourceGroup": item.resource_group,
+                        "resourceType": item.resource_type,
+                        "location": item.location,
+                        "resourceName": item.item_name,
+                    }
+                resources[rid][scope_field] = item.latest_month_emissions
+
+            log.info(f"  -> {len(items)} items")
+
+        with open(outfile, "w") as f:
+            json.dump(list(resources.values()), f, indent=2)
+        log.info(f"Wrote {outfile} ({len(resources)} resources)")
 
 
 if __name__ == "__main__":
@@ -106,4 +122,4 @@ if __name__ == "__main__":
     available_range = safe_request(carbon.query_carbon_emission_data_available_date_range)
     log.info(f"Date range: {available_range.start_date} -> {available_range.end_date}")
 
-    export_item_details(carbon, available_range)
+    export_emissions(carbon, available_range)

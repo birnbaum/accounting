@@ -1,0 +1,442 @@
+[
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/cloud-energy-control-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "cloud-energy-control-pip",
+    "scope1": 0.000367609667510428,
+    "scope2": 0.0,
+    "scope3": 0.0249680267727778
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/cloud-energy-worker-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "cloud-energy-worker-pip",
+    "scope1": 0.000367609667510428,
+    "scope2": 0.0,
+    "scope3": 0.0249680267727778
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/edge-energy-control-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "edge-energy-control-pip",
+    "scope1": 0.000367609667510428,
+    "scope2": 0.0,
+    "scope3": 0.0249680267727778
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/edge-energy-worker-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "edge-energy-worker-pip",
+    "scope1": 0.000367609667510428,
+    "scope2": 0.0,
+    "scope3": 0.0249680267727778
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/knowledge-base-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "knowledge-base-pip",
+    "scope1": 0.000367609667510428,
+    "scope2": 0.0,
+    "scope3": 0.0249680267727778
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/fog-energy-control-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "fog-energy-control-pip",
+    "scope1": 0.000329016262961011,
+    "scope2": 0.0,
+    "scope3": 0.0223467650291237
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/fog-energy-worker-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "fog-energy-worker-pip",
+    "scope1": 0.000329016262961011,
+    "scope2": 0.0,
+    "scope3": 0.0223467650291237
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/cloud-cost-control-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "cloud-cost-control-pip",
+    "scope1": 0.000269734053418486,
+    "scope2": 0.0,
+    "scope3": 0.0183203208797321
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/cloud-cost-worker-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "cloud-cost-worker-pip",
+    "scope1": 0.000269734053418486,
+    "scope2": 0.0,
+    "scope3": 0.0183203208797321
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/cloud-performance-control-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "cloud-performance-control-pip",
+    "scope1": 0.000269734053418486,
+    "scope2": 0.0,
+    "scope3": 0.0183203208797321
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.network/publicipaddresses/cloud-performance-worker-pip",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "cloud-performance-worker-pip",
+    "scope1": 0.000269734053418486,
+    "scope2": 0.0,
+    "scope3": 0.0183203208797321
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/cloud-energy-control_osdisk_1_a0345497e4ba4e3c866cf9b706f733f5",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "cloud-energy-control_osdisk_1_a0345497e4ba4e3c866cf9b706f733f5",
+    "scope1": 0.000135639212475686,
+    "scope2": 0.0,
+    "scope3": 0.00921260725123707
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/cloud-energy-worker_osdisk_1_fe8b2f9602154ba68ea7017bdcc09a82",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "cloud-energy-worker_osdisk_1_fe8b2f9602154ba68ea7017bdcc09a82",
+    "scope1": 0.000135639212475686,
+    "scope2": 0.0,
+    "scope3": 0.00921260725123707
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/edge-energy-control_osdisk_1_94358646db124ffa9403261840c0d965",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "edge-energy-control_osdisk_1_94358646db124ffa9403261840c0d965",
+    "scope1": 0.000135639212475686,
+    "scope2": 0.0,
+    "scope3": 0.00921260725123707
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/edge-energy-worker_osdisk_1_b045da08f0f54b258fbeb9095c6eaaa2",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "edge-energy-worker_osdisk_1_b045da08f0f54b258fbeb9095c6eaaa2",
+    "scope1": 0.000135639212475686,
+    "scope2": 0.0,
+    "scope3": 0.00921260725123707
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/fog-energy-control_osdisk_1_717511f4dc454297be38a63b169f737a",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "fog-energy-control_osdisk_1_717511f4dc454297be38a63b169f737a",
+    "scope1": 0.000135639212475686,
+    "scope2": 0.0,
+    "scope3": 0.00921260725123707
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/fog-energy-worker_osdisk_1_9739aaedac84421893fb8fdfab678f2a",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "fog-energy-worker_osdisk_1_9739aaedac84421893fb8fdfab678f2a",
+    "scope1": 0.000135639212475686,
+    "scope2": 0.0,
+    "scope3": 0.00921260725123707
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/knowledge-base_osdisk_1_aa78a5d9bb7545e0a4cd6848155acf6f",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "knowledge-base_osdisk_1_aa78a5d9bb7545e0a4cd6848155acf6f",
+    "scope1": 0.000135639212475686,
+    "scope2": 0.0,
+    "scope3": 0.00921260725123707
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/cloud-cost-control_osdisk_1_5343a7b992c140419c84a8b9a66ec608",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "cloud-cost-control_osdisk_1_5343a7b992c140419c84a8b9a66ec608",
+    "scope1": 0.000111162963607893,
+    "scope2": 0.0,
+    "scope3": 0.00755018188259279
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/cloud-cost-worker_osdisk_1_2db66381dfd44598ad894164bb28a25e",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "cloud-cost-worker_osdisk_1_2db66381dfd44598ad894164bb28a25e",
+    "scope1": 0.000111162963607893,
+    "scope2": 0.0,
+    "scope3": 0.00755018188259279
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/cloud-performance-control_osdisk_1_3bc0aca6812347d59112bc3976fbf60d",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "cloud-performance-control_osdisk_1_3bc0aca6812347d59112bc3976fbf60d",
+    "scope1": 0.000111162963607893,
+    "scope2": 0.0,
+    "scope3": 0.00755018188259279
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/cloud-performance-worker_osdisk_1_71a29d4691724a8e98b2f90dbbf11763",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "cloud-performance-worker_osdisk_1_71a29d4691724a8e98b2f90dbbf11763",
+    "scope1": 0.000111162963607893,
+    "scope2": 0.0,
+    "scope3": 0.00755018188259279
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/virtualmachines/cloud-energy-control",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/virtualmachines",
+    "location": "east us",
+    "resourceName": "cloud-energy-control",
+    "scope1": 6.41756330653572e-05,
+    "scope2": 0.0,
+    "scope3": 0.00435880518427974
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/virtualmachines/cloud-energy-worker",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/virtualmachines",
+    "location": "east us",
+    "resourceName": "cloud-energy-worker",
+    "scope1": 6.33391173622086e-05,
+    "scope2": 0.0,
+    "scope3": 0.0043019890874303
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/virtualmachines/knowledge-base",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/virtualmachines",
+    "location": "east us",
+    "resourceName": "knowledge-base",
+    "scope1": 2.59094620171436e-05,
+    "scope2": 0.0,
+    "scope3": 0.00175976912058212
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/cloud-energy-control_osdisk_1_dd8d7c7f827f4077afa286f13e9bf72a",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "cloud-energy-control_osdisk_1_dd8d7c7f827f4077afa286f13e9bf72a",
+    "scope1": 1.94964324452528e-05,
+    "scope2": 0.0,
+    "scope3": 0.00132419653314182
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/cloud-energy-worker_osdisk_1_837867263bf8418790e063c8854e6c14",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "cloud-energy-worker_osdisk_1_837867263bf8418790e063c8854e6c14",
+    "scope1": 1.7605873381044e-05,
+    "scope2": 0.0,
+    "scope3": 0.00119578987384376
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/knowledge-base_osdisk_1_9b784ac031df4f51ae0dca4750c6be5a",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "knowledge-base_osdisk_1_9b784ac031df4f51ae0dca4750c6be5a",
+    "scope1": 1.67668917908366e-05,
+    "scope2": 0.0,
+    "scope3": 0.00113880629409182
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/edge-energy-control_osdisk_1_d70b39fea8434f92985cf6c86d8d1bfb",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "edge-energy-control_osdisk_1_d70b39fea8434f92985cf6c86d8d1bfb",
+    "scope1": 1.61242479384558e-05,
+    "scope2": 0.0,
+    "scope3": 0.00109515796182605
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/disks/edge-energy-worker_osdisk_1_c2c59bd1e7d84309964d8f1a2baedd06",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "edge-energy-worker_osdisk_1_c2c59bd1e7d84309964d8f1a2baedd06",
+    "scope1": 1.60906695069331e-05,
+    "scope2": 0.0,
+    "scope3": 0.00109287731675237
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/virtualmachines/edge-energy-control",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/virtualmachines",
+    "location": "east us",
+    "resourceName": "edge-energy-control",
+    "scope1": 7.21102799415613e-06,
+    "scope2": 0.0,
+    "scope3": 0.000489772592860968
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/virtualmachines/edge-energy-worker",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/virtualmachines",
+    "location": "east us",
+    "resourceName": "edge-energy-worker",
+    "scope1": 7.19464071770826e-06,
+    "scope2": 0.0,
+    "scope3": 0.000488659570018412
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/flerlage-sc/providers/microsoft.cognitiveservices/accounts/flerlage-sc",
+    "resourceGroup": "flerlage-sc",
+    "resourceType": "microsoft.cognitiveservices/accounts",
+    "location": "sweden central",
+    "resourceName": "flerlage-sc",
+    "scope1": 9.70127901508236e-07,
+    "scope2": 0.0,
+    "scope3": 9.13594354996629e-05
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/virtualmachines/fog-energy-worker",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/virtualmachines",
+    "location": "east us",
+    "resourceName": "fog-energy-worker",
+    "scope1": 7.75577359627769e-07,
+    "scope2": 0.0,
+    "scope3": 5.26771681786556e-05
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.compute/virtualmachines/fog-energy-control",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.compute/virtualmachines",
+    "location": "east us",
+    "resourceName": "fog-energy-control",
+    "scope1": 7.21703371177732e-07,
+    "scope2": 0.0,
+    "scope3": 4.90180500844921e-05
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/speech/providers/microsoft.storage/storageaccounts/kiassistentspeicher",
+    "resourceGroup": "speech",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "west europe",
+    "resourceName": "kiassistentspeicher",
+    "scope1": 1.77117818490133e-07,
+    "scope2": 0.0,
+    "scope3": 1.95243247876328e-05
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/monitoringfunctionapp/providers/microsoft.operationalinsights/workspaces/workspace-monitoringfunctionapp",
+    "resourceGroup": "monitoringfunctionapp",
+    "resourceType": "microsoft.operationalinsights/workspaces",
+    "location": "germany west central",
+    "resourceName": "workspace-monitoringfunctionapp",
+    "scope1": 1.1190864111715e-07,
+    "scope2": 0.0,
+    "scope3": 7.66045524151754e-06
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/monitoringfunctionapp/providers/microsoft.storage/storageaccounts/monitoringfunctionapp",
+    "resourceGroup": "monitoringfunctionapp",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "germany west central",
+    "resourceName": "monitoringfunctionapp",
+    "scope1": 5.93128800530206e-08,
+    "scope2": 0.0,
+    "scope3": 4.06013028445246e-06
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/flerlage-sc/providers/microsoft.storage/storageaccounts/stflerlage0226117948410",
+    "resourceGroup": "flerlage-sc",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "sweden central",
+    "resourceName": "stflerlage0226117948410",
+    "scope1": 2.13385245660073e-08,
+    "scope2": 0.0,
+    "scope3": 2.00950364968919e-06
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/jonathan-rau-student-rg/providers/microsoft.insights/actiongroups/budgetalertactiongroup",
+    "resourceGroup": "jonathan-rau-student-rg",
+    "resourceType": "microsoft.insights/actiongroups",
+    "location": "east us 2",
+    "resourceName": "budgetalertactiongroup",
+    "scope1": 8.23765728665154e-09,
+    "scope2": 0.0,
+    "scope3": 8.42640285456098e-07
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/felixswarmchestrate/providers/microsoft.storage/storageaccounts/myclusterfiles",
+    "resourceGroup": "felixswarmchestrate",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "east us",
+    "resourceName": "myclusterfiles",
+    "scope1": 8.06633264527928e-09,
+    "scope2": 0.0,
+    "scope3": 5.47864833940342e-07
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/monitoringfunctionapp/providers/microsoft.web/sites/monitoring-function-app",
+    "resourceGroup": "monitoringfunctionapp",
+    "resourceType": "microsoft.web/sites",
+    "location": "germany west central",
+    "resourceName": "monitoring-function-app",
+    "scope1": 6.58310823975698e-09,
+    "scope2": 0.0,
+    "scope3": 4.50631921872165e-07
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/cc/providers/microsoft.storage/storageaccounts/ccws24",
+    "resourceGroup": "cc",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "west europe",
+    "resourceName": "ccws24",
+    "scope1": 3.79247211038977e-09,
+    "scope2": 0.0,
+    "scope3": 4.18057640177032e-07
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/flerlage-sc/providers/microsoft.keyvault/vaults/kv-flerlage226117948410",
+    "resourceGroup": "flerlage-sc",
+    "resourceType": "microsoft.keyvault/vaults",
+    "location": "sweden central",
+    "resourceName": "kv-flerlage226117948410",
+    "scope1": 6.95556839224309e-10,
+    "scope2": 0.0,
+    "scope3": 6.55023735433953e-08
+  }
+]

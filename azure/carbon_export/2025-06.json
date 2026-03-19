@@ -1,0 +1,52 @@
+[
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/speech/providers/microsoft.storage/storageaccounts/kiassistentspeicher",
+    "resourceGroup": "speech",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "west europe",
+    "resourceName": "kiassistentspeicher",
+    "scope1": 1.78423072368922e-07,
+    "scope2": 0.0,
+    "scope3": 2.25494989590912e-05
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/leonardo-tizian-student-rg/providers/microsoft.cognitiveservices/accounts/ocits-open-ai",
+    "resourceGroup": "leonardo-tizian-student-rg",
+    "resourceType": "microsoft.cognitiveservices/accounts",
+    "location": "east us",
+    "resourceName": "ocits-open-ai",
+    "scope1": 1.40715453178512e-07,
+    "scope2": 0.0,
+    "scope3": 8.62870045953794e-06
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/monitoringfunctionapp/providers/microsoft.storage/storageaccounts/monitoringfunctionapp",
+    "resourceGroup": "monitoringfunctionapp",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "germany west central",
+    "resourceName": "monitoringfunctionapp",
+    "scope1": 6.67999065823618e-08,
+    "scope2": 0.0,
+    "scope3": 4.61265093581272e-06
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/cc/providers/microsoft.storage/storageaccounts/ccws24",
+    "resourceGroup": "cc",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "west europe",
+    "resourceName": "ccws24",
+    "scope1": 5.80786685227434e-09,
+    "scope2": 0.0,
+    "scope3": 7.34010942649323e-07
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/student-monitoring-rg/providers/microsoft.storage/storageaccounts/studentmonitoringrga2f4",
+    "resourceGroup": "student-monitoring-rg",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "germany west central",
+    "resourceName": "studentmonitoringrga2f4",
+    "scope1": 7.37414334623011e-11,
+    "scope2": 0.0,
+    "scope3": 5.09197556509559e-09
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/speech/providers/microsoft.storage/storageaccounts/kiassistentspeicher",
+    "resourceGroup": "speech",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "west europe",
+    "resourceName": "kiassistentspeicher",
+    "scope1": 5.15020075754528e-06,
+    "scope2": 0.0,
+    "scope3": 0.000709403463431608
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/mc_aksproject-myaksresourcegroup_aksproject-myakscluster_eastus/providers/microsoft.network/loadbalancers/kubernetes",
+    "resourceGroup": "mc_aksproject-myaksresourcegroup_aksproject-myakscluster_eastus",
+    "resourceType": "microsoft.network/loadbalancers",
+    "location": "east us",
+    "resourceName": "kubernetes",
+    "scope1": 3.04050064762884e-06,
+    "scope2": 0.0,
+    "scope3": 0.000197857916633669
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/mc_aksproject-myaksresourcegroup_aksproject-myakscluster_eastus/providers/microsoft.network/publicipaddresses/85a1c9d6-9018-4dbf-b80d-2045bc0818b1",
+    "resourceGroup": "mc_aksproject-myaksresourcegroup_aksproject-myakscluster_eastus",
+    "resourceType": "microsoft.network/publicipaddresses",
+    "location": "east us",
+    "resourceName": "85a1c9d6-9018-4dbf-b80d-2045bc0818b1",
+    "scope1": 6.08100129526408e-07,
+    "scope2": 0.0,
+    "scope3": 3.95715833267755e-05
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/mc_aksproject-myaksresourcegroup_aksproject-myakscluster_eastus/providers/microsoft.compute/virtualmachinescalesets/aks-default-14760252-vmss",
+    "resourceGroup": "mc_aksproject-myaksresourcegroup_aksproject-myakscluster_eastus",
+    "resourceType": "microsoft.compute/virtualmachinescalesets",
+    "location": "east us",
+    "resourceName": "aks-default-14760252-vmss",
+    "scope1": 5.49447342927281e-07,
+    "scope2": 0.0,
+    "scope3": 3.57548046096545e-05
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/mc_aksproject-myaksresourcegroup_aksproject-myakscluster_eastus/providers/microsoft.compute/disks/aks-default-14760252aks-default-14760252-os__1_9e5ac543d5b34e729717c07df666ea1d",
+    "resourceGroup": "mc_aksproject-myaksresourcegroup_aksproject-myakscluster_eastus",
+    "resourceType": "microsoft.compute/disks",
+    "location": "east us",
+    "resourceName": "aks-default-14760252aks-default-14760252-os__1_9e5ac543d5b34e729717c07df666ea1d",
+    "scope1": 3.80069956574609e-07,
+    "scope2": 0.0,
+    "scope3": 2.47327195412856e-05
+  },
+  {
+    "resourceId": "/subscriptions/3b7f0d07-2848-4c7c-87d3-074743ad0131/resourcegroups/cc/providers/microsoft.storage/storageaccounts/ccws24",
+    "resourceGroup": "cc",
+    "resourceType": "microsoft.storage/storageaccounts",
+    "location": "west europe",
+    "resourceName": "ccws24",
+    "scope1": 3.86624220146512e-08,
+    "scope2": 0.0,
+    "scope3": 5.32547319474213e-06
+  }
+]
