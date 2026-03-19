@@ -20,7 +20,7 @@ Summary by provider:
 
 - **GCP:** strongest alignment for electricity-related signals at the aggregate level — internal allocation is physical and granular. However, the customer-facing step distributes energy across SKUs using price-based proportionality and allocates by usage units (e.g., vCPU-hours), so individual customer CPU utilization is not reflected in the reported number (Schneider & Mattia 2024, §3.6.1). Temporal shifting reconciles internally (hourly Electricity Maps) but only monthly data is exposed to customers.
 - **AWS:** strong for foundational services (usage allocation tracks instance-hours), weaker where economic allocation is used for non-foundational services.
-- **Azure:** directionally aligned for many actions, but confidence is limited by usage-factor opacity and coarser service granularity.
+- **Azure:** directionally aligned for many actions, but confidence is limited by usage-factor opacity (2021 whitepaper reveals usage = "normalized cost metric," closer to economic allocation than physical), coarser service granularity, and methodological tension between sources. Carbon Optimization tool adds resource-level granularity with AI-driven recommendations.
 
 When a provider improves methodology, new optimization levers become reconcilable. Making that visible is part of the point.
 
@@ -28,7 +28,7 @@ When a provider improves methodology, new optimization levers become reconcilabl
 
 We compiled a detailed comparison of the carbon accounting methodologies of the three major hyperscalers (AWS, GCP, Azure) covering their customer-facing tools (CCFT, Cloud Carbon Footprint, EID), allocation methods, Scope 1/2/3 coverage, emission factor sources, temporal granularity, embodied carbon treatment, verification status, and reporting practices. The full comparison is in `HYPERSCALER_CARBON_ACCOUNTING.md`.
 
-From this analysis, we identified the **variables that determine which bottom-up optimizations are reconcilable** with the top-down report. These variables were organized into the schema below with three design principles:
+From this analysis, we identified the **variables that determine which bottom-up optimizations are reconcilable** with the top-down report. Note that Azure now has two customer-facing tools: the Emissions Impact Dashboard (EID, subscription × service × region, up to 5 years, Power BI) and Carbon Optimization (resource_group × resource level, 12 months, Azure portal + REST API, with AI-driven reduction recommendations). These variables were organized into the schema below with three design principles:
 
 1. **Each parameter carries a reconcilability flag** — `direct` (bottom-up feeds same calculation), `approximate` (correlated but not identical), or `structural_mismatch` (provider's method is decoupled from physical measurement).
 2. **The schema derives actionable levers per provider** — given a filled profile, you can determine which optimizations will actually move the user's reported number.
@@ -146,11 +146,14 @@ These are slow-moving parameters — outside the user's optimization loop but re
 
 | Field | Type | Description |
 |-------|------|-------------|
+| `purchased_goods_services_included` | boolean | Category 1: Purchased Goods & Services (e.g., raw material extraction) |
 | `fera_included` | boolean | Category 3: Fuel & Energy-Related Activities |
-| `upstream_transport_included` | boolean | Category 4 |
-| `waste_included` | boolean | Category 5 |
-| `business_travel_included` | boolean | Category 6 |
-| `employee_commuting_included` | boolean | Category 7 |
+| `upstream_transport_included` | boolean | Category 4: Upstream Transportation & Distribution |
+| `waste_included` | boolean | Category 5: Waste Generated in Operations |
+| `business_travel_included` | boolean | Category 6: Business Travel |
+| `employee_commuting_included` | boolean | Category 7: Employee Commuting |
+| `downstream_transport_included` | boolean | Category 9: Downstream Transportation & Distribution |
+| `end_of_life_treatment_included` | boolean | Category 12: End-of-Life Treatment of Sold Products |
 | `other_scope3_allocation_method` | enum: `usage`, `proportional_to_energy`, `economic` | How these are allocated to customers |
 
 ### 7. Verification and Trust
@@ -329,17 +332,19 @@ methodology_publicly_available: true
 
 ```yaml
 provider_name: "Microsoft Azure"
-tool_name: "Emissions Impact Dashboard (EID)"
-methodology_version: "CHEM Whitepaper 2026"
-reporting_delay_days: 15
+tool_name: "Emissions Impact Dashboard (EID); Carbon Optimization (Azure portal + REST API)"
+# EID: subscription × service × region level, up to 5 years retention, Power BI / Fabric
+# Carbon Optimization: resource_group × resource level, 12-month retention, Azure portal + REST API, AI-driven reduction recommendations via Azure Advisor
+methodology_version: "CHEM Whitepaper 2026; Azure Emissions Calculation Methodology (updated January 2026)"
+reporting_delay_days: 19  # per Carbon Optimization docs: "Data for the previous month is available by day 19 of the current month"
 customer_temporal_granularity: monthly
 internal_temporal_granularity: monthly  # assumed
-customer_reporting_dimensions: [subscription, service_category, region]
+customer_reporting_dimensions: [subscription, service_category, region, resource_group, resource]  # resource_group and resource via Carbon Optimization only
 recommended_reconciliation_unit: "subscription × service_category × region × month"
 historical_recast_policy: limited_window
 recast_window_months: 12
-data_retention_months: 12
-api_access: true  # Fabric / Power BI
+data_retention_months: 12  # Carbon Optimization: 12 months; EID offers up to 5 years via Power BI but primary retention is 12 months
+api_access: true  # Fabric / Power BI (EID); Azure portal + REST API (Carbon Optimization)
 
 # Scope 2 — Energy to Carbon
 emission_factor_temporal_resolution: monthly
@@ -351,8 +356,8 @@ grid_region_mapping: provider_region
 primary_allocation_method: usage
 fallback_allocation_method: null  # not disclosed; Azure does not describe any explicit fallback
 fallback_allocation_scope: null  # not disclosed
-usage_allocation_unit: "compute, storage, and data transfer time per region (derivation not disclosed)"
-economic_allocation_basis: null  # not disclosed
+usage_allocation_unit: "normalized cost metric (2021 whitepaper: 'the normalized cost metric associated with IaaS, PaaS or SaaS... normalized to exclude discounts and other variables'); described as compute, storage, and data transfer time in 2025 Carbon Optimization docs — unclear if methodology evolved or terminology differs"
+economic_allocation_basis: null  # not formally disclosed as economic, but normalized cost metric basis is closer to economic than physical
 allocation_granularity: service_category
 idle_capacity_treatment: undisclosed
 allocation_uncertainty_pct: "15-30%"
@@ -368,19 +373,23 @@ networking_overhead_included: null
 it_hardware_included: true
 it_hardware_lca_boundary: cradle_to_grave
 it_hardware_lifetime_years: 6
-it_hardware_lifetime_treatment: amortize_then_zero  # zero after 6 years; same as AWS
+it_hardware_lifetime_treatment: amortize_then_zero  # zero after 6 years; asymmetric: if equipment life < 6 years, emissions still counted for 6 years (conservative)
 building_embodied_included: false
 building_lifetime_years: null
 non_it_infrastructure_included: false
 end_of_life_included: true
 embodied_carbon_allocation_method: usage  # consistent with overall usage-based allocation approach
-lca_data_source: "Component-level LCA via CHEM; AI-augmented for scale"
+lca_data_source: "Component-level LCA via CHEM (Material Circularity and Life Cycle Carbon Emission Calculator v7.3); AI-augmented for scale. Component types: rack, disk drive, server blades, FPGA, power supply units, other"
 embodied_uncertainty_pct: "10-20% (LCA-backed), 15-30% (AI-augmented)"
 
 # Other Scope 3
-fera_included: true
-upstream_transport_included: true  # partial; Azure source explicitly lists Cat. 4 in scope (hardware transport in LCA)
-waste_included: false  # Azure lists Cat. 5 in scope but refers to hardware end-of-life, not operational waste
+# Azure explicitly lists "scope 3 categories 1, 2, 4, 5, 9, and 12" per emissions calculation methodology
+fera_included: false  # Cat. 3 NOT in Azure's listed categories
+upstream_transport_included: true  # Cat. 4 explicitly listed (upstream transportation: manufacturer → datacenter dock)
+waste_included: true  # Cat. 5 explicitly listed (waste generated in operations)
+downstream_transport_included: true  # Cat. 9 explicitly listed (downstream transportation: datacenter → recycler)
+end_of_life_treatment_included: true  # Cat. 12 explicitly listed (recycling, landfill, composting)
+purchased_goods_services_included: true  # Cat. 1 explicitly listed (raw material extraction)
 business_travel_included: false
 employee_commuting_included: false
 other_scope3_allocation_method: usage
@@ -399,9 +408,11 @@ methodology_publicly_available: true  # partial
 | Compute efficiency (reduce compute utilization) | ❌ Not rewarded | Usage allocation (compute, storage, network time). Compute utilization not reflected — same usage time = same carbon. |
 | Temporal shifting | ❌ Not rewarded | Monthly emission factors. |
 | Spatial shifting (region choice) | ⚠️ Approximate | Regional emission factors differ; usage-based approach preserves regional signal. |
-| Right-sizing / eliminate waste | ✅ Direct | Reducing usage time (compute/storage/network) directly reduces allocated carbon. |
+| Right-sizing / eliminate waste | ✅ Direct | Reducing usage time (compute/storage/network) directly reduces allocated carbon. Carbon Optimization tool provides AI-driven recommendations (via Azure Advisor) for shutdown of idle VMs and rightsizing, with estimated carbon and cost savings per recommendation. |
 | Architecture choice | ⚠️ Approximate | Only reconciles if the more efficient hardware completes the job faster (less usage time). Same duration = same carbon. Service-category granularity (not SKU) may not capture all differences. |
-| Eliminate idle resources | ✅ Direct | Azure's allocation is based on compute, storage, and data transfer time — turning off idle resources directly reduces allocated carbon. |
+| Eliminate idle resources | ✅ Direct | Azure's allocation is based on compute, storage, and data transfer time — turning off idle resources directly reduces allocated carbon. Carbon Optimization surfaces idle VM recommendations with per-resource carbon savings estimates. |
+
+**Note on allocation basis:** The 2021 Scope 3 Whitepaper defines Azure usage as a "normalized cost metric," which is closer to economic allocation than physical usage. If the allocation is indeed cost-based rather than resource-time-based, the reconcilability of right-sizing and idle resource elimination may be weaker than stated above — cost-normalized allocation does not guarantee that reducing physical resource consumption proportionally reduces the allocated carbon. The 2025 Carbon Optimization docs describe usage as "compute, storage, and data transfer" time, which would support stronger reconcilability. The true allocation basis is uncertain.
 
 ---
 
@@ -462,7 +473,7 @@ Based on this analysis, these are the **minimum parameters** a provider must dis
 
 ## Open Questions
 
-1. **How should the framework handle usage allocation with undisclosed parameters?** Azure's usage-factor approach correlates with physical usage but the exact derivation is undisclosed. Options: (a) treat as `approximate` and provide reconcilable signals with wider confidence intervals, (b) require Microsoft to disclose usage factor derivation before claiming reconcilability, (c) empirically determine the correlation by comparing bottom-up estimates with top-down actuals over multiple months.
+1. **How should the framework handle Azure's usage allocation given the normalized cost metric basis?** The 2021 Scope 3 Whitepaper defines Azure usage as a "normalized cost metric... normalized to exclude discounts and other variables," which is closer to economic allocation than physical usage. The 2025 Carbon Optimization docs describe it as "compute, storage, and data transfer" time. This tension creates ambiguity about whether Azure's allocation is truly usage-based or economic-adjacent. Options: (a) treat as `approximate` with wider confidence intervals reflecting the cost-metric uncertainty, (b) require Microsoft to clarify the current allocation basis (cost-metric vs. resource-time) before claiming reconcilability, (c) empirically determine the correlation by comparing bottom-up estimates with top-down actuals over multiple months, (d) treat as two regimes — pre-2025 (cost-metric) and post-2025 (possibly resource-time) — pending confirmation of a methodology change.
 
 2. **How to handle GCP's hourly-internal / monthly-external gap?** GCP computes hourly but reports monthly. If a user shifts load to low-carbon hours, the internal accounting captures it but the customer-facing report doesn't show it at that granularity. Do we reward it (because it's real) or not (because the customer can't verify it in their report)?
 

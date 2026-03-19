@@ -7,7 +7,7 @@ Based on:
 - Azure emissions calculation methodology: https://learn.microsoft.com/en-us/power-bi/connect-data/azure-emissions-calculation-methodology
 
 **Scope:** This document covers only IaaS and PaaS offerings. Microsoft 365 and other SaaS products are explicitly excluded.  
-**Sources:** AWS CCFT Methodology PDF (October 2025), Apex Companies LLC Assurance Statement, Google Cloud Carbon Footprint Methodology Docs, Schneider & Mattia arXiv:2406.09645, Azure Emissions Calculation Methodology (Microsoft Learn), Microsoft Scope 3 Whitepaper (2021), Microsoft Cloud Hardware Emissions Methodology (CHEM) Whitepaper (2026), GHG Protocol Corporate Standard, GHG Protocol Scope 3 Standard, GHG Protocol Scope 2 Guidance (2015), HotCarbon 2024 academic papers.  
+**Sources:** AWS CCFT Methodology PDF (October 2025), Apex Companies LLC Assurance Statement, Google Cloud Carbon Footprint Methodology Docs, Schneider & Mattia arXiv:2406.09645, Azure Emissions Calculation Methodology (Microsoft Learn, updated January 2026), Microsoft Scope 3 Whitepaper (2021), Microsoft Cloud Hardware Emissions Methodology (CHEM) Whitepaper (2026), Azure Carbon Optimization Docs (Microsoft Learn, 2025), GHG Protocol Corporate Standard, GHG Protocol Scope 3 Standard, GHG Protocol Scope 2 Guidance (2015), HotCarbon 2024 academic papers.  
 **Last updated:** March 2026
 
 ---
@@ -16,7 +16,7 @@ Based on:
 
 | Attribute | AWS | Google Cloud | Azure |
 |---|---|---|---|
-| **Tool name** | Customer Carbon Footprint Tool (CCFT) | Google Cloud Carbon Footprint | Emissions Impact Dashboard (EID) |
+| **Tool name** | Customer Carbon Footprint Tool (CCFT) | Google Cloud Carbon Footprint | Emissions Impact Dashboard (EID); Carbon Optimization (Azure portal + REST API) |
 | **Launched** | 2022 | 2021 | 2020 |
 | **Scope 3 added** | April 2024 (IT hardware); expanded Oct 2024 (buildings, non-IT, waste, transport) | 2021 (embodied carbon included from launch) | 2021 (methodology whitepaper) |
 | **Primary calculation approach** | Usage allocation for foundational services (instance-hours); economic (revenue) fallback for non-foundational services | Two-stage: physical measurement internally (machine-level power telemetry) → usage allocation at customer boundary (vCPU-hours × price-derived SKU factor) | LCA-based embodied carbon (CHEM) + usage allocation via customer usage factors per datacenter region |
@@ -24,11 +24,12 @@ Based on:
 | **Third-party verified** | Yes — limited scope | No — academic critical review only | Yes — limited scope |
 | **Verifier** | Apex Companies, LLC | Fraunhofer IZM (ISO 14040/14044 critical review) | WSP USA |
 | **Verification scope** | Scope 3 Cat. 2, 3, 4 only; Scope 1 unverified; Oct 2024 expansion not re-verified | LCA methodology for hardware embodied carbon only; customer tool not audited | Scope 3 methodology document only; tool implementation not audited |
-| **Reporting delay** | ≤21 days (as of Dec 2025; previously ~3 months) | ~15 days | ~15 days (by 15th of following month) |
-| **Historical data retention** | 38 months | Unlimited (BigQuery export) | 12 months only |
+| **Reporting delay** | ≤21 days (as of Dec 2025; previously ~3 months) | ~15 days | ~19 days (data available by day 19 of following month per Carbon Optimization docs) |
+| **Historical data retention** | 38 months | Unlimited (BigQuery export) | 12 months (Carbon Optimization); up to 60 months (EID via Power BI) |
 | **Historical recasting on methodology change** | Full recast to January 2020 | Full recast capability via BigQuery | 12-month window only |
-| **API / programmatic access** | No | Yes (BigQuery export) | Yes (Microsoft Fabric / Power BI) |
+| **API / programmatic access** | No | Yes (BigQuery export) | Yes (Microsoft Fabric / Power BI for EID; Azure portal + REST API for Carbon Optimization) |
 | **Service coverage** | 200+ AWS services | All GCP services (per SKU per region) | Major Azure IaaS/PaaS services |
+| **Additional capabilities** | — | — | Carbon Optimization provides resource_group × resource level granularity with AI-driven reduction recommendations (via Azure Advisor), including estimated carbon and cost savings per recommendation |
 
 ---
 
@@ -77,22 +78,25 @@ The GHG Protocol Scope 3 Standard defines 15 upstream and downstream categories.
 
 | GHG Protocol Scope 3 Category | AWS | GCP | Azure | Notes |
 |---|---|---|---|---|
-| **Cat. 1: Purchased Goods & Services** | N/A | N/A | N/A | Not applicable — these providers *are* the service |
-| **Cat. 2: IT Hardware (servers, networking, storage)** | ✅ Full | ✅ Full | ✅ Full | All three amortize over assumed service life; see §6 for lifetime assumptions |
+| **Cat. 1: Purchased Goods & Services** | N/A | N/A | ✅ Full | Azure explicitly lists Cat. 1 (raw material extraction) in scope per emissions calculation methodology; N/A for AWS and GCP (these providers *are* the service) |
+| **Cat. 2: IT Hardware (servers, networking, storage)** | ✅ Full | ✅ Full | ✅ Full | All three amortize over assumed service life; see §6 for lifetime assumptions. Azure CHEM covers component types: rack, disk drive, server blades, FPGA, power supply units, other |
 | **Cat. 2: Data center buildings (embodied carbon)** | ✅ Full (added Oct 2024) | ✅ Full | ❌ Excluded | Azure excludes (methodology doc notes it "might add as data becomes available") |
 | **Cat. 2: Non-IT infrastructure (UPS, cooling, etc.)** | ✅ Full | ⚠️ Partial | ❌ Excluded | AWS most complete |
-| **Cat. 3: Fuel & Energy-Related Activities (FERA)** | ✅ Full | ✅ Full | ✅ Full | All three comply |
-| **Cat. 4: Upstream Transportation & Distribution** | ✅ Full | ⚠️ Partial | ⚠️ Partial | Hardware lifecycle LCA includes transport; Azure source explicitly lists Cat. 4 in scope |
-| **Cat. 5: Waste Generated in Operations** | ✅ Full | ❌ Excluded | ❌ Excluded | AWS only |
+| **Cat. 3: Fuel & Energy-Related Activities (FERA)** | ✅ Full | ✅ Full | ❌ Excluded | Azure's emissions calculation methodology explicitly lists "scope 3 categories 1, 2, 4, 5, 9, and 12" — Cat. 3 is NOT included |
+| **Cat. 4: Upstream Transportation & Distribution** | ✅ Full | ⚠️ Partial | ✅ Full | Azure explicitly lists Cat. 4 (upstream transportation: manufacturer → datacenter dock) |
+| **Cat. 5: Waste Generated in Operations** | ✅ Full | ❌ Excluded | ✅ Full | Azure explicitly lists Cat. 5 (waste generated in operations) |
 | **Cat. 6: Business Travel** | ❌ Excluded | ✅ Full | ❌ Excluded | GCP only |
 | **Cat. 7: Employee Commuting** | ❌ Excluded | ✅ Full | ❌ Excluded | GCP only |
-| **Cat. 8–15: Downstream categories** | N/A | N/A | N/A | Not material for cloud providers as service sellers |
-| **End-of-Life Treatment of Hardware** | ❌ Excluded | ❌ Excluded | ✅ Full | Not a standard GHG Protocol category; Azure only |
+| **Cat. 8: Upstream Leased Assets** | N/A | N/A | N/A | Not material for cloud providers |
+| **Cat. 9: Downstream Transportation & Distribution** | ❌ Excluded | ❌ Excluded | ✅ Full | Azure explicitly lists Cat. 9 (downstream transportation: datacenter → recycler) |
+| **Cat. 10–11** | N/A | N/A | N/A | Not material for cloud providers |
+| **Cat. 12: End-of-Life Treatment of Sold Products** | ❌ Excluded | ❌ Excluded | ✅ Full | Azure explicitly lists Cat. 12 (end-of-life treatment: recycling, landfill, composting) |
+| **Cat. 13–15** | N/A | N/A | N/A | Not material for cloud providers |
 
 **GHG Protocol category count (approximate):**
 - **AWS:** 4 categories (Cat. 2 full incl. buildings, Cat. 3, Cat. 4, Cat. 5)
 - **GCP:** 4 categories (Cat. 2 full incl. buildings, Cat. 3, Cat. 6, Cat. 7)
-- **Azure:** 3 categories (Cat. 2, Cat. 3, Cat. 4 partial via hardware LCA)
+- **Azure:** 6 categories (Cat. 1, Cat. 2, Cat. 4, Cat. 5, Cat. 9, Cat. 12) — broadest Scope 3 category count, though excludes FERA (Cat. 3) and buildings
 
 **GHG Protocol position:** The Scope 3 Standard requires companies to include all material categories. For cloud providers, Category 2 (Capital Goods) is unambiguously material and required. Categories 3, 4, 5, 6, and 7 are likely material for hyperscale operators but are not included by all providers. The omission of these categories is a gap, not necessarily a violation — the GHG Protocol allows companies to exclude immaterial categories with justification. However, none of the three providers publicly discloses a materiality assessment justifying their exclusions.
 
@@ -128,11 +132,29 @@ GCP uses the most granular approach of the three providers, but it operates in t
 
 **Weakness:** The price-based SKU distribution step means customer-facing allocation does not reflect actual compute utilization — only usage units (time × size). The paper explicitly acknowledges this: "Cost-based allocation doesn't signal actual efficiency differences." The proportional allocation for non-electricity Scope 3 is a proxy that may not accurately reflect the actual distribution of embodied carbon across customers with different workload types (e.g., GPU-heavy AI workloads vs. CPU-only compute). The cost-based fallback for internal shared services introduces additional economic allocation at the internal level, though the affected fraction is not disclosed.
 
-### 5.3 Azure — Usage Allocation
+### 5.3 Azure — Usage Allocation (Normalized Cost Metric)
 
-Azure uses usage allocation via customer usage factors:
+Azure uses usage allocation via customer usage factors. However, the underlying definition of "usage" has evolved between sources:
 
-**Azure IaaS/PaaS:** Emissions are allocated based on a customer's relative Azure usage in a given datacenter region. An algorithm calculates a usage factor (emissions per unit of customer usage in a specific region) and applies it directly. Usage is calculated from compute, storage, and data transfer. The methodology is described as consistent across Scope 1, 2, and 3. The precise definition of the "usage factor" units and how they are derived are not fully disclosed in the public methodology document, limiting independent verification. Uncertainty: ~15–30%.
+**2021 Whitepaper definition:** The Microsoft Scope 3 Whitepaper (2021) defines Azure usage as "the normalized cost metric associated with IaaS, PaaS or SaaS... normalized to exclude discounts and other variables." This is significantly closer to economic allocation than the term "usage" suggests — a normalized cost metric is a price proxy, not a physical measurement of resource consumption.
+
+**2025 Carbon Optimization terminology:** The Carbon Optimization documentation describes usage as "compute, storage, and data transfer" time, which implies a more physical, resource-time-based allocation. It is unclear whether this reflects a methodology evolution or simply different terminology for the same underlying approach.
+
+**Azure IaaS/PaaS:** Emissions are allocated based on a customer's relative Azure usage in a given datacenter region. An algorithm calculates a usage factor (emissions per unit of customer usage in a specific region) and applies it directly. The methodology is described as consistent across Scope 1, 2, and 3. The precise definition of the "usage factor" units and how they are derived are not fully disclosed in the public methodology document, limiting independent verification. The tension between the "normalized cost metric" basis (2021) and the "compute, storage, data transfer time" description (2025) adds uncertainty about the true allocation basis. Uncertainty: ~15–30%.
+
+**7-step methodology (2021 Whitepaper):** The whitepaper describes a structured pipeline:
+1. **Component LCA:** Material Circularity and Life Cycle Carbon Emission Calculator v7.3 applied to individual hardware components (rack, disk drive, server blades, FPGA, power supply units, other)
+2. **Datacenter aggregation:** Component-level emissions aggregated to datacenter level
+3. **Region aggregation:** Datacenter emissions aggregated to region level
+4. **Customer usage calculation:** Normalized cost metric per customer per region
+5. **Region emission factors:** Region-level emission factors applied
+6. **M365 usage factors:** Microsoft 365-specific usage factors applied (SaaS; excluded from this document's scope)
+7. **Customer emissions:** Final customer allocation combining steps 4–6
+8. **Combine:** Scope 1 + 2 + 3 combined into total customer emissions
+
+**Two customer-facing tools now exist:**
+- **Emissions Impact Dashboard (EID):** subscription × service × region level, up to 5 years retention, accessed via Power BI / Microsoft Fabric
+- **Carbon Optimization:** resource_group × resource level, 12-month retention, Azure portal + REST API, includes AI-driven reduction recommendations via Azure Advisor with estimated carbon and cost savings per recommendation
 
 **GHG Protocol position on allocation:** The Scope 3 Standard prefers physical allocation. All three providers use usage allocation at the customer level: GCP allocates by vCPU-hours (per SKU), AWS foundational by instance-hours (per service), and Azure by usage time (per region). GCP's internal pipeline measures power physically (machine-level power telemetry), but the customer-facing step introduces price-based proportionality (Schneider & Mattia 2024, Eq. 10). Without full disclosure of how AWS's per-instance-hour rate or Azure's usage factor are derived, it is not possible to confirm precise GHG Protocol alignment for any provider at the customer boundary.
 
@@ -141,7 +163,7 @@ Azure uses usage allocation via customer usage factors:
 | Dimension | AWS | GCP | Azure |
 |---|---|---|---|
 | **Internal method** | Described as physical (foundational) | Physical (machine-level power telemetry, GCU-proportional) | Not disclosed |
-| **Customer-facing method** | Usage (foundational: instance-hours) | Usage (vCPU-hours × price-derived energy factor per SKU) | Usage (customer usage factor per region) |
+| **Customer-facing method** | Usage (foundational: instance-hours) | Usage (vCPU-hours × price-derived energy factor per SKU) | Usage (normalized cost metric per 2021 whitepaper; described as compute, storage, data transfer time in 2025 Carbon Optimization docs) |
 | **Fallback method** | Economic (non-foundational) | Cost-based (internal shared services); proportional ratio (non-electricity Scope 3) | Not disclosed |
 | **Allocation granularity** | Service + region + account | SKU + region + account | Service category + region + account |
 | **Idle capacity allocation** | Not disclosed | Allocated to services proportionally (internal) | Not disclosed |
@@ -170,6 +192,8 @@ GCP's 4-year assumption means its per-year amortized embodied carbon is **50% hi
 Both AWS and Azure report **zero amortized embodied carbon** for equipment that has been in service beyond its assumed lifetime. AWS's methodology explicitly states: for racks beyond planned retirement, `active_time = 0 ⟹ amortized_E = 0` (CCFT Methodology §3.3.4.3), justified as "avoiding overallocation/double counting." Azure's EID behaves identically: once IT hardware has been in service for 6 years, its amortized Scope 3 contribution drops to zero.
 
 This is a defensible accounting choice: total embodied carbon is fully allocated over the amortization period (Eq 30 in AWS methodology confirms the sum equals total embodied carbon). In any given reporting month, however, hardware past its amortization window contributes zero — meaning the fleet-wide monthly Scope 3 number is lower when equipment is older. The practical consequence is that extending hardware lifetimes beyond the assumed service life reduces reported monthly Scope 3 emissions, even though total lifecycle embodied carbon remains fully allocated.
+
+**Asymmetric treatment (Azure):** Azure's methodology applies the 6-year amortization window asymmetrically. If equipment life extends *beyond* 6 years, emissions drop to zero (as documented above). However, if equipment life is *shorter* than 6 years (e.g., early retirement at 4 years), the emissions are still counted for the full 6-year period. This conservative approach ensures that early equipment retirement does not reduce reported emissions — the embodied carbon is always allocated over at least 6 years, preventing a perverse incentive to decommission hardware early to reduce the reported number.
 
 GCP uses the same approach with its 4-year amortization period: "The total number of machines resident in Google data centers and the summed emissions of all equipment is updated monthly by adding the new machines and dropping those at the 4-year mark." All three providers thus treat post-amortization equipment identically — zero contribution — differing only in the assumed lifetime (4 years for GCP, 6 years for AWS and Azure).
 
@@ -223,12 +247,15 @@ AWS's use of AI/LLM estimation as a fallback for components without supplier EPD
 
 ### 7.3 Azure Variables
 
+**Reporting delay:** 19 days (data for the previous month is available by day 19 of the current month per Carbon Optimization docs).
+**Data retention:** 12 months (Carbon Optimization) / 60 months (EID via Power BI).
+
 | Variable | Source | Uncertainty | Update Cadence | Recast on Change |
 |---|---|---|---|---|
 | Hardware component LCA factor (EPD-backed) | Component-level LCA (CHEM) | Low–Medium (~10–20%) | With CHEM updates | Yes (12-mo window) |
 | Hardware component LCA factor (AI-augmented) | AI-augmented CHEM (2026) | Medium–High (~15–30%) | With CHEM updates | Yes (12-mo window) |
-| Equipment lifetime — IT hardware | Azure internal assumption (6 yr, zero after; same as AWS) | Medium (~10–20%) | Rarely | Yes (12-mo window) |
-| **Usage factor (Azure IaaS/PaaS)** | Azure internal data (compute, storage, data transfer time) | **High (~15–30%)** | Monthly | Yes (12-mo window) |
+| Equipment lifetime — IT hardware | Azure internal assumption (6 yr, zero after; asymmetric: if life < 6 yr, emissions still counted for 6 yr) | Medium (~10–20%) | Rarely | Yes (12-mo window) |
+| **Usage factor (Azure IaaS/PaaS)** | Azure internal data ("normalized cost metric" per 2021 whitepaper; "compute, storage, data transfer time" per 2025 Carbon Optimization docs) | **High (~15–30%)** | Monthly | Yes (12-mo window) |
 | Regional electricity emission factor | Regional grid operators; IEA | Medium (~5–15%) | Annually | Yes (12-mo window) |
 | End-of-life disposition factor | Microsoft disposition programs | Medium (~10–20%) | With CHEM updates | Yes (12-mo window) |
 
@@ -242,7 +269,7 @@ AWS's use of AI/LLM estimation as a fallback for components without supplier EPD
 |---|---|---|---|
 | **AWS** | ≤21 days (as of Dec 2025) | ~3 months | Major improvement |
 | **GCP** | ~15 days | ~1 month | Moderate improvement |
-| **Azure** | ~15 days (by 15th of following month) | ~1 month | Moderate improvement |
+| **Azure** | ~19 days (by day 19 of following month) | ~1 month | Moderate improvement |
 
 All three providers now offer sub-month reporting delays. AWS's December 2025 improvement (from ~3 months to ≤21 days) is the most significant recent change in reporting timeliness.
 
@@ -254,13 +281,13 @@ Recasting is the retroactive recalculation of historical emissions when methodol
 |---|---|---|---|
 | **AWS** | Full recast to January 2020 | Any methodology change | 38 months |
 | **GCP** | Full historical recast | Methodology changes; manual backfill via BigQuery | Unlimited (BigQuery) |
-| **Azure** | 12-month window only | Methodology changes | 12 months |
+| **Azure** | 12-month window only | Methodology changes | 12 months (Carbon Optimization) / 60 months (EID) |
 
 **AWS recasting:** AWS recasts all historical data back to January 2020 when emission factors or allocation methods change. The April 2024 Scope 3 addition and October 2024 expansion were both applied retroactively. This is best practice.
 
 **GCP recasting:** GCP has full historical recast capability via BigQuery. The Electricity Maps integration (introduced 2022) was applied retroactively. Customers with BigQuery export can access the full corrected history.
 
-**Azure recasting:** Azure's 12-month retention window is a significant limitation. When methodology changes are made, only the most recent 12 months can be retroactively corrected. This makes multi-year trend analysis unreliable and prevents full GHG Protocol compliance on the recasting requirement. The GHG Protocol requires that when methodology changes are made, base year emissions should be recalculated — Azure's 12-month window prevents this for any change affecting data older than 12 months.
+**Azure recasting:** Azure's Carbon Optimization tool has a 12-month retention window, which is a significant limitation for recasting. The Emissions Impact Dashboard (EID) offers up to 5 years of data retention via Power BI, which mitigates the retention concern for trend analysis. However, recasting scope is still limited to a 12-month window — when methodology changes are made, only the most recent 12 months are retroactively corrected regardless of tool. The GHG Protocol requires that when methodology changes are made, base year emissions should be recalculated — Azure's 12-month recasting window prevents this for any change affecting data older than 12 months.
 
 ---
 
@@ -339,7 +366,7 @@ None of the three providers offers comprehensive, end-to-end independent verific
 | Scope 2 verified | No | No | No |
 | Scope 3 Cat. 2 (IT hardware) verified | Yes | LCA review only | Yes (methodology doc) |
 | Scope 3 Cat. 3 (FERA) verified | Yes | No | Yes (methodology doc) |
-| Scope 3 Cat. 4 (Transport) verified | Yes | No | N/A (excluded) |
+| Scope 3 Cat. 4 (Transport) verified | Yes | No | Yes (methodology doc) |
 | Oct 2024 expansion verified | No | N/A | N/A |
 | Tool implementation verified | No | No | No |
 | Verification standard disclosed | No | ISO 14040/14044 | Partial |
@@ -351,7 +378,7 @@ None of the three providers offers comprehensive, end-to-end independent verific
 
 ### 11.1 Areas of Clear Compliance (All Three Providers)
 
-All three providers comply with: reporting both location-based and market-based Scope 2; including Scope 1 stationary combustion and fugitive emissions; including FERA in Scope 3 (Category 3); using GHG Protocol-aligned system boundaries and emission factor sources.
+All three providers comply with: reporting both location-based and market-based Scope 2; including Scope 1 stationary combustion and fugitive emissions; using GHG Protocol-aligned system boundaries and emission factor sources. AWS and GCP include FERA (Cat. 3); Azure does not (Azure's listed Scope 3 categories are 1, 2, 4, 5, 9, and 12).
 
 ### 11.2 Clear Divergences from GHG Protocol Requirements
 
@@ -368,7 +395,7 @@ These are areas where the GHG Protocol does not fully specify the correct approa
 
 | Under-Specified Area | AWS Interpretation | GCP Interpretation | Azure Interpretation |
 |---|---|---|---|
-| Allocation of shared cloud infrastructure | Usage for foundational (instance-hours); economic fallback for non-foundational | Physical measurement internally; usage at customer boundary (vCPU-hours × price-derived factor); proportional ratio (non-electricity Scope 3) | Usage throughout (usage factors; parameters undisclosed) |
+| Allocation of shared cloud infrastructure | Usage for foundational (instance-hours); economic fallback for non-foundational | Physical measurement internally; usage at customer boundary (vCPU-hours × price-derived factor); proportional ratio (non-electricity Scope 3) | Normalized cost metric (2021 whitepaper) / described as compute, storage, data transfer time (2025 docs); parameters undisclosed |
 | Equipment lifetime assumption | 6 yr (IT); 50 yr (buildings) | 4 yr (IT, financial accounting standard) | 6 yr (IT) |
 | EAC/PPA temporal matching | Not disclosed | Hourly CFE reported | Not disclosed |
 | Building embodied carbon inclusion | Included (Oct 2024) | Included in customer tool | Excluded from customer tool |
@@ -430,11 +457,11 @@ These are areas where the GHG Protocol does not fully specify the correct approa
 
 **Critical:**
 
-1. **Allocation parameters not fully disclosed.** Azure describes a usage-factor approach (emissions per unit of customer usage in a given region) consistent across Scope 1, 2, and 3. However, the internal derivation of the usage factor — including what "usage" units are measured and how they are aggregated — is not publicly disclosed. This prevents independent verification or replication. Estimated uncertainty: ~15–30%.
+1. **Allocation parameters not fully disclosed, and "usage" may be a normalized cost metric.** Azure describes a usage-factor approach (emissions per unit of customer usage in a given region) consistent across Scope 1, 2, and 3. However, the 2021 Scope 3 Whitepaper defines Azure usage as a "normalized cost metric... normalized to exclude discounts and other variables," which is closer to economic allocation than physical usage. The 2025 Carbon Optimization docs describe usage as "compute, storage, and data transfer" time — it is unclear whether this reflects a methodology evolution or different terminology. The internal derivation of the usage factor is not publicly disclosed, preventing independent verification. This cost-metric basis potentially increases reconciliation uncertainty and weakens reconcilability vs. pure physical usage allocation. Estimated uncertainty: ~15–30%.
 
 **High:**
 
-2. **Narrowest Scope 3 coverage of the three providers.** Only 3 of 15 GHG Protocol categories (Cat. 2, Cat. 3, Cat. 4 partial). AWS covers 4 categories; GCP covers 3–4. Building embodied carbon, waste, business travel, and employee commuting are all excluded.
+2. **FERA (Cat. 3) excluded despite broad Scope 3 coverage.** Azure's emissions calculation methodology explicitly lists "scope 3 categories 1, 2, 4, 5, 9, and 12" — Cat. 3 (Fuel & Energy-Related Activities) is NOT included. This is notable because FERA is included by both AWS and GCP and is typically considered material for energy-intensive operations. Azure does cover 6 categories overall (more than previously credited), including Cat. 1 (Purchased Goods), Cat. 5 (Waste), Cat. 9 (Downstream Transportation), and Cat. 12 (End-of-Life Treatment), but the FERA omission is a specific gap.
 
 3. **Building embodied carbon excluded.** No announced plans to include. This is a material omission for a company operating 200+ data centers globally.
 
@@ -442,7 +469,7 @@ These are areas where the GHG Protocol does not fully specify the correct approa
 
 5. **Methodology inconsistency with Microsoft corporate GHG disclosure.** The sum of all customer-reported emissions in the EID does not equal Microsoft's corporate Scope 3 disclosure. Microsoft has not publicly reconciled this discrepancy. This raises questions about whether the EID is internally consistent with Microsoft's own accounting.
 
-6. **12-month data retention prevents multi-year trend analysis.** Insufficient for GHG Protocol base year recalculation requirements. Makes it impossible to track emissions trends over the 3–5 year horizons relevant to corporate sustainability commitments.
+6. **12-month recasting window limits retroactive corrections.** While the EID offers up to 5 years of data retention (mitigating the trend analysis limitation), recasting scope remains limited to 12 months. Carbon Optimization has only 12-month retention. The 12-month recasting window is insufficient for GHG Protocol base year recalculation requirements.
 
 **Medium:**
 
@@ -476,11 +503,15 @@ The following table assesses each provider against a set of gold standard requir
 | Disclose equipment lifetime assumption | Full | Partial | Partial | |
 | Use defensible equipment lifetime | Full | Full | Full | All three use financial-service-life-based amortization; AWS and Azure: 6 yr, GCP: 4 yr; AWS and Azure both report zero after amortization window |
 | **SCOPE 3 — FERA (CAT. 3)** | | | | |
-| Include fuel and energy-related activities | Full | Full | Full | All three comply |
+| Include fuel and energy-related activities | Full | Full | Not Met | Azure's listed categories (1, 2, 4, 5, 9, 12) do not include Cat. 3 |
 | **SCOPE 3 — UPSTREAM TRANSPORT (CAT. 4)** | | | | |
-| Include upstream hardware transportation | Full | Partial | Not Met | |
+| Include upstream hardware transportation | Full | Partial | Full | Azure explicitly lists Cat. 4 (upstream transportation: manufacturer → datacenter dock) |
 | **SCOPE 3 — WASTE (CAT. 5)** | | | | |
-| Include waste generated in operations | Full | Not Met | Not Met | AWS only |
+| Include waste generated in operations | Full | Not Met | Full | Azure explicitly lists Cat. 5 |
+| **SCOPE 3 — DOWNSTREAM TRANSPORT (CAT. 9)** | | | | |
+| Include downstream transportation | Not Met | Not Met | Full | Azure explicitly lists Cat. 9 (datacenter → recycler) |
+| **SCOPE 3 — END-OF-LIFE (CAT. 12)** | | | | |
+| Include end-of-life treatment | Not Met | Not Met | Full | Azure explicitly lists Cat. 12 (recycling, landfill, composting) |
 | **SCOPE 3 — BUSINESS TRAVEL & COMMUTING (CAT. 6/7)** | | | | |
 | Include business travel (Cat. 6) | Not Met | Full | Not Met | GCP only |
 | Include employee commuting (Cat. 7) | Not Met | Full | Not Met | GCP only |
@@ -491,7 +522,7 @@ The following table assesses each provider against a set of gold standard requir
 | **REPORTING** | | | | |
 | Report with ≤1 month lag | Full | Full | Full | All three now comply |
 | Full historical recasting on methodology change | Full | Full | Partial | Azure: 12-month window only |
-| Retain ≥3 years of data | Full | Full | Not Met | Azure: 12 months only |
+| Retain ≥3 years of data | Full | Full | Partial | Azure: 12 months (Carbon Optimization) / 60 months (EID via Power BI); EID meets the 3-year threshold |
 | Provide programmatic API access | Not Met | Full | Full | AWS has no API |
 | **VERIFICATION** | | | | |
 | Formal third-party assurance (all material categories) | Partial | Not Met | Partial | No provider covers all categories |
@@ -511,14 +542,14 @@ The following table assesses each provider against a set of gold standard requir
 | **Overall approach** | Usage with economic fallback | Physical measurement internally; usage at customer boundary | LCA + usage |
 | **Scope 1 coverage** | Full | Full | Full (usage allocation) |
 | **Scope 2 granularity** | Monthly | Hourly (internal) / Monthly (customer) | Monthly |
-| **Scope 3 category count** | 4 of 15 | 3–4 of 15 | 2 of 15 |
+| **Scope 3 category count** | 4 of 15 | 3–4 of 15 | 6 of 15 (Cat. 1, 2, 4, 5, 9, 12; excludes FERA/Cat. 3) |
 | **Building embodied carbon** | Yes (Oct 2024) | Yes | No |
 | **End-of-life hardware** | No | No | Yes |
-| **Allocation method** | Usage (foundational) + economic fallback | Physical measurement internally; usage at customer level (vCPU-hours × price-derived factor) + proportional proxy for non-electricity Scope 3 | Usage (customer usage factor; parameters undisclosed) |
+| **Allocation method** | Usage (foundational) + economic fallback | Physical measurement internally; usage at customer level (vCPU-hours × price-derived factor) + proportional proxy for non-electricity Scope 3 | Usage (normalized cost metric per 2021 whitepaper / compute, storage, data transfer time per 2025 docs; parameters undisclosed) |
 | **Post-amortization treatment** | Zero after 6 yr | Zero after 4 yr | Zero after 6 yr |
-| **Reporting delay** | ≤21 days | ~15 days | ~15 days |
+| **Reporting delay** | ≤21 days | ~15 days | ~19 days |
 | **Historical recasting** | Full (to Jan 2020) | Full (unlimited) | 12-month window |
-| **Data retention** | 38 months | Unlimited | 12 months |
+| **Data retention** | 38 months | Unlimited | 12 months (Carbon Optimization) / 60 months (EID) |
 | **API access** | No | Yes (BigQuery) | Yes (Fabric/Power BI) |
 | **Third-party verification** | Limited (Cat. 2/3/4 only) | Academic review only | Limited (methodology doc) |
 | **Service granularity** | 200+ services | Per SKU | Service categories |
@@ -542,7 +573,7 @@ The following table assesses each provider against a set of gold standard requir
 
 **6. GCP has the most transparent and granular methodology.** GCP's internal machine-level power monitoring is best-in-class. Its hourly Electricity Maps integration is best-in-class for Scope 2. It includes building embodied carbon in the customer tool (alongside AWS), which is best practice. However, like all three providers, the customer-facing allocation step is usage-based: energy is distributed across SKUs using price-based proportionality and allocated to customers by resource-time (vCPU-hours). Compute utilization is not reflected in the customer-reported number — this is a shared limitation across all three providers, not specific to GCP (see observation 8). GCP also excludes end-of-life hardware and operational waste — categories that AWS includes. GCP's 4-year amortization assumption (vs. AWS/Azure's 6-year) means higher reported annual embodied carbon per asset.
 
-**7. AWS has the broadest Scope 3 coverage; all three providers have allocation opacity.** AWS and GCP both include building embodied carbon. AWS is the only provider to also include non-IT equipment, operational waste, and a more complete upstream transport scope. However, all three providers have significant allocation opacity: AWS uses economic allocation for non-foundational services (affecting an undisclosed proportion of total emissions); GCP uses cost-based fallback for internal shared services without sufficient usage data (affected fraction not disclosed) and price-based proportionality for SKU distribution; Azure does not disclose the derivation of its usage factor at all.
+**7. Azure has the broadest Scope 3 category count; all three providers have allocation opacity.** Azure covers 6 GHG Protocol Scope 3 categories (Cat. 1, 2, 4, 5, 9, 12) — more than previously credited — but excludes FERA (Cat. 3), which both AWS and GCP include. AWS covers 4 categories (Cat. 2 incl. buildings, 3, 4, 5) and is the only provider to include non-IT equipment and building embodied carbon alongside waste. GCP covers 4 categories (Cat. 2 incl. buildings, 3, 6, 7) and uniquely includes business travel and employee commuting. However, all three providers have significant allocation opacity: AWS uses economic allocation for non-foundational services (affecting an undisclosed proportion of total emissions); GCP uses cost-based fallback for internal shared services without sufficient usage data (affected fraction not disclosed) and price-based proportionality for SKU distribution; Azure's 2021 whitepaper reveals that "usage" is actually a "normalized cost metric," making the allocation more economic-adjacent than the term suggests.
 
 **8. Compute utilization is invisible to all three customer-facing methodologies.** All three providers use usage allocation at the customer level: GCP (vCPU-hours), AWS foundational (instance-hours), Azure (usage time). A VM or GPU instance running idle and one at full load report the same carbon for the same duration and SKU. Only reducing resource-time (turning off instances, right-sizing, running for less time) moves the reported number. This is the most important practical finding for users trying to reduce their reported footprint through compute efficiency.
 
@@ -556,12 +587,14 @@ The following table assesses each provider against a set of gold standard requir
 4. Google Cloud Carbon Footprint Methodology — https://cloud.google.com/carbon-footprint/docs/methodology
 5. Schneider, I. & Mattia, T. (2024). Carbon Accounting in the Cloud. arXiv:2406.09645 — https://arxiv.org/abs/2406.09645
 6. Google Cloud Carbon Footprint Release Notes — https://cloud.google.com/carbon-footprint/docs/release-notes
-7. Azure Emissions Calculation Methodology — https://learn.microsoft.com/en-us/power-bi/connect-data/azure-emissions-calculation-methodology
+7. Azure Emissions Calculation Methodology (updated January 2026) — https://learn.microsoft.com/en-us/power-bi/connect-data/azure-emissions-calculation-methodology
 8. Microsoft Scope 3 Emissions Methodology Whitepaper (2021) — https://download.microsoft.com/download/7/...
 9. Microsoft Cloud Hardware Emissions Methodology (CHEM) Whitepaper (2026) — https://datacenters.microsoft.com/wp-content/uploads/...
-10. GHG Protocol Corporate Standard — https://ghgprotocol.org/corporate-standard
-11. GHG Protocol Scope 3 Standard — https://ghgprotocol.org/scope-3-standard
-12. GHG Protocol Scope 2 Guidance — https://ghgprotocol.org/scope_2_guidance
-13. Bhagavathula et al. (2024). Understanding Implications of Uncertainty in Embodied Carbon Models. HotCarbon 2024.
-14. Lyu et al. (2023). Myths and Misconceptions Around Reducing Carbon Embedded in Cloud Platforms. HotCarbon 2023.
-15. Simon et al. (2024). BoaviztAPI: A Bottom-Up Model to Assess Environmental Impacts of Cloud Services. HotCarbon 2024.
+10. Azure Carbon Optimization Overview — https://learn.microsoft.com/en-us/azure/carbon-optimization/overview
+11. Azure Carbon Optimization Terminology — https://learn.microsoft.com/en-us/azure/carbon-optimization/terminology
+12. GHG Protocol Corporate Standard — https://ghgprotocol.org/corporate-standard
+13. GHG Protocol Scope 3 Standard — https://ghgprotocol.org/scope-3-standard
+14. GHG Protocol Scope 2 Guidance — https://ghgprotocol.org/scope_2_guidance
+15. Bhagavathula et al. (2024). Understanding Implications of Uncertainty in Embodied Carbon Models. HotCarbon 2024.
+16. Lyu et al. (2023). Myths and Misconceptions Around Reducing Carbon Embedded in Cloud Platforms. HotCarbon 2023.
+17. Simon et al. (2024). BoaviztAPI: A Bottom-Up Model to Assess Environmental Impacts of Cloud Services. HotCarbon 2024.
