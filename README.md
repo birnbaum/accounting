@@ -54,8 +54,8 @@ It absorbs embodied carbon, idle capacity, PUE, Scope 1/3, allocation artifacts,
 **Benefits of rSCI**
 - it shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but makes it practical: instead of requiring complete bottom-up datacenter knowledge, rSCI learns the gap from historical ($`O`$, $`\tilde{C}`$) pairs.
 - it is also more comprehensive in scope: where tSCI only adds idle server operational and embodied carbon, rSCI's residual captures *everything* between the observable operational total and the provider-reported number: embodied carbon, idle capacity, PUE, Scope 1 emissions (diesel, refrigerants), allocation artifacts, and any other overhead the provider includes.
-- it does **not** suffer from the sunk carbon fallacy (Bashir et al.): Since rSCI = oSCI · $`\gamma`$ (where $`\gamma = \tilde{C} / O`$ is the residual factor), the allocation of overhead is proportional to operational emissions at a specific time and location. The ordering between scheduling alternatives is always identical to oSCI within a slice.
-- but it **does** reward scheduling toward lower-overhead infrastructure. Because $`\gamma`$ differs across slices (a region with older hardware, higher PUE, or more idle capacity carries a larger $`\gamma`$) rSCI incentivizes placing work on nodes with lower embodied emissions and facility overhead. $`\gamma`$ also changes over time, e.g., fluctuating PUE, hardware refresh cycles. oSCI is blind to these factors.
+- it does **not** suffer from the sunk carbon fallacy (Bashir et al.): Embodied carbon is pooled into the slice-level residual $`\Delta_s`$ and distributed by energy usage ($`E_{i,s}/E_s`$), not attributed per-server. Old, inefficient hardware has higher $`E`$ → receives more residual → always looks worse. The mechanism that creates the sunk carbon fallacy (per-server embodied attribution) is structurally absent.
+- but it **does** reward scheduling toward lower-overhead infrastructure. Because $`\Delta_s`$ differs across slices (a region with older hardware, higher PUE, or more idle capacity has a larger $`\Delta_s`$), and a workload's share is $`E_{i,s}/E_s \cdot \Delta_s`$, rSCI incentivizes placing work on lower-overhead infrastructure. $`\Delta_s`$ also changes over time, e.g., fluctuating PUE, hardware refresh cycles. oSCI is blind to these factors.
 
 ## Problem Framing
 
@@ -113,13 +113,13 @@ $$E_i = \sum_r q_r \times \varepsilon_r \quad [\text{Wh}]$$
 
 Where $`r`$ indexes resource types, $`q_r`$ is the quantity of resource $`r`$ consumed during $`t_i`$, and $`\varepsilon_r`$ is the energy coefficient per unit of resource $`r`$ (Wh/unit).
 
-| Resource type | Unit ($`q_r`$) | $`\varepsilon_r`$    | Note |
-|---|---|----------------------|---|
-| vCPU | vCPU-hours | Wh/vCPU-h (= W/vCPU) | Reservation-based: $`\varepsilon_r`$ equals TDP / rated power in watts |
-| GPU | GPU-hours | Wh/GPU-h (= W/GPU)   | Same |
+| Resource type | Unit ($`q_r`$) | $`\varepsilon_r`$    | Note                                            |
+|---|---|----------------------|-------------------------------------------------|
+| vCPU | vCPU-hours | Wh/vCPU-h | Reservation-based, equals W/vCPU                |
+| GPU | GPU-hours | Wh/GPU-h   | Same                                            |
 | Storage | GB-hours | Wh/GB-h              | Reservation-based (provisioned capacity × time) |
-| Disk I/O | IO operations | Wh/IO-op             | Event-based |
-| Network transfer | GB transferred | Wh/GB                | Event-based: no persistent reservation |
+| Disk I/O | IO operations | Wh/IO-op             | Event-based                                     |
+| Network transfer | GB transferred | Wh/GB                | Event-based: no persistent reservation          |
 
 For reservation-based resources (vCPU, GPU, storage), $`\varepsilon_r`$ equals the power draw in watts, since Wh per hour of reservation = W.
 For event-based resources (network transfer, disk I/O), there is no persistent reservation. $`\varepsilon_r`$ is the energy per discrete unit consumed.
@@ -153,13 +153,13 @@ $$\Delta_s = \tilde{C}_s - O_s$$
 
 Each $`\Delta_s`$ absorbs everything the action metric does not capture within that slice: embodied carbon, idle/shared capacity, non-energy overhead (PUE, Scope 1), allocation artifacts — and the estimation error in $`O`$ itself. In the cloud, $`O`$ is not measured but estimated: $`E`$ comes from energy models (TDP-based, not metered), and $`I`$ is a grid-average approximation. The residual therefore includes $`\varepsilon_O = O_\text{true} - O_\text{estimated}`$.
 
-**Residual allocation and bridge decomposition.** By default, the residual is allocated proportionally: $`w_{i,s} = O_{i,s}/O_s`$. This is acceptable when the estimation error is approximately proportional across workloads within a slice — the reconciliation factor $`\gamma_s`$ absorbs any systematic bias. However, when heterogeneous workloads share a slice (e.g., GPU and CPU instances), proportionality can no longer be assumed: their energy model errors, embodied carbon intensities, and overhead profiles differ structurally.
+**Residual allocation and bridge decomposition.** By default, the residual is allocated by energy share: $`w_{i,s} = E_{i,s}/E_s`$. The residual components (PUE, embodied carbon, idle capacity, Scope 1) scale with energy consumption, and $`E`$ is usage-based by definition, making it the natural allocation key. However, when heterogeneous workloads share a slice (e.g., GPU and CPU instances), a single energy-proportional key may not capture structural differences in embodied carbon intensity or overhead profiles.
 
 Bridge decomposition generalizes the allocation. Decompose the residual into components:
 
 $$\Delta_s = \sum_k \Delta_s^k$$
 
-where each component $`k`$ (embodied carbon, PUE, idle capacity, etc.) is allocated by its own structurally appropriate key $`w_{i,s}^k`$. Proportional allocation is the degenerate case where all $`w_{i,s}^k = O_{i,s}/O_s`$, collapsing the decomposed form back to the default. As components are identified and assigned better keys, allocation fairness improves without changing the reconciliation guarantee.
+where each component $`k`$ (embodied carbon, PUE, idle capacity, etc.) is allocated by its own structurally appropriate key $`w_{i,s}^k`$. Energy-proportional allocation is the degenerate case where all $`w_{i,s}^k = E_{i,s}/E_s`$, collapsing the decomposed form back to the default. As components are identified and assigned better keys, allocation fairness improves without changing the reconciliation guarantee.
 
 ### rSCI
 
@@ -167,13 +167,13 @@ Workload $`i`$'s rSCI sums its reconciled contributions across all slices it tou
 
 $$\text{rSCI}_i = \frac{1}{R_i} \sum_s \left( O_{i,s} + \sum_k w_{i,s}^k \cdot \Delta_s^k \right)$$
 
-where $`w_{i,s}^k`$ is workload $`i`$'s share of component $`k`$ in slice $`s`$. When no decomposition is available (default), all $`w_{i,s}^k = O_{i,s}/O_s`$, and the formula collapses to:
+where $`w_{i,s}^k`$ is workload $`i`$'s share of component $`k`$ in slice $`s`$. When no decomposition is available (default), all $`w_{i,s}^k = E_{i,s}/E_s`$, and the formula collapses to:
 
-$$\text{rSCI}_i = \frac{1}{R_i} \sum_s \left( O_{i,s} + \frac{O_{i,s}}{O_s} \cdot \Delta_s \right)$$
+$$\text{rSCI}_i = \frac{1}{R_i} \sum_s \left( O_{i,s} + \frac{E_{i,s}}{E_s} \cdot \Delta_s \right)$$
 
 **Key property (per slice):** As long as $`\sum_i w_{i,s}^k = 1`$ for each component $`k`$, we have $`\sum_i \sum_k w_{i,s}^k \cdot \Delta_s^k = \sum_k \Delta_s^k = \Delta_s`$, therefore $`\sum_i \text{rSCI}_i \cdot R_i = \sum_s \tilde{C}_s`$.
 
-The reconciled metric distributes the full provider-reported footprint across workloads. In the default (proportional) case, rSCI **always preserves oSCI ordering** — reducing operational carbon always reduces rSCI, and it cannot produce perverse scheduling incentives. With decomposed allocation, ordering may differ from oSCI where component-specific keys diverge from proportional weights, but this reflects structurally fairer attribution. Each workload's rSCI reflects its share of the full reported footprint, including embodied carbon and overhead.
+The reconciled metric distributes the full provider-reported footprint across workloads. In the default case, reducing energy usage always reduces the residual allocation, and reducing operational carbon always reduces the operational term — both independently lower rSCI. Under monthly emission factors (the current provider regime), the two terms are proportional anyway. With decomposed allocation, component-specific keys may shift attribution relative to the default, but this reflects structurally fairer attribution. Each workload's rSCI reflects its share of the full reported footprint, including embodied carbon and overhead.
 
 ## Estimation
 
@@ -220,20 +220,21 @@ Last residual error: Compute +0.3 tCO2e (2.4%), Networking +0.05 tCO2e (3.8%)
 
 ## Open Questions
 
-1. **Actionability limits:** What minimum provider profile can be constructed from public documentation before the framework becomes too speculative? How many months of slice-level pairs $`(O, \tilde{C})`$ are needed before the residual bridge estimate is decision-useful? When a reporting slice is too coarse or too opaque, how should the framework expose that optimization claims are weak rather than presenting false precision?
-2. **Non-stationarity:** $`\Delta`$ should be modeled as time-varying, learned across months, to capture seasonal effects, methodology changes, and infrastructure evolution. How should methodology changes trigger profile version updates and regime shifts in the model?
-3. **Cold start:** Without historical slice pairs, $`\Delta`$ is unknown and rSCI degrades to oSCI. The reconciliation claim is empty until calibrated. How should the framework communicate this? Options include: reporting confidence intervals that widen with fewer data points, falling back to provider-profile-derived priors (e.g., published PUE × typical embodied ratios), or explicitly labeling the estimate as "uncalibrated" until a minimum number of months are available. What is the minimum number of slice pairs needed before the residual estimate is decision-useful — and does this differ by provider methodology quality?
-4. **Provider methodology opacity:** rSCI reconciles to whatever the provider reports. If the provider's methodology is flawed (e.g., uses economic allocation that doesn't reflect physical reality, or applies uniform emission factors across regions with different grid mixes), rSCI faithfully reconciles to a misleading number. The framework makes this visible — a persistently large or volatile $`\Delta`$ signals methodology weakness — but it cannot correct for it. How should the framework distinguish "high residual because provider methodology is coarse" from "high residual because we are missing observable activity"? Should provider methodology quality scores inform how the residual estimate is presented to users?
-5. **Bridge decomposition:** Decomposing $`\Delta`$ into components is not only about transparency — it is the mechanism for fair residual allocation in heterogeneous slices. Each component $`k`$ can use a structurally appropriate allocation key $`w_{i,s}^k`$:
+1. **Energy coefficients:** Where to source reliable $`\varepsilon_r`$ values for each resource type, and at what granularity (per instance family, per chip generation)? For reservation-based resources (vCPU, GPU), TDP and published benchmarks provide reasonable proxies. For event-based resources (network transfer, disk I/O), empirical data is scarce and provider-specific. Sources include TDP, measured averages, or provider-published figures. How sensitive is the residual to $`\varepsilon_r`$ estimation error?
+2. **Cold start:** Without historical slice pairs, $`\Delta`$ is unknown and rSCI degrades to oSCI. The reconciliation claim is empty until calibrated. How should the framework communicate this? Options include: reporting confidence intervals that widen with fewer data points, falling back to provider-profile-derived priors (e.g., published PUE × typical embodied ratios), or explicitly labeling the estimate as "uncalibrated" until a minimum number of months are available. What is the minimum number of slice pairs needed before the residual estimate is decision-useful — and does this differ by provider methodology quality?
+3. **Cross-customer pooling:** The residual ratio $`\gamma_s = \tilde{C}_s / O_s`$ is largely driven by the provider's methodology, not the individual customer. Within a given provider × region × slice type, the same PUE, embodied amortization formula, and emission factors apply. A hierarchical model — pooled $`\gamma`$ per provider × region × slice type, with per-customer deviations — could let new customers inherit a calibrated prior immediately, solving the cold start problem. Pooling at the component level ($`\gamma_\text{embodied}`$, $`\gamma_\text{PUE}`$, $`\gamma_\text{idle}`$) would be more stable than pooling the aggregate $`\gamma`$, since workload composition (GPU-heavy vs CPU-heavy) shifts the aggregate. Cross-provider pooling is likely too diffuse given methodology differences. Open design questions: privacy implications of sharing slice-level $`(O, \tilde{C})`$ pairs (ratios only may suffice), detection of provider methodology changes as regime shifts at the pooled level, and minimum customer count per stratum before the pooled prior is useful.
+4. **Bridge decomposition:** Decomposing $`\Delta`$ into components is not only about transparency — it is the mechanism for fair residual allocation in heterogeneous slices. Each component $`k`$ can use a structurally appropriate allocation key $`w_{i,s}^k`$:
    - **Embodied carbon:** instance-hours × hardware cost or weight (reflects actual hardware footprint per workload)
    - **PUE:** proportional to energy $`E_{i,s}`$ (overhead scales with energy consumption)
    - **Idle capacity:** proportional to reservation size (idle cost follows capacity held, not work done)
-   - **Allocation artifacts / other:** default to $`O_{i,s}/O_s`$ until a better key is identified
+   - **Allocation artifacts / other:** default to $`E_{i,s}/E_s`$ until a better key is identified
 
    For example, PUE could be factored out as a learnable parameter ($`O_i = \alpha_\text{PUE} \cdot E_i \cdot I`$), calibrated from provider-published PUE or historical data. As components are separated and assigned their own keys, the residual allocation becomes fairer for heterogeneous slices while the reconciliation guarantee ($`\sum_i w_{i,s}^k = 1`$) is preserved. The goal is to identify whether any true unexplained residual remains after accounting for known methodology effects.
+5. **Actionability limits:** What minimum provider profile can be constructed from public documentation before the framework becomes too speculative? How many months of slice-level pairs $`(O, \tilde{C})`$ are needed before the residual bridge estimate is decision-useful? When a reporting slice is too coarse or too opaque, how should the framework expose that optimization claims are weak rather than presenting false precision?
 6. **Location dependence:** How should regional variation in residual composition (e.g., different PUE, grid mix, hardware vintages across regions) be modeled?
-7. **Normative reference estimate:** a second, more methodologically complete estimate (covering omitted Scope 3 categories, questionable amortization, coarse allocation, provider-specific flaws) that makes visible the gap between what providers report and what a fuller methodology would report — comparative, not substitutive, and explicitly separate from the core reconciliation framework.
-8. **Energy coefficients:** Where to source reliable $`\varepsilon_r`$ values for each resource type, and at what granularity (per instance family, per chip generation)? For reservation-based resources (vCPU, GPU), TDP and published benchmarks provide reasonable proxies. For event-based resources (network transfer, disk I/O), empirical data is scarce and provider-specific. Sources include TDP, measured averages, or provider-published figures. How sensitive is the residual to $`\varepsilon_r`$ estimation error?
+7. **Non-stationarity:** $`\Delta`$ should be modeled as time-varying, learned across months, to capture seasonal effects, methodology changes, and infrastructure evolution. How should methodology changes trigger profile version updates and regime shifts in the model?
+8. **Provider methodology opacity:** rSCI reconciles to whatever the provider reports. If the provider's methodology is flawed (e.g., uses economic allocation that doesn't reflect physical reality, or applies uniform emission factors across regions with different grid mixes), rSCI faithfully reconciles to a misleading number. The framework makes this visible — a persistently large or volatile $`\Delta`$ signals methodology weakness — but it cannot correct for it. How should the framework distinguish "high residual because provider methodology is coarse" from "high residual because we are missing observable activity"? Should provider methodology quality scores inform how the residual estimate is presented to users?
+9. **Normative reference estimate:** a second, more methodologically complete estimate (covering omitted Scope 3 categories, questionable amortization, coarse allocation, provider-specific flaws) that makes visible the gap between what providers report and what a fuller methodology would report — comparative, not substitutive, and explicitly separate from the core reconciliation framework.
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific and provider-profile questions.
 
