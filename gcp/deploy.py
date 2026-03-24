@@ -7,14 +7,6 @@ Uses google-cloud-compute Python API. Each VM runs a startup script
 Prerequisites:
   - Application Default Credentials (gcloud auth application-default login)
   - Project mapping in gcp/projects.csv
-
-Usage:
-  python gcp/deploy.py list                        # list all experiments
-  python gcp/deploy.py run <id> [--region R]       # run experiment
-  python gcp/deploy.py status [<id>]               # check running instances
-  python gcp/deploy.py cleanup [<id>]              # delete instances
-  python gcp/deploy.py test [--stress]             # quick 5min test
-  python gcp/deploy.py init                        # grant self-delete IAM
 """
 
 from __future__ import annotations
@@ -24,6 +16,7 @@ import csv
 import json
 import sys
 import textwrap
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -53,8 +46,6 @@ else
   shutdown -h now
 fi"""
 
-
-# ---------- helpers ----------
 
 def log(msg: str) -> None:
     print(f"[{datetime.now(timezone.utc).strftime('%H:%M:%S')}] {msg}")
@@ -90,36 +81,22 @@ def resolve_project(projects: dict[int, Project], project_var: str) -> str:
     return projects[idx].project_id
 
 
-def load_experiments() -> dict:
+def load_experiments() -> list[dict]:
     with open(EXPERIMENT_JSON) as f:
         return json.load(f)
 
 
-def get_experiment(data: dict, exp_id: int) -> dict:
-    for exp in data["experiments"]:
-        if exp["id"] == exp_id:
-            return exp
-    die(f"experiment {exp_id} not found.")
+def get_experiments(data: list[dict], ids: list[int]) -> list[dict]:
+    by_id = {exp["id"]: exp for exp in data}
+    missing = [i for i in ids if i not in by_id]
+    if missing:
+        die(f"experiment(s) not found: {missing}")
+    return [by_id[i] for i in ids]
 
 
-def require_project(exp: dict, projects: dict[int, Project]) -> str:
-    pvar = exp.get("project", "")
-    if not pvar:
-        die(f"experiment {exp['id']} has no project assignment.")
-    return resolve_project(projects, pvar)
+def parse_ids(raw: str) -> list[int]:
+    return [int(x) for x in raw.split(",")]
 
-
-def _iter_projects(data: dict, projects: dict[int, Project], filter_id: int | None):
-    """Yield (project_id, label) for status/cleanup commands."""
-    if filter_id is not None:
-        exp = get_experiment(data, filter_id)
-        yield require_project(exp, projects), f"Experiment {filter_id}"
-    else:
-        for idx, proj in sorted(projects.items()):
-            yield proj.project_id, f"PROJECT_{idx}"
-
-
-# ---------- startup script ----------
 
 def startup_script(workload: str, duration_m: int) -> str:
     duration_s = duration_m * 60
@@ -151,8 +128,6 @@ echo "Self-deleting $INSTANCE_NAME in $ZONE..."
 """
 
 
-# ---------- instance creation ----------
-
 def create_instance(project_id: str, zone: str, instance_name: str,
                     machine_type: str, script: str) -> bool:
     log(f"  Creating {instance_name} ({machine_type}) in {zone}")
@@ -182,73 +157,46 @@ def create_instance(project_id: str, zone: str, instance_name: str,
         return False
 
 
-def deploy_region(project_id: str, family: str, size: int, workload: str,
-                  duration_h: int, region: str, zones: list[str] | None = None) -> None:
-    mtype = f"{family}-standard-{size}"
-    name = f"{mtype}-{workload}-{duration_h}h"
-    script = startup_script(workload, duration_h * 60)
-    if zones:
-        for suffix in zones:
-            create_instance(project_id, f"{region}-{suffix}", f"{name}-{region}-{suffix}", mtype, script)
-    else:
-        create_instance(project_id, f"{region}-b", f"{name}-{region}", mtype, script)
+def create_instances_parallel(tasks: list[tuple[str, str, str, str, str]]) -> None:
+    if not tasks:
+        return
+    log(f"Launching {len(tasks)} VMs in parallel...")
+    with ThreadPoolExecutor(max_workers=len(tasks)) as pool:
+        futures = {pool.submit(create_instance, *t): t[2] for t in tasks}
+    for fut, name in futures.items():
+        try:
+            fut.result()
+        except Exception as e:
+            log(f"  UNEXPECTED ERROR for {name}: {e}")
 
 
-# ---------- commands ----------
-
-def cmd_list(data: dict) -> None:
-    print("=== GCP Carbon Footprint Experiments ===\n")
-    for exp in data["experiments"]:
-        eid, etype = exp["id"], exp["type"]
-        print(f"--- Experiment {eid} ({etype}) ---")
-        print(f"  {exp['description']}")
-        if p := exp.get("project"):
-            print(f"  Project: {p}")
-
-        if etype == "controlled":
-            print(f"  Config: {exp['family']}-standard-{exp['size']}, {exp['workload']}, "
-                  f"{exp['duration_h']}h, start {exp['start_utc']} UTC")
-            print(f"  Regions: {', '.join(data['controlled_regions'])}")
-            print("  Instances: 5")
-        else:
-            print("  Per-region config:")
-            n_inst = 0
-            for region, rc in exp["regions"].items():
-                z = rc.get("zones")
-                z_info = f" zones:{','.join(z)}" if z else ""
-                n_info = f" ({rc['notes']})" if rc.get("notes") else ""
-                n_inst += len(z) if z else 1
-                print(f"    {region:<24s} {rc['family']}-standard-{rc['size']:<2} "
-                      f"{rc['workload']:<6s} {rc['duration_h']}h {rc['start_utc']} UTC{z_info}{n_info}")
-            print(f"  Instances: {n_inst}")
-        print()
-    print("Total: 15 controlled + 3 zone + 23 factorial = 41 data points")
+def exp_to_task(exp: dict) -> tuple[str, str, str, str, str]:
+    mtype = f"{exp['family']}-standard-{exp['size']}"
+    zone = f"{exp['region']}-{exp['zone']}"
+    name = f"{mtype}-{exp['workload']}-{exp['duration_h']}h-{zone}"
+    script = startup_script(exp["workload"], exp["duration_h"] * 60)
+    return (exp["project"], zone, name, mtype, script)
 
 
-def cmd_run(data: dict, projects: dict[int, Project], exp_id: int, filter_region: str = "") -> None:
-    exp = get_experiment(data, exp_id)
-    project_id = require_project(exp, projects)
-    log(f"=== Running experiment {exp_id} ({exp['type']}) in project {project_id} ===")
-
-    if exp["type"] == "controlled":
-        regions = [filter_region] if filter_region else data["controlled_regions"]
-        for r in regions:
-            deploy_region(project_id, exp["family"], exp["size"], exp["workload"], exp["duration_h"], r)
-    else:
-        regions_to_run = [filter_region] if filter_region else list(exp["regions"].keys())
-        for r in regions_to_run:
-            if (rc := exp["regions"].get(r)) is None:
-                log(f"  WARNING: region {r} not found, skipping")
-                continue
-            deploy_region(project_id, rc["family"], rc["size"], rc["workload"], rc["duration_h"], r, rc.get("zones"))
-
-    log(f"=== Experiment {exp_id} deployment complete ===")
+def cmd_run(data: list[dict], ids: list[int]) -> None:
+    exps = get_experiments(data, ids)
+    log(f"=== Running {len(exps)} experiment(s): {ids} ===")
+    for e in exps:
+        log(f"  #{e['id']}: {e['family']}-standard-{e['size']} {e['workload']} {e['duration_h']}h in {e['region']}-{e['zone']} ({e['project']})")
+    create_instances_parallel([exp_to_task(e) for e in exps])
+    log("=== Deployment complete ===")
 
 
-def cmd_status(data: dict, projects: dict[int, Project], filter_id: int | None = None) -> None:
+def _unique_projects(data: list[dict], ids: list[int] | None, projects: dict[int, Project]) -> list[str]:
+    if ids:
+        return sorted({e["project"] for e in get_experiments(data, ids)})
+    return sorted({p.project_id for p in projects.values() if p.billing_account})
+
+
+def cmd_status(data: list[dict], projects: dict[int, Project], ids: list[int] | None = None) -> None:
     client = compute_v1.InstancesClient()
-    for project_id, label in _iter_projects(data, projects, filter_id):
-        print(f"--- {label} ({project_id}) ---")
+    for project_id in _unique_projects(data, ids, projects):
+        print(f"--- {project_id} ---")
         try:
             found = False
             for _, scoped in client.aggregated_list(project=project_id):
@@ -265,10 +213,10 @@ def cmd_status(data: dict, projects: dict[int, Project], filter_id: int | None =
         print()
 
 
-def cmd_cleanup(data: dict, projects: dict[int, Project], filter_id: int | None = None) -> None:
+def cmd_cleanup(data: list[dict], projects: dict[int, Project], ids: list[int] | None = None) -> None:
     client = compute_v1.InstancesClient()
-    for project_id, label in _iter_projects(data, projects, filter_id):
-        log(f"Cleaning up {label} ({project_id})")
+    for project_id in _unique_projects(data, ids, projects):
+        log(f"Cleaning up {project_id}")
         try:
             found = False
             for _, scoped in client.aggregated_list(project=project_id):
@@ -302,12 +250,14 @@ def cmd_test2(projects: dict[int, Project]) -> None:
     zone = "us-east1-c"
     workloads = {1: "idle", 2: "idle", 3: "idle", 4: "stress", 5: "stress"}
     log(f"=== Test2: e2-standard-2, 10min in {zone} across projects 1-5 ===")
+    tasks = []
     for idx in range(1, 6):
         wl = workloads[idx]
         project_id = resolve_project(projects, f"PROJECT_{idx}")
         script = startup_script(wl, 10)
         log(f"  PROJECT_{idx} ({project_id}) — {wl}")
-        create_instance(project_id, zone, f"{idx}-{wl}", "e2-standard-2", script)
+        tasks.append((project_id, zone, f"test2-{idx}-{wl}", "e2-standard-2", script))
+    create_instances_parallel(tasks)
     log("All test instances launched. They will self-delete after 10 minutes.")
 
 
@@ -345,13 +295,10 @@ def cmd_init(projects: dict[int, Project]) -> None:
     log("Done. VMs can now self-delete.")
 
 
-# ---------- main ----------
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="GCP Carbon Footprint Experiment — Deployment")
-    parser.add_argument("command", choices=["list", "run", "status", "cleanup", "test", "test2", "init", "help"])
-    parser.add_argument("id", nargs="?", type=int, help="Experiment id")
-    parser.add_argument("--region", help="Run in one region only")
+    parser.add_argument("command", choices=["run", "status", "cleanup", "test", "test2", "init", "help"])
+    parser.add_argument("ids", nargs="?", help="Comma-separated experiment ids (e.g. 1,2,3)")
     parser.add_argument("--stress", action="store_true", help="Use stress workload (for test)")
     args = parser.parse_args()
 
@@ -359,16 +306,14 @@ def main() -> None:
         parser.print_help(); return
 
     data = load_experiments()
-    if args.command == "list":
-        cmd_list(data); return
-
     projects = load_projects()
+    ids = parse_ids(args.ids) if args.ids else None
     match args.command:
         case "run":
-            if args.id is None: parser.error("run requires an experiment id")
-            cmd_run(data, projects, args.id, args.region or "")
-        case "status":  cmd_status(data, projects, args.id)
-        case "cleanup": cmd_cleanup(data, projects, args.id)
+            if not ids: parser.error("run requires experiment ids (e.g. run 1,2,3)")
+            cmd_run(data, ids)
+        case "status":  cmd_status(data, projects, ids)
+        case "cleanup": cmd_cleanup(data, projects, ids)
         case "test":    cmd_test(projects, args.stress)
         case "test2":   cmd_test2(projects)
         case "init":    cmd_init(projects)

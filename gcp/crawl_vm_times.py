@@ -40,7 +40,7 @@ def query_vm_events(project_id: str, since: str) -> list[dict]:
         '(protoPayload.methodName="v1.compute.instances.insert" OR '
         ' protoPayload.methodName="v1.compute.instances.delete") AND '
         'operation.last="true" AND '
-        f'timestamp>="{since}T00:00:00Z"'
+        f'timestamp>="{since}"'
     )
     entries = []
     for entry in client.list_entries(filter_=filter_str, order_by="timestamp asc"):
@@ -102,7 +102,7 @@ def pair_events(events: list[dict]) -> list[dict]:
 
 def main():
     parser = argparse.ArgumentParser(description="Crawl VM start/stop times from audit logs")
-    default_since = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")
+    default_since = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
     parser.add_argument("--since", default=default_since, help=f"Start date (default: {default_since})")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Output CSV path")
     args = parser.parse_args()
