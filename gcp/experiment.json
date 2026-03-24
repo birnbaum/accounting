@@ -1,0 +1,70 @@
+{
+  "description": "GCP Carbon Footprint calibration experiment: 5 projects across 5 controlled regions. P1: baseline replication. P2: workload & family effects. P3: size scaling. P4: duration scaling. P5: zone-level attribution test.",
+  "image": "debian-cloud/debian-12",
+  "controlled_regions": ["us-central1", "europe-west1", "asia-east1", "australia-southeast1", "southamerica-east1"],
+  "experiments": [
+    {
+      "id": 1,
+      "project": "PROJECT_1",
+      "type": "controlled",
+      "description": "Baseline: e2-standard-2, idle, 2h — identical across all 5 regions",
+      "family": "e2",
+      "size": 2,
+      "workload": "idle",
+      "duration_h": 2,
+      "start_utc": "00:00"
+    },
+    {
+      "id": 2,
+      "project": "PROJECT_2",
+      "type": "exploratory",
+      "description": "Workload & family effects: stress verification (2 regions), n4 baseline, n4 stress, c4 baseline",
+      "regions": {
+        "us-central1":          {"family": "e2", "size": 2, "workload": "stress", "duration_h": 2, "start_utc": "00:00", "notes": "stress verification 1"},
+        "europe-west1":         {"family": "e2", "size": 2, "workload": "stress", "duration_h": 2, "start_utc": "00:00", "notes": "stress verification 2"},
+        "asia-east1":           {"family": "n4", "size": 2, "workload": "idle",   "duration_h": 2, "start_utc": "00:00", "notes": "n4 baseline"},
+        "australia-southeast1": {"family": "n4", "size": 2, "workload": "stress", "duration_h": 2, "start_utc": "00:00", "notes": "n4 stress"},
+        "southamerica-east1":   {"family": "c4", "size": 2, "workload": "idle",   "duration_h": 2, "start_utc": "00:00", "notes": "c4 baseline"}
+      }
+    },
+    {
+      "id": 3,
+      "project": "PROJECT_3",
+      "type": "exploratory",
+      "description": "Size scaling: e2 4/4/8 vCPUs, n4 4/8 vCPUs",
+      "regions": {
+        "us-central1":          {"family": "e2", "size": 4, "workload": "idle", "duration_h": 2, "start_utc": "00:00", "notes": "e2 4 vCPUs"},
+        "europe-west1":         {"family": "e2", "size": 4, "workload": "idle", "duration_h": 2, "start_utc": "00:00", "notes": "e2 4 vCPUs"},
+        "asia-east1":           {"family": "e2", "size": 8, "workload": "idle", "duration_h": 2, "start_utc": "00:00", "notes": "e2 8 vCPUs"},
+        "australia-southeast1": {"family": "n4", "size": 4, "workload": "idle", "duration_h": 2, "start_utc": "00:00", "notes": "n4 4 vCPUs"},
+        "southamerica-east1":   {"family": "n4", "size": 8, "workload": "idle", "duration_h": 2, "start_utc": "00:00", "notes": "n4 8 vCPUs"}
+      }
+    },
+    {
+      "id": 4,
+      "project": "PROJECT_4",
+      "type": "exploratory",
+      "description": "Duration scaling: e2 1/4/8h, n4 4/8h",
+      "regions": {
+        "us-central1":          {"family": "e2", "size": 2, "workload": "idle", "duration_h": 1, "start_utc": "00:00", "notes": "e2 1h"},
+        "europe-west1":         {"family": "e2", "size": 2, "workload": "idle", "duration_h": 4, "start_utc": "00:00", "notes": "e2 4h"},
+        "asia-east1":           {"family": "e2", "size": 2, "workload": "idle", "duration_h": 8, "start_utc": "00:00", "notes": "e2 8h"},
+        "australia-southeast1": {"family": "n4", "size": 2, "workload": "idle", "duration_h": 4, "start_utc": "00:00", "notes": "n4 4h"},
+        "southamerica-east1":   {"family": "n4", "size": 2, "workload": "idle", "duration_h": 8, "start_utc": "00:00", "notes": "n4 8h"}
+      }
+    },
+    {
+      "id": 5,
+      "project": "PROJECT_5",
+      "type": "exploratory",
+      "description": "Zone attribution test: e2-standard-2 in 3 zones per region — do carbon reports distinguish zones?",
+      "regions": {
+        "us-central1":          {"family": "e2", "size": 2, "workload": "idle", "duration_h": 2, "start_utc": "00:00", "zones": ["a", "b", "c"], "notes": "zone attribution"},
+        "europe-west1":         {"family": "e2", "size": 2, "workload": "idle", "duration_h": 2, "start_utc": "00:00", "zones": ["b", "c", "d"], "notes": "zone attribution"},
+        "asia-east1":           {"family": "e2", "size": 2, "workload": "idle", "duration_h": 2, "start_utc": "00:00", "zones": ["a", "b", "c"], "notes": "zone attribution"},
+        "australia-southeast1": {"family": "e2", "size": 2, "workload": "idle", "duration_h": 2, "start_utc": "00:00", "zones": ["a", "b", "c"], "notes": "zone attribution"},
+        "southamerica-east1":   {"family": "e2", "size": 2, "workload": "idle", "duration_h": 2, "start_utc": "00:00", "zones": ["a", "b", "c"], "notes": "zone attribution"}
+      }
+    }
+  ]
+}
