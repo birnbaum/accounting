@@ -43,14 +43,14 @@ They proposed
 
 We extend the taxonomy with **rSCI** (reconciled SCI): a variant that reconciles to the provider-reported total.
 
-| Metric | $`C`$                                                   | Includes                                                            | Key limitation                               |
-|--------|---------------------------------------------------------|---------------------------------------------------------------------|----------------------------------------------|
-| SCI | $`E \cdot I + M`$                                       | Bottom-up operational + bottom-up embodied                          | Sunk carbon fallacy (Bashir et al.)          |
-| oSCI | $`E \cdot I`$                                           | Bottom-up operational only                                          | Misses embodied and other overheads entirely |
+| Metric | $`C`$                                             | Includes                                                            | Key limitation                               |
+|--------|---------------------------------------------------|---------------------------------------------------------------------|----------------------------------------------|
+| SCI | $`E \cdot I + M`$                                 | Bottom-up operational + bottom-up embodied                          | Sunk carbon fallacy (Bashir et al.)          |
+| oSCI | $`E \cdot I`$                                     | Bottom-up operational only                                          | Misses embodied and other overheads entirely |
 | tSCI | $`E \cdot I + O_\text{idle-infra} + M + M_\text{idle-infra}`$ | SCI + bottom-up models for operational and embodied idle overhead   | Requires bottom-up datacenter knowledge      |
-| **rSCI** | $`E \cdot I + w \cdot \hat{\Delta}`$                    | Operational + estimated fraction of residuals from reporting metric | (to be found out)                            |
+| **rSCI** | $`E \cdot I + w \cdot \Delta`$                    | Operational + estimated fraction of residuals from reporting metric | (to be found out)                            |
 
-where $`\hat{\Delta}`$ is the estimated residual bridge and $`w`$ the per-workload weighting factor. Details below.
+where $`\Delta`$ is the residual bridge and $`w`$ the per-workload weighting factor. Details below.
 
 <details>
 <summary>Benefits of rSCI</summary>
@@ -73,12 +73,12 @@ Without full coverage, the residual loses its interpretation.
 
 
 
-## Method
+## rSCI Definition
 
 Let $`i`$ index **workload instances** — one evaluation of a workload over its period $`t_i`$.
 All per-instance quantities ($`E_i`$, $`C_i`$, $`R_i`$) are defined over one $`i`$.
-Ther are two common workload types:
-- **Batch**: discrete jobs with a clear start and end where $`t_i`$ is the job duration and $`R_i`$ is a job-level quantity, e.g., 1 (the job), GB processed, oe batches trained.
+There are two common workload types:
+- **Batch**: discrete jobs with a clear start and end where $`t_i`$ is the job duration and $`R_i`$ is a job-level quantity, e.g., 1 (the job), GB processed, or batches trained.
 - **Interactive**: continuous services where $`t_i`$ is a fixed window (e.g., 5min) and $`R_i`$ is a request-level quantity, e.g., number of requests, tokens, or queries.
 
 
