@@ -86,11 +86,10 @@ Each workload has an evaluation period $`t_i`$ and all per-workload quantities l
 
 ### Energy Model
 
-TODO: This dowes not yet fully match the concept and notation from the residual bridge section, needs to be aligned.
+$$E_{i,s,r} = \sum_p q_p \cdot \varepsilon_p \quad [\text{Wh}]$$
 
-$$E_i = \sum_p q_p \times \varepsilon_p \quad [\text{Wh}]$$
-
-where $`p`$ indexes resource types, $`q_p`$ is quantity consumed during $`t_i`$, and $`\varepsilon_p`$ is the energy coefficient (Wh/unit).
+where $`p`$ indexes resource types consumed by workload $`i`$ within service $`s`$ and region $`r`$, $`q_p`$ is quantity consumed during $`t_i`$, and $`\varepsilon_p`$ is the energy coefficient (Wh/unit).
+The workload-level total is $`E_i = \sum_{s,r} E_{i,s,r}`$.
 
 | Resource type | Unit ($`q_p`$) | $`\varepsilon_p`$ | Note                         |
 |---|---|---|------------------------------|
