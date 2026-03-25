@@ -14,6 +14,7 @@ The README is a living research document for rapid iteration on ideas. Keep it c
 ## General style
 
 - Be concise. Prefer precision over prose.
+- **One sentence per line** in all markdown files. Always use a newline after each sentence. This makes diffs cleaner and editing easier.
 - Don't add docstrings, comments, or type annotations to code that wasn't changed.
 - This is a research repo — scripts are exploratory, not production code.
 
