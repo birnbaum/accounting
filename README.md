@@ -75,20 +75,20 @@ Without full coverage, the residual loses its interpretation.
 
 ## Method
 
-Let $`i`$ index workloads to be optimized by an individual $`rSCI_i`$.
-Each workload has an evaluation period $`t_i`$ and all per-workload quantities like $`C_i`$ and $`R_i`$ are defined over one $`i`$.
-
-| Type | $`t_i`$                  | Examples                                    | Typical $`R`$ choices                      |
-|---|--------------------------|---------------------------------------------|--------------------------------------------|
-| **Batch** | Job duration             | carbon per ML training, CI build, ...       | 1 (the job), GB processed, batches trained |
-| **Interactive** | Fixed window | carbon per request, defined per 5min window | requests, tokens, queries                  |
+Let $`i`$ index **workload instances** — one evaluation of a workload over its period $`t_i`$.
+All per-instance quantities ($`E_i`$, $`C_i`$, $`R_i`$) are defined over one $`i`$.
+Ther are two common workload types:
+- **Batch**: discrete jobs with a clear start and end where $`t_i`$ is the job duration and $`R_i`$ is a job-level quantity, e.g., 1 (the job), GB processed, oe batches trained.
+- **Interactive**: continuous services where $`t_i`$ is a fixed window (e.g., 5min) and $`R_i`$ is a request-level quantity, e.g., number of requests, tokens, or queries.
 
 
 ### Energy Model
 
+We define the bottom-up energy estimate for workload $`i`$ within service $`s`$ and region $`r`$ as:
+
 $$E_{i,s,r} = \sum_p q_p \cdot \varepsilon_p \quad [\text{Wh}]$$
 
-where $`p`$ indexes resource types consumed by workload $`i`$ within service $`s`$ and region $`r`$, $`q_p`$ is quantity consumed during $`t_i`$, and $`\varepsilon_p`$ is the energy coefficient (Wh/unit).
+where $`p`$ indexes resource types, $`q_p`$ is quantity consumed during $`t_i`$, and $`\varepsilon_p`$ is the energy coefficient (Wh/unit).
 The workload-level total is $`E_i = \sum_{s,r} E_{i,s,r}`$.
 
 | Resource type | Unit ($`q_p`$) | $`\varepsilon_p`$ | Note                         |
@@ -105,7 +105,7 @@ Unobservable components increase the residual.
 <details>
 <summary>Why usage-based, not utilization-based?</summary>
 
-This is a usage-based energy model: $`E`$ depends on what you have provisioned or consumed ($`q \times \varepsilon`$), not on how hard you drive the resource.
+This is a usage-based energy model: $`E`$ depends on what you have provisioned or consumed ($`q \cdot \varepsilon`$), not on how hard you drive the resource.
 No provider currently rewards utilization at the customer boundary (see [SCHEMA.md](SCHEMA.md)), so the utilization term does not help reconciliation.
 Utilization improvements are real (they reduce physical energy) but invisible to provider accounting (they fall into $`\Delta^{\text{S2}}`$).
 </details>
@@ -115,69 +115,59 @@ Utilization improvements are real (they reduce physical energy) but invisible to
 
 Providers report Scope 1, 2, and 3 separately per **reporting slice** (e.g., GCP: `project × service × region × month`).
 We assume a workload does not span multiple projects and optimize within a single month (real-time scheduling signal).
-Following, we index the top-down per-scope reported emissions $C^{\downarrow}$ by service $`s`$ and region $`r`$:
+Following, we index the top-down per-scope reported emissions $`C^{\downarrow S1}`$, $`C^{\downarrow S2}`$, and $`C^{\downarrow S3}`$ by service $`s`$ and region $`r`$. We define the residual bridges:
 
-$$\Delta_{s,r}^{\text{S1}} = C_{s,r}^{\downarrow\text{S1}}, \qquad \Delta_{s,r}^{\text{S2}} = C_{s,r}^{\downarrow\text{S2}} - O_{s,r}, \qquad \Delta_{s,r}^{\text{S3}} = C_{s,r}^{\downarrow\text{S3}}$$
+- $`\Delta_{s,r}^{\text{S1}} = C_{s,r}^{\downarrow\text{S1}}`$ (Scope 1) is fully residual: diesel, refrigerants.
+- $`\Delta_{s,r}^{\text{S2}} = C_{s,r}^{\downarrow\text{S2}} - O_{s,r}`$ (Scope 2 gap) is the power usage we cannot estimate bottom-up: PUE, idle capacity, power model error.
+- $`\Delta_{s,r}^{\text{S3}} = C_{s,r}^{\downarrow\text{S3}}`$ (Scope 3) is fully residual: embodied hardware/datacenter, FERA, upstream transport, etc.
 
-where $`O_{s,r} = \sum_i E_{i,s,r} \cdot I_r`$ is the bottom-up operational estimate.
+where 
+$$O_{s,r} = \sum_i E_{i,s,r} \cdot I_r$$ 
+is the bottom-up operational estimate.
 Carbon intensity $`I_r`$ depends on the grid region.
 
-- $`\Delta_{s,r}^{\text{S1}}`$ (Scope 1) is fully residual: diesel, refrigerants.
-- $`\Delta_{s,r}^{\text{S2}}`$ (Scope 2 gap) is the power usage we cannot estimate bottom-up: PUE, idle capacity, power model error.
-- $`\Delta_{s,r}^{\text{S3}}`$ (Scope 3) is fully residual: embodied hardware/datacenter, FERA, upstream transport, etc.
 
-Since we can only compute each $`\Delta`$ once the provider report arrives, we need to estimate it for real-time optimization. TBD.
-
-### Weighting factor $`w`$
-
-...
-
-
-
+TODO: Since we can only compute each $`\Delta`$ once the provider report arrives, we need to estimate it for real-time optimization. TBD.
 
 
 ### Reconciliation
 
-Reconciliation is performed per service $`s`$ and region $`r`$.
-By default, all residuals are allocated by energy share $`w_{i,s,r} = E_{i,s,r}/E_{s,r}`$:
+Reconciliation is performed per $`(s,r)`$.
+By default, all residuals are allocated by energy share 
+$$w_{i,s,r} = E_{i,s,r}/E_{s,r}$$
 
-$$\text{rSCI}_i = \frac{1}{R_i} \sum_{s,r} \left( O_{i,s,r} + w_{i,s,r} \cdot \Delta_{s,r}^{\text{S1}} + w_{i,s,r} \cdot \Delta_{s,r}^{\text{S2}} + w_{i,s,r} \cdot \Delta_{s,r}^{\text{S3}} \right)$$
+We define:
 
-This collapses to:
+$$\text{rSCI}_i = \frac{1}{R_i} \sum_{s,r} \left(O_{i,s,r} +  w_{i,s,r} \left(\Delta_{s,r}^{\text{S1}} + \Delta_{s,r}^{\text{S2}} + \Delta_{s,r}^{\text{S3}} \right)\right)$$
+
+Since $`O_{i,s,r} = E_{i,s,r} \cdot I_r`$, this collapses to:
 
 $$\text{rSCI}_i = \frac{1}{R_i} \sum_{s,r} E_{i,s,r} \left( I_r + \frac{\Delta_{s,r}^{\text{S1}} + \Delta_{s,r}^{\text{S2}} + \Delta_{s,r}^{\text{S3}}}{E_{s,r}} \right)$$
 
 where $`I_r + (\Delta_{s,r}^{\text{S1}} + \Delta_{s,r}^{\text{S2}} + \Delta_{s,r}^{\text{S3}})/E_{s,r}`$ is the **effective carbon intensity** of service $`s`$ in region $`r`$.
 The only workload-specific term is $`E_{i,s,r}`$.
 
-**Reconciliation guarantee:** $`\sum_i w_{i,s,r} = 1 \implies \sum_i \text{rSCI}_i \cdot R_i = \sum_{s,r} C_{s,r}^{\downarrow}`$.
+Since, by construction, $`\sum_i w_{i,s,r} = 1 \implies \sum_i \text{rSCI}_i \cdot R_i = \sum_{s,r} C_{s,r}^{\downarrow}`$.
 
 **Bridge decomposition.**
-Energy-proportional allocation is a reasonable default but not structurally optimal for all components (e.g., embodied carbon depends on hardware type, not energy).
+Energy-proportional allocation is a reasonable default but *maybe* not structurally optimal for all components (e.g., embodied carbon depends on hardware type, not energy).
 Each scope's residual can be further decomposed into sub-components $`k`$ with their own allocation keys $`w_{i,s,r}^k`$, as long as $`\sum_i w_{i,s,r}^k = 1`$:
-
-| Component | Suggested allocation key |
-|---|---|
-| PUE (within $`\Delta^{\text{S2}}`$) | $`E_{i,s,r}/E_{s,r}`$ (scales with energy) |
-| Idle capacity (within $`\Delta^{\text{S2}}`$) | Reservation size (idle cost follows capacity held) |
-| Embodied carbon (within $`\Delta^{\text{S3}}`$) | Instance-hours × hardware cost/weight |
-| Other | $`E_{i,s,r}/E_{s,r}`$ (default) |
+- PUE overhead can meaningfully be allocated by energy share since it scales with energy.
+- Idle capacity overhead may be better allocated by reservation size since it follows capacity held, not energy.
+- Embodied carbon may be better allocated by instance-hours × hardware cost/weight.
 
 
 ## Open Questions
-
-- Does the model hold for mixed batch and interactive workloads? 
 
 1. **Energy coefficients:** Where to source reliable $`\varepsilon_p`$ values per resource type / instance family / chip generation? How sensitive is $`\Delta^{\text{S2}}`$ to $`\varepsilon_p`$ estimation error?
 2. **Cold start and pooling:** Without historical data, $`\Delta_{s,r}^{\text{S2}}`$ is unknown (rSCI degrades to oSCI + raw overhead).
 $`\gamma_{s,r} = C_{s,r}^{\downarrow\text{S2}} / O_{s,r}`$ is driven by provider methodology (PUE, emission factors), not individual customers — pooling $`\gamma`$ per provider × service × region could provide priors for new customers.
 $`\Delta^{\text{S1}}`$ and $`\Delta^{\text{S3}}`$ need no calibration (directly from provider report).
-3. **Non-stationarity and location dependence:** All residuals vary by region and over time (seasonal PUE, hardware refreshes, methodology changes).
-How to model this and detect regime shifts?
+3. **Non-stationarity :** Residuals can vary over time (seasonal PUE, hardware refreshes, methodology changes). How to model this and detect regime shifts?
 4. **Provider methodology opacity:** rSCI reconciles to whatever the provider reports.
 A persistently large or volatile $`\Delta^{\text{S2}}`$ signals methodology weakness but cannot correct for it.
 How to distinguish "coarse provider methodology" from "missing observable activity"?
-5. **Normative reference estimate:** A second, more methodologically complete estimate that makes visible the gap between what providers report and what a fuller methodology would report — comparative, not substitutive.
+Should we provide a second, more methodologically complete estimate that makes visible the gap between what providers report and what a "ideal" methodology would report?
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific and provider-profile questions.
 
