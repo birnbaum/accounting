@@ -1,1 +1,3 @@
 python gcp/crawl_vm_times.py --since 2026-03-24T11:00:00z
+
+Ended AWS VMs at 23:20 (start at 16:04 or smth?)
