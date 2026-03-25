@@ -54,16 +54,16 @@ We extend the taxonomy with **rSCI** (reconciled SCI): a variant that reconciles
 
 Providers report Scope 1, 2, and 3 separately per **reporting slice** (e.g., GCP: `project × service × region × month`).
 We assume a workload does not span multiple projects and optimize within a single month (real-time scheduling signal).
-Project and month are therefore fixed, and we index by service $`s`$ and region $`r`$:
+Following, we index the top-down per-scope reported emissions $C^{\downarrow}$ by service $`s`$ and region $`r`$:
 
 $$\Delta_{s,r}^{\text{S1}} = C_{s,r}^{\downarrow\text{S1}}, \qquad \Delta_{s,r}^{\text{S2}} = C_{s,r}^{\downarrow\text{S2}} - O_{s,r}, \qquad \Delta_{s,r}^{\text{S3}} = C_{s,r}^{\downarrow\text{S3}}$$
 
 where $`O_{s,r} = \sum_i E_{i,s,r} \cdot I_r`$ is the bottom-up operational estimate.
-Carbon intensity $`I_r`$ depends on the grid region, not the service.
+Carbon intensity $`I_r`$ depends on the grid region.
 
-- $`\Delta_{s,r}^{\text{S2}}`$ (Scope 2 gap): PUE, idle capacity, emission factor differences, estimation error. The part we can **shrink**.
-- $`\Delta_{s,r}^{\text{S1}}`$ (Scope 1): diesel, refrigerants. Fully residual — pure overhead.
-- $`\Delta_{s,r}^{\text{S3}}`$ (Scope 3): embodied hardware, FERA, upstream transport. Fully residual — pure overhead.
+- $`\Delta_{s,r}^{\text{S1}}`$ (Scope 1) is fully residual: diesel, refrigerants.
+- $`\Delta_{s,r}^{\text{S2}}`$ (Scope 2 gap) is the power usage we cannot estimate bottom-up: PUE, idle capacity, power model error.
+- $`\Delta_{s,r}^{\text{S3}}`$ (Scope 3) is fully residual: embodied hardware/datacenter, FERA, upstream transport, etc.
 
 
 <details>
