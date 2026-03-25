@@ -56,7 +56,7 @@ Providers report Scope 1, 2, and 3 separately per **reporting slice** (e.g., GCP
 We assume a workload does not span multiple projects and optimize within a single month (real-time scheduling signal).
 Project and month are therefore fixed, and we index by service $`s`$ and region $`r`$:
 
-$$\Delta_{s,r}^{\text{S1}} = \tilde{C}_{s,r}^{\text{S1}}, \qquad \Delta_{s,r}^{\text{S2}} = \tilde{C}_{s,r}^{\text{S2}} - O_{s,r}, \qquad \Delta_{s,r}^{\text{S3}} = \tilde{C}_{s,r}^{\text{S3}}$$
+$$\Delta_{s,r}^{\text{S1}} = C_{s,r}^{\downarrow\text{S1}}, \qquad \Delta_{s,r}^{\text{S2}} = C_{s,r}^{\downarrow\text{S2}} - O_{s,r}, \qquad \Delta_{s,r}^{\text{S3}} = C_{s,r}^{\downarrow\text{S3}}$$
 
 where $`O_{s,r} = \sum_i E_{i,s,r} \cdot I_r`$ is the bottom-up operational estimate.
 Carbon intensity $`I_r`$ depends on the grid region, not the service.
@@ -69,7 +69,7 @@ Carbon intensity $`I_r`$ depends on the grid region, not the service.
 <details>
 <summary>Benefits of rSCI</summary>
 
-- Shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but practical: learns $`\Delta_{s,r}^{\text{S2}}`$ from historical ($`O`$, $`\tilde{C}^{\text{S2}}`$) pairs; $`\Delta^{\text{S1}}`$ and $`\Delta^{\text{S3}}`$ come directly from the provider report.
+- Shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but practical: learns $`\Delta_{s,r}^{\text{S2}}`$ from historical ($`O`$, $`C^{\downarrow\text{S2}}`$) pairs; $`\Delta^{\text{S1}}`$ and $`\Delta^{\text{S3}}`$ come directly from the provider report.
 - More comprehensive: captures *everything* between the bottom-up total and the provider-reported number, separated by scope.
 - Does **not** suffer from the sunk carbon fallacy: embodied carbon enters via $`\Delta_{s,r}^{\text{S3}}`$ and is distributed by energy share ($`E_{i,s,r}/E_{s,r}`$), not attributed per-server. Old hardware → higher $`E`$ → more residual → always looks worse.
 - **Does** reward scheduling toward lower-overhead infrastructure: $`\Delta_{s,r}^{\text{S2}}`$ and $`\Delta_{s,r}^{\text{S3}}`$ differ across services and regions. oSCI is blind to these factors.
@@ -78,7 +78,9 @@ Carbon intensity $`I_r`$ depends on the grid region, not the service.
 <details>
 <summary>Boundary mismatch assumption</summary>
 
-We assume the observable boundary covers all activity in the reporting slice (no boundary mismatch). A provider may bundle supporting services (storage I/O, managed networking) into a slice you only partially observe. Without full coverage, the residual loses its interpretation.
+We assume the observable boundary covers all activity in the reporting slice (no boundary mismatch).
+A provider may bundle supporting services (storage I/O, managed networking) into a slice you only partially observe.
+Without full coverage, the residual loses its interpretation.
 
 *Example: you instrument all EC2 instances in `eu-central-1`, but the provider's `Compute` slice also includes EBS volume activity and NAT Gateway traffic.*
 </details>
@@ -134,9 +136,11 @@ $$\text{rSCI}_i = \frac{1}{R_i} \sum_{s,r} E_{i,s,r} \left( I_r + \frac{\Delta_{
 where $`I_r + (\Delta_{s,r}^{\text{S1}} + \Delta_{s,r}^{\text{S2}} + \Delta_{s,r}^{\text{S3}})/E_{s,r}`$ is the **effective carbon intensity** of service $`s`$ in region $`r`$.
 The only workload-specific term is $`E_{i,s,r}`$.
 
-**Reconciliation guarantee:** $`\sum_i w_{i,s,r} = 1 \implies \sum_i \text{rSCI}_i \cdot R_i = \sum_{s,r} \tilde{C}_{s,r}`$.
+**Reconciliation guarantee:** $`\sum_i w_{i,s,r} = 1 \implies \sum_i \text{rSCI}_i \cdot R_i = \sum_{s,r} C_{s,r}^{\downarrow}`$.
 
-**Bridge decomposition.** Energy-proportional allocation is a reasonable default but not structurally optimal for all components (e.g., embodied carbon depends on hardware type, not energy). Each scope's residual can be further decomposed into sub-components $`k`$ with their own allocation keys $`w_{i,s,r}^k`$, as long as $`\sum_i w_{i,s,r}^k = 1`$:
+**Bridge decomposition.**
+Energy-proportional allocation is a reasonable default but not structurally optimal for all components (e.g., embodied carbon depends on hardware type, not energy).
+Each scope's residual can be further decomposed into sub-components $`k`$ with their own allocation keys $`w_{i,s,r}^k`$, as long as $`\sum_i w_{i,s,r}^k = 1`$:
 
 | Component | Suggested allocation key |
 |---|---|
@@ -149,9 +153,14 @@ The only workload-specific term is $`E_{i,s,r}`$.
 ## Open Questions
 
 1. **Energy coefficients:** Where to source reliable $`\varepsilon_p`$ values per resource type / instance family / chip generation? How sensitive is $`\Delta^{\text{S2}}`$ to $`\varepsilon_p`$ estimation error?
-2. **Cold start and pooling:** Without historical data, $`\Delta_{s,r}^{\text{S2}}`$ is unknown (rSCI degrades to oSCI + raw overhead). $`\gamma_{s,r} = \tilde{C}_{s,r}^{\text{S2}} / O_{s,r}`$ is driven by provider methodology (PUE, emission factors), not individual customers — pooling $`\gamma`$ per provider × service × region could provide priors for new customers. $`\Delta^{\text{S1}}`$ and $`\Delta^{\text{S3}}`$ need no calibration (directly from provider report).
-3. **Non-stationarity and location dependence:** All residuals vary by region and over time (seasonal PUE, hardware refreshes, methodology changes). How to model this and detect regime shifts?
-4. **Provider methodology opacity:** rSCI reconciles to whatever the provider reports. A persistently large or volatile $`\Delta^{\text{S2}}`$ signals methodology weakness but cannot correct for it. How to distinguish "coarse provider methodology" from "missing observable activity"?
+2. **Cold start and pooling:** Without historical data, $`\Delta_{s,r}^{\text{S2}}`$ is unknown (rSCI degrades to oSCI + raw overhead).
+$`\gamma_{s,r} = C_{s,r}^{\downarrow\text{S2}} / O_{s,r}`$ is driven by provider methodology (PUE, emission factors), not individual customers — pooling $`\gamma`$ per provider × service × region could provide priors for new customers.
+$`\Delta^{\text{S1}}`$ and $`\Delta^{\text{S3}}`$ need no calibration (directly from provider report).
+3. **Non-stationarity and location dependence:** All residuals vary by region and over time (seasonal PUE, hardware refreshes, methodology changes).
+How to model this and detect regime shifts?
+4. **Provider methodology opacity:** rSCI reconciles to whatever the provider reports.
+A persistently large or volatile $`\Delta^{\text{S2}}`$ signals methodology weakness but cannot correct for it.
+How to distinguish "coarse provider methodology" from "missing observable activity"?
 5. **Normative reference estimate:** A second, more methodologically complete estimate that makes visible the gap between what providers report and what a fuller methodology would report — comparative, not substitutive.
 
 See also [`SCHEMA.md`](SCHEMA.md) for schema-specific and provider-profile questions.
