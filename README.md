@@ -43,28 +43,14 @@ They proposed
 
 We extend the taxonomy with **rSCI** (reconciled SCI): a variant that reconciles to the provider-reported total.
 
-| Metric | $`C`$                                           | Includes                                             | Key limitation                               |
-|--------|-------------------------------------------------|------------------------------------------------------|----------------------------------------------|
-| SCI | $`E \cdot I + M`$                               | Operational + active embodied                        | Sunk carbon fallacy (Bashir et al.)          |
-| oSCI | $`E \cdot I`$                                   | Operational only                                     | Misses embodied and other overheads entirely |
-| tSCI | $`E \cdot I + O_\text{idle-infra} + M + M_\text{idle-infra}`$ | Full infrastructure, allocated proportionally        | Requires bottom-up datacenter knowledge      |
-| **rSCI** | $`E \cdot I + w \cdot \Delta`$ | oSCI + per-scope residuals | Requires some historical data |
+| Metric | $`C`$                                                   | Includes                                                            | Key limitation                               |
+|--------|---------------------------------------------------------|---------------------------------------------------------------------|----------------------------------------------|
+| SCI | $`E \cdot I + M`$                                       | Bottom-up operational + bottom-up embodied                          | Sunk carbon fallacy (Bashir et al.)          |
+| oSCI | $`E \cdot I`$                                           | Bottom-up operational only                                          | Misses embodied and other overheads entirely |
+| tSCI | $`E \cdot I + O_\text{idle-infra} + M + M_\text{idle-infra}`$ | SCI + bottom-up models for operational and embodied idle overhead   | Requires bottom-up datacenter knowledge      |
+| **rSCI** | $`E \cdot I + w \cdot \hat{\Delta}`$                    | Operational + estimated fraction of residuals from reporting metric | (to be found out)                            |
 
-### Residual Bridge
-
-Providers report Scope 1, 2, and 3 separately per **reporting slice** (e.g., GCP: `project × service × region × month`).
-We assume a workload does not span multiple projects and optimize within a single month (real-time scheduling signal).
-Following, we index the top-down per-scope reported emissions $C^{\downarrow}$ by service $`s`$ and region $`r`$:
-
-$$\Delta_{s,r}^{\text{S1}} = C_{s,r}^{\downarrow\text{S1}}, \qquad \Delta_{s,r}^{\text{S2}} = C_{s,r}^{\downarrow\text{S2}} - O_{s,r}, \qquad \Delta_{s,r}^{\text{S3}} = C_{s,r}^{\downarrow\text{S3}}$$
-
-where $`O_{s,r} = \sum_i E_{i,s,r} \cdot I_r`$ is the bottom-up operational estimate.
-Carbon intensity $`I_r`$ depends on the grid region.
-
-- $`\Delta_{s,r}^{\text{S1}}`$ (Scope 1) is fully residual: diesel, refrigerants.
-- $`\Delta_{s,r}^{\text{S2}}`$ (Scope 2 gap) is the power usage we cannot estimate bottom-up: PUE, idle capacity, power model error.
-- $`\Delta_{s,r}^{\text{S3}}`$ (Scope 3) is fully residual: embodied hardware/datacenter, FERA, upstream transport, etc.
-
+where $`\hat{\Delta}`$ is the estimated residual bridge and $`w`$ the per-workload weighting factor. Details below.
 
 <details>
 <summary>Benefits of rSCI</summary>
@@ -89,27 +75,30 @@ Without full coverage, the residual loses its interpretation.
 
 ## Method
 
-Let $`i`$ index workloads.
-Each workload has an evaluation period $`t_i`$ and all per-workload quantities are defined over one $`i`$.
+Let $`i`$ index workloads to be optimized by an individual $`rSCI_i`$.
+Each workload has an evaluation period $`t_i`$ and all per-workload quantities like $`C_i`$ and $`R_i`$ are defined over one $`i`$.
 
-| Type | $`t_i`$ | Examples | Typical $`R`$ choices |
-|---|---|---|---|
-| **Batch** | Job duration (start to finish) | ML training, ETL pipeline, CI build | 1 (the job), GB processed, images generated |
-| **Interactive** | Fixed window (e.g., 5 min) | Web API, LLM inference, database serving | requests, tokens, queries |
+| Type | $`t_i`$                  | Examples                                    | Typical $`R`$ choices                      |
+|---|--------------------------|---------------------------------------------|--------------------------------------------|
+| **Batch** | Job duration             | carbon per ML training, CI build, ...       | 1 (the job), GB processed, batches trained |
+| **Interactive** | Fixed window | carbon per request, defined per 5min window | requests, tokens, queries                  |
+
 
 ### Energy Model
+
+TODO: This dowes not yet fully match the concept and notation from the residual bridge section, needs to be aligned.
 
 $$E_i = \sum_p q_p \times \varepsilon_p \quad [\text{Wh}]$$
 
 where $`p`$ indexes resource types, $`q_p`$ is quantity consumed during $`t_i`$, and $`\varepsilon_p`$ is the energy coefficient (Wh/unit).
 
-| Resource type | Unit ($`q_p`$) | $`\varepsilon_p`$ | Note |
-|---|---|---|---|
+| Resource type | Unit ($`q_p`$) | $`\varepsilon_p`$ | Note                         |
+|---|---|---|------------------------------|
 | vCPU | vCPU-hours | Wh/vCPU-h | Reservation-based (= W/vCPU) |
-| GPU | GPU-hours | Wh/GPU-h | Same |
-| Storage | GB-hours | Wh/GB-h | Reservation-based |
-| Disk I/O | IO operations | Wh/IO-op | Event-based |
-| Network transfer | GB transferred | Wh/GB | Event-based |
+| GPU | GPU-hours | Wh/GPU-h | Reservation-based (= W/vCPU) |
+| Storage | GB-hours | Wh/GB-h | Reservation-based            |
+| Disk I/O | IO operations | Wh/IO-op | Event-based                  |
+| Network transfer | GB transferred | Wh/GB | Event-based                  |
 
 Not all resource types are observable.
 Unobservable components increase the residual.
@@ -121,6 +110,32 @@ This is a usage-based energy model: $`E`$ depends on what you have provisioned o
 No provider currently rewards utilization at the customer boundary (see [SCHEMA.md](SCHEMA.md)), so the utilization term does not help reconciliation.
 Utilization improvements are real (they reduce physical energy) but invisible to provider accounting (they fall into $`\Delta^{\text{S2}}`$).
 </details>
+
+
+### Residual Bridges $`\Delta`$
+
+Providers report Scope 1, 2, and 3 separately per **reporting slice** (e.g., GCP: `project × service × region × month`).
+We assume a workload does not span multiple projects and optimize within a single month (real-time scheduling signal).
+Following, we index the top-down per-scope reported emissions $C^{\downarrow}$ by service $`s`$ and region $`r`$:
+
+$$\Delta_{s,r}^{\text{S1}} = C_{s,r}^{\downarrow\text{S1}}, \qquad \Delta_{s,r}^{\text{S2}} = C_{s,r}^{\downarrow\text{S2}} - O_{s,r}, \qquad \Delta_{s,r}^{\text{S3}} = C_{s,r}^{\downarrow\text{S3}}$$
+
+where $`O_{s,r} = \sum_i E_{i,s,r} \cdot I_r`$ is the bottom-up operational estimate.
+Carbon intensity $`I_r`$ depends on the grid region.
+
+- $`\Delta_{s,r}^{\text{S1}}`$ (Scope 1) is fully residual: diesel, refrigerants.
+- $`\Delta_{s,r}^{\text{S2}}`$ (Scope 2 gap) is the power usage we cannot estimate bottom-up: PUE, idle capacity, power model error.
+- $`\Delta_{s,r}^{\text{S3}}`$ (Scope 3) is fully residual: embodied hardware/datacenter, FERA, upstream transport, etc.
+
+Since we can only compute each $`\Delta`$ once the provider report arrives, we need to estimate it for real-time optimization. TBD.
+
+### Weighting factor $`w`$
+
+...
+
+
+
+
 
 ### Reconciliation
 
@@ -151,6 +166,8 @@ Each scope's residual can be further decomposed into sub-components $`k`$ with t
 
 
 ## Open Questions
+
+- Does the model hold for mixed batch and interactive workloads? 
 
 1. **Energy coefficients:** Where to source reliable $`\varepsilon_p`$ values per resource type / instance family / chip generation? How sensitive is $`\Delta^{\text{S2}}`$ to $`\varepsilon_p`$ estimation error?
 2. **Cold start and pooling:** Without historical data, $`\Delta_{s,r}^{\text{S2}}`$ is unknown (rSCI degrades to oSCI + raw overhead).
