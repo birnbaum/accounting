@@ -127,7 +127,6 @@ is the bottom-up operational estimate.
 Carbon intensity $`I_r`$ depends on the grid region.
 
 
-TODO: Since we can only compute each $`\Delta`$ once the provider report arrives, we need to estimate it for real-time optimization. TBD.
 
 
 ### Reconciliation
@@ -142,9 +141,11 @@ $$\text{rSCI}_i = \frac{1}{R_i} \sum_{s,r} \left(O_{i,s,r} +  w_{i,s,r} \left(\D
 
 Since $`O_{i,s,r} = E_{i,s,r} \cdot I_r`$, this collapses to:
 
-$$\text{rSCI}_i = \frac{1}{R_i} \sum_{s,r} E_{i,s,r} \left( I_r + \frac{\Delta_{s,r}^{\text{S1}} + \Delta_{s,r}^{\text{S2}} + \Delta_{s,r}^{\text{S3}}}{E_{s,r}} \right)$$
+$$\text{rSCI}_i = \frac{1}{R_i} \sum_{s,r} E_{i,s,r} \cdot \xi_{s,r}$$
 
-where $`I_r + (\Delta_{s,r}^{\text{S1}} + \Delta_{s,r}^{\text{S2}} + \Delta_{s,r}^{\text{S3}})/E_{s,r}`$ is the **effective carbon intensity** of service $`s`$ in region $`r`$.
+where
+$$\xi_{s,r} = I_r + \frac{\Delta_{s,r}^{\text{S1}} + \Delta_{s,r}^{\text{S2}} + \Delta_{s,r}^{\text{S3}}}{E_{s,r}}$$
+is the **effective carbon intensity** of service $`s`$ in region $`r`$.
 The only workload-specific term is $`E_{i,s,r}`$.
 
 Since, by construction, $`\sum_i w_{i,s,r} = 1 \implies \sum_i \text{rSCI}_i \cdot R_i = \sum_{s,r} C_{s,r}^{\downarrow}`$.
@@ -157,13 +158,47 @@ Each scope's residual can be further decomposed into sub-components $`k`$ with t
 - Embodied carbon may be better allocated by instance-hours × hardware cost/weight.
 
 
+## Real-time Estimation
+
+The retrospective rSCI requires $`\Delta`$ (from the provider report, delayed weeks) and $`E_{s,r}`$ (total slice energy, known only after the reporting period).
+To use rSCI as a real-time optimization signal, we estimate $`\xi_{s,r}`$ from the most recent reconciled month.
+
+**Why $`\xi`$ is approximately stable across months.**
+Providers allocate all overhead — embodied, idle, facility — proportionally to SKU usage.
+Both $`C^{\downarrow}_{s,r}`$ and $`O_{s,r}`$ therefore scale linearly with resource consumption, so $`\xi_{s,r} = C^{\downarrow}_{s,r} / E_{s,r}`$ is approximately load-independent.
+
+**Factoring out grid intensity.**
+Grid carbon intensity $`I_r`$ is volatile (varies hourly) but observable in real time and should not be estimated from last month.
+Decomposing $`\xi`$ by scope:
+
+$$\xi_{s,r} = \mu_{s,r} \cdot I_r + \rho_{s,r}$$
+
+where:
+- $`\mu_{s,r} = C_{s,r}^{\downarrow\text{S2}} / (E_{s,r} \cdot I_r)`$ is the **Scope 2 multiplier** (dimensionless; captures PUE and energy model error)
+- $`\rho_{s,r} = (C_{s,r}^{\downarrow\text{S1}} + C_{s,r}^{\downarrow\text{S3}}) / E_{s,r}`$ is the **non-electricity overhead intensity** (gCO2eq/Wh; Scope 1 + 3)
+
+Both are slow-moving and load-independent.
+$`\rho`$ can be split by scope for diagnostics if the provider reports Scope 1 and 3 separately.
+
+The real-time estimate is then:
+
+$$\widehat{\text{rSCI}}_i = \frac{1}{R_i} \sum_{s,r} E_{i,s,r} \left( \hat{\mu}_{s,r} \cdot I_r + \hat{\rho}_{s,r} \right)$$
+
+where $`I_r`$ is the current grid intensity and $`\hat{\mu}`$, $`\hat{\rho}`$ are from the last reconciled month.
+
+**Graceful degradation:** without any history, $`\hat{\mu} = 1`$, $`\hat{\rho} = 0`$, and $`\widehat{\text{rSCI}}`$ reduces to oSCI.
+
+
 ## Open Questions
 
-1. **Energy coefficients:** Where to source reliable $`\varepsilon_p`$ values per resource type / instance family / chip generation? How sensitive is $`\Delta^{\text{S2}}`$ to $`\varepsilon_p`$ estimation error?
-2. **Cold start and pooling:** Without historical data, $`\Delta_{s,r}^{\text{S2}}`$ is unknown (rSCI degrades to oSCI + raw overhead).
-$`\gamma_{s,r} = C_{s,r}^{\downarrow\text{S2}} / O_{s,r}`$ is driven by provider methodology (PUE, emission factors), not individual customers — pooling $`\gamma`$ per provider × service × region could provide priors for new customers.
-$`\Delta^{\text{S1}}`$ and $`\Delta^{\text{S3}}`$ need no calibration (directly from provider report).
-3. **Non-stationarity :** Residuals can vary over time (seasonal PUE, hardware refreshes, methodology changes). How to model this and detect regime shifts?
+1. **Energy coefficients:** Where to source reliable $`\varepsilon_p`$ values per resource type / instance family / chip generation?
+Practical starting points: [Cloud Carbon Footprint](https://github.com/cloud-carbon-footprint/cloud-carbon-footprint) (per-instance power estimates from SPECpower data), SPECpower benchmarks mapped to cloud SKUs, or GCP's per-project energy export for calibration.
+Note: absolute $`\varepsilon_p`$ error is absorbed by $`\mu`$ (overestimate $`\varepsilon`$ → higher $`E`$ → lower $`\mu`$; reconciliation still holds).
+The real sensitivity is *relative* accuracy across resource types — if $`\varepsilon_{\text{GPU}}/\varepsilon_{\text{vCPU}}`$ is wrong, workloads are compared on a skewed basis.
+2. **Cold start and pooling:** Without historical data, $`\hat{\mu}`$ and $`\hat{\rho}`$ are unknown ($`\widehat{\text{rSCI}}`$ degrades to oSCI).
+Since $`\mu`$ and $`\rho`$ are driven by provider methodology (PUE, hardware mix), not individual customers, pooling per provider × service × region could provide priors for new customers.
+3. **Non-stationarity:** $`\mu`$ and $`\rho`$ can drift over time (seasonal PUE, hardware refreshes, methodology changes).
+How to detect regime shifts and update estimates?
 4. **Provider methodology opacity:** rSCI reconciles to whatever the provider reports.
 A persistently large or volatile $`\Delta^{\text{S2}}`$ signals methodology weakness but cannot correct for it.
 How to distinguish "coarse provider methodology" from "missing observable activity"?
