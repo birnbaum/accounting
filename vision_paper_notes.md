@@ -3,10 +3,14 @@
 Working title candidates: *Reconcilable Carbon Accounting for Cloud Software* / *Closing the Reconcilability Gap: From SCI to rSCI*.
 Target venue: **HotCarbon** (primary — forgiving of lighter empirical section, 6 pages) or **SoCC vision track** (secondary).
 
-## Open question for Philipp
+## Framing decision: "solves the framework, instantiates the parameterization"
 
-Does the paper claim **rSCI *solves* reconcilability** (strong, README-math tone), or that **rSCI *instantiates* one path toward reconcilability** and invites the community to propose others (vision tone, more discussion-provoking)?
-Current structure leans "solves" in §4 and keeps §6 open for unsolved parts — but call it out.
+Reconcilability forces a residual-based structure on any bottom-up metric: if the bottom-up signal must sum to the top-down total, a residual term is mathematically unavoidable.
+**rSCI solves the framework problem** — it is the first worked-out metric that (a) closes the reconciliation gap by construction and (b) dodges the sunk carbon fallacy by allocating embodied carbon per-unit-energy rather than per-unit-work.
+**rSCI instantiates one concrete parameterization** of that framework — the split between $\mu$ and $\rho$, the choice to allocate $\Delta$ per-unit-energy at service level, the monthly residual cadence, are design decisions, not theorems.
+The community's job is to refine the parameterization and pressure providers to make it computable.
+
+This framing is reflected in §1 (thesis), §4 (math-forward, claims the theorem-level contributions), §5 (honest about computability), and §7 (invites alternatives to the specific parameterization, not to the requirement).
 
 ## Proposed structure
 
@@ -18,7 +22,7 @@ Current structure leans "solves" in §4 and keeps §6 open for unsolved parts �
     *   When reporting and action diverge, engineers produce *Invisible Efficiency* (saved MWh that never appear in the ESG report) and firms produce *Carbon Washing* (accounting shifts that look like physical ones).
     *   The Green Software Foundation explicitly frames "measuring for reporting" and "measuring for action" as separate concerns; we argue this dichotomy is a failure mode, not a design principle.
     *   An optimization signal that doesn't land in the corporate footprint will not be funded, audited, or sustained at scale.
-*   **Thesis:** carbon metrics for software must be *reconcilable by design*. We propose **rSCI** as a first concrete instantiation.
+*   **Thesis:** carbon metrics for software must be *reconcilable by design*. Reconcilability forces any bottom-up metric to carry a residual term. We propose **rSCI** as the first worked-out metric in this class — solving the framework (reconciliation + sunk carbon) while instantiating one concrete parameterization that the community can refine.
 
 **Contributions (to finalize):**
 1.  Argument that reconcilability is a first-class requirement for software carbon metrics, not a separate concern from real-time action.
@@ -91,8 +95,14 @@ The lever × provider matrix as the centerpiece of this section. The point: a re
 *   Broader claim: without a bottom-up reconcilable framework like rSCI, these provider-side methodology choices are invisible to the customer. rSCI doesn't just serve engineers — it gives the rest of the accounting ecosystem a lens to push back on providers.
 
 ### 7. Discussion / Call to Action (short)
-*   Reconcilability is a *requirement*, not a feature. rSCI is a first instantiation; other decompositions are possible and welcome.
-*   Open questions: audit of $\mu$ and $\rho$; right cadence for residual updates; multi-tenant and serverless (hook to Basu Roy et al.); standard-body ownership (GSF vs. GHG Protocol vs. joint).
+*   Reconcilability is a *requirement*, not a feature. The residual-bridge structure is forced by it; rSCI is the first worked-out metric carrying that structure.
+*   What is open (and what we invite the community to take up): the *parameterization* of the framework.
+    *   Is per-unit-energy the right $\Delta$ allocation, or should it follow $vCPU \cdot h$ or other physical proxies?
+    *   What is the right cadence for residual updates — monthly (matching top-down reports) or finer?
+    *   How should $\mu$ and $\rho$ be audited?
+    *   How do multi-tenant and serverless settings reshape the decomposition? (Hook to Basu Roy et al.)
+    *   Who owns the resulting standard — GSF, GHG Protocol, a joint effort?
+*   The requirement is non-negotiable; the metric is a first draft.
 
 ## Data story (internal — do not write in paper)
 
@@ -111,5 +121,5 @@ The lever × provider matrix as the centerpiece of this section. The point: a re
 ## Risks / open tensions
 
 *   Reviewers may ask for evaluation we don't have. Our answer: §5 reframes the lack of evaluation as itself the evidence — rSCI is blocked by the exact failures that motivate the paper.
-*   Tone risk: "solves" vs. "instantiates" (see open question at top).
+*   Tone risk: the "solves the framework, instantiates the parameterization" split must be held consistently — drift toward pure "solves" overclaims deployability, drift toward pure "instantiates" gives up the theorem-level wins.
 *   Vendor-naming: Azure S2=0 and AWS "Other"=70% both name providers. Frame as *structural failure classes* any provider could exhibit, using AWS/Azure as instances.
