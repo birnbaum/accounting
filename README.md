@@ -66,9 +66,13 @@ where $`\Delta`$ is the residual bridge and $`w`$ the per-workload weighting fac
 
 We assume the observable boundary covers all activity in the reporting slice (no boundary mismatch).
 A provider may bundle supporting services (storage I/O, managed networking) into a slice you only partially observe.
-Without full coverage, the residual loses its interpretation.
 
 *Example: you instrument all EC2 instances in `eu-central-1`, but the provider's `Compute` slice also includes EBS volume activity and NAT Gateway traffic.*
+
+- If we miss modeling an activity contributing to a top-down slice, the residual loses its interpretation. The additional unobserved activity will falsely be attributed to observed activities.
+- If we miss modeling the contributions of a bottom-up activity to a top-down slice, the residual will falsely be attributed to observed activities.
+  - If there is NO observed activity in a reported slice, can either decide to discard the slice or we need to improve out modeling.
+
 </details>
 
 
@@ -115,6 +119,41 @@ Utilization improvements are real (they reduce physical energy) but invisible to
 
 Providers report Scope 1, 2, and 3 separately per **reporting slice** (e.g., GCP: `project × service × region × month`).
 We assume a workload does not span multiple projects and optimize within a single month (real-time scheduling signal).
+
+<details>
+<summary>Reporting slice granularity by provider</summary>
+
+**GCP** — per project × service × region × month.
+Services are explicit (Compute Engine, Cloud Storage, BigQuery, etc.).
+[Full list of covered services](https://docs.cloud.google.com/carbon-footprint/docs/covered-services).
+
+**Azure** — per subscription × resource type × region × month.
+Reports at individual resource granularity (the finest of the three providers).
+Example resource types from a real export:
+
+| Resource type | Resource type (raw) |
+|---|---|
+| Virtual machine | `microsoft.compute/virtualmachines` |
+| Disk | `microsoft.compute/disks` |
+| Storage account | `microsoft.storage/storageaccounts` |
+| App Service plan | `microsoft.web/serverfarms` |
+| App Service | `microsoft.web/sites` |
+| Foundry | `microsoft.cognitiveservices/accounts` |
+| Load balancer | `microsoft.network/loadbalancers` |
+| Firewall | `microsoft.network/azurefirewalls` |
+| Public IP address | `microsoft.network/publicipaddresses` |
+| Private DNS zone | `microsoft.network/privatednszones` |
+| Log Analytics workspace | `microsoft.operationalinsights/workspaces` |
+| Action group | `microsoft.insights/actiongroups` |
+
+No explicit covered-services list; Azure states coverage for [all billed resource types](https://learn.microsoft.com/en-us/azure/carbon-optimization/overview).
+
+**AWS** — per account × service × region × month.
+Only 3 named services: EC2, S3, CloudFront.
+All other services are aggregated into "Other."
+[CCFT overview](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ccft-overview.html).
+
+</details>
 Following, we index the top-down per-scope reported emissions $`C^{\downarrow S1}`$, $`C^{\downarrow S2}`$, and $`C^{\downarrow S3}`$ by service $`s`$ and region $`r`$. We define the residual bridges:
 
 - $`\Delta_{s,r}^{\text{S1}} = C_{s,r}^{\downarrow\text{S1}}`$ (Scope 1) is fully residual: diesel, refrigerants.
@@ -148,7 +187,7 @@ $$\xi_{s,r} = I_r + \frac{\Delta_{s,r}^{\text{S1}} + \Delta_{s,r}^{\text{S2}} + 
 is the **effective carbon intensity** of service $`s`$ in region $`r`$.
 The only workload-specific term is $`E_{i,s,r}`$.
 
-Since, by construction, $`\sum_i w_{i,s,r} = 1 \implies \sum_i \text{rSCI}_i \cdot R_i = \sum_{s,r} C_{s,r}^{\downarrow}`$.
+Since, by construction, $`\sum_i w_{i,s,r} = 1 \implies \sum_i \text{rSCI}_i \cdot R_i = \sum_{s,r} C_{s,r}^{\downarrow}`$ over all observed $`(s,r)`$ slices (see boundary mismatch assumption above).
 
 **Bridge decomposition.**
 Energy-proportional allocation is a reasonable default but *maybe* not structurally optimal for all components (e.g., embodied carbon depends on hardware type, not energy).
