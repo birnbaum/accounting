@@ -1,0 +1,7 @@
+category,cost_usd
+compute_nodes,387.009200064
+eks_control_plane,67.2
+nat_gateway_gb,167.2440762254
+network_transfer_gb,245.2560543648
+other,155.2459207886
+storage_gb,37.2401183023

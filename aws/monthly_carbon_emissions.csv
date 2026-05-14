@@ -1,0 +1,34 @@
+usage_month,service,region,total_lbm_emissions,total_mbm_emissions,total_scope_1_emissions_value,total_scope_2_lbm_emissions_value,total_scope_2_mbm_emissions_value,total_scope_3_lbm_emissions_value,total_scope_3_mbm_emissions_value,cfe_savings_value,model_version
+2025-06,AmazonEC2,Europe (Frankfurt),0.001486,0.000293,0.000002,0.000981,0,0.000502,0.000291,0.001193,v3.0.0
+2025-06,Other,Europe (Frankfurt),0.003175,0.000543,0.000005,0.002165,0,0.001005,0.000538,0.002632,v3.0.0
+2025-06,AmazonEC2,Europe (Stockholm),0.000002,0.000002,0,0,0,0.000002,0.000002,0,v3.0.0
+2025-06,Other,Europe (Stockholm),0.000004,0.000003,0,0.000001,0,0.000004,0.000003,0.000001,v3.0.0
+2025-07,AmazonEC2,Europe (Frankfurt),0.004328,0.001058,0.000009,0.002689,0,0.00163,0.001049,0.00327,v3.0.0
+2025-07,Other,Europe (Frankfurt),0.011585,0.002421,0.000025,0.007537,0,0.004024,0.002396,0.009164,v3.0.0
+2025-08,AmazonEC2,Europe (Frankfurt),0.006087,0.001161,0.000013,0.00405,0,0.002024,0.001148,0.004926,v3.0.0
+2025-08,Other,Europe (Frankfurt),0.012743,0.002874,0.000027,0.008114,0,0.004602,0.002848,0.009869,v3.0.0
+2025-09,AmazonEC2,Europe (Frankfurt),0.009273,0.00157,0.000025,0.006332,0,0.002916,0.001546,0.007703,v3.0.0
+2025-09,Other,Europe (Frankfurt),0.013091,0.002614,0.000033,0.008613,0,0.004444,0.00258,0.010477,v3.0.0
+2025-09,AmazonS3,Europe (Stockholm),0,0,0,0,0,0,0,0,v3.0.0
+2025-09,Other,Europe (Stockholm),0,0,0,0,0,0,0,0,v3.0.0
+2025-09,AmazonEC2,US East (N. Virginia),0.000015,0.000004,0,0.000009,0,0.000006,0.000004,0.000011,v3.0.0
+2025-09,Other,US East (N. Virginia),0,0,0,0,0,0,0,0,v3.0.0
+2025-10,AmazonEC2,Europe (Frankfurt),0.00744,0.00138,0.000017,0.004982,0,0.002442,0.001363,0.00606,v3.0.0
+2025-10,Other,Europe (Frankfurt),0.024846,0.005125,0.000054,0.016211,0,0.008581,0.005071,0.019721,v3.0.0
+2025-10,AmazonS3,Europe (Stockholm),0,0,0,0,0,0,0,0,v3.0.0
+2025-10,Other,Europe (Stockholm),0,0,0,0,0,0,0,0,v3.0.0
+2025-10,Other,US East (N. Virginia),0,0,0,0,0,0,0,0,v3.0.0
+2025-11,AmazonEC2,Europe (Frankfurt),0.018364,0.003494,0.000037,0.01222,0,0.006106,0.003457,0.01487,v3.0.0
+2025-11,Other,Europe (Frankfurt),0.039369,0.008349,0.000078,0.025492,0,0.0138,0.008272,0.03102,v3.0.0
+2025-11,Other,US East (N. Virginia),0,0,0,0,0,0,0,0,v3.0.0
+2025-12,AmazonEC2,Europe (Frankfurt),0.010243,0.002352,0.000046,0.006484,0,0.003713,0.002306,0.007891,v3.0.0
+2025-12,Other,Europe (Frankfurt),0.022581,0.005989,0.000096,0.013634,0,0.00885,0.005893,0.016592,v3.0.0
+2025-12,Other,Europe (Stockholm),0,0,0,0,0,0,0,0,v3.0.0
+2025-12,Other,US East (N. Virginia),0,0,0,0,0,0,0,0,v3.0.0
+2026-01,AmazonEC2,Europe (Frankfurt),0.007684,0.001336,0.000022,0.004978,0,0.002685,0.001314,0.006348,v3.0.0
+2026-01,Other,Europe (Frankfurt),0.023492,0.004846,0.000064,0.014619,0,0.008809,0.004782,0.018646,v3.0.0
+2026-01,Other,Europe (Stockholm),0,0,0,0,0,0,0,0,v3.0.0
+2026-01,Other,US East (N. Virginia),0,0,0,0,0,0,0,0,v3.0.0
+2026-02,AmazonEC2,Europe (Frankfurt),0.004646,0.000747,0.000019,0.003063,0,0.001565,0.000728,0.003899,v3.0.0
+2026-02,Other,Europe (Frankfurt),0.010676,0.002231,0.00004,0.006633,0,0.004002,0.00219,0.008445,v3.0.0
+2026-02,Other,US East (N. Virginia),0,0,0,0,0,0,0,0,v3.0.0
