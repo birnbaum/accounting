@@ -1,7 +1,6 @@
-# Vision Paper Framing Note
+# Reconcilable Software Carbon Intensity: Bridging Cloud Carbon Accounting and Actionable Metrics
 
-Working title candidates: *Reconcilable Carbon Accounting for Cloud Software* / *Closing the Reconcilability Gap: From SCI to rSCI*.
-Target venue: **HotCarbon** (primary — forgiving of lighter empirical section, 6 pages) or **SoCC vision track** (secondary).
+Target venue: **SoCC vision track** (6 pages) or **HotCarbon** (5 pages) depending on how much evaluation/experiments we'll be able to do.
 
 ## Framing decision: "solves the framework, instantiates the parameterization"
 
@@ -22,12 +21,12 @@ This framing is reflected in §1 (thesis), §4 (math-forward, claims the theorem
     *   When reporting and action diverge, engineers produce *Invisible Efficiency* (saved MWh that never appear in the ESG report) and firms produce *Carbon Washing* (accounting shifts that look like physical ones).
     *   The Green Software Foundation explicitly frames "measuring for reporting" and "measuring for action" as separate concerns; we argue this dichotomy is a failure mode, not a design principle.
     *   An optimization signal that doesn't land in the corporate footprint will not be funded, audited, or sustained at scale.
-*   **Thesis:** carbon metrics for software must be *reconcilable by design*. Reconcilability forces any bottom-up metric to carry a residual term. We propose **rSCI** as the first worked-out metric in this class — solving the framework (reconciliation + sunk carbon) while instantiating one concrete parameterization that the community can refine.
+*   **Thesis:** carbon metrics for software must be *reconcilable by design*. Reconcilability forces any bottom-up metric to carry a residual term. We propose **rSCI** as the first worked-out metric in this class — **solving the framework** (it closes the reconciliation gap by construction *and* dodges the sunk carbon fallacy) while **instantiating one concrete parameterization** that the community can refine. The parameterization is not rigid: rSCI's precision scales along three axes — bottom-up model quality, top-down reporting granularity, and unit-of-work definition — with the residual $\Delta$ shrinking as each improves.
 
 **Contributions (to finalize):**
 1.  Argument that reconcilability is a first-class requirement for software carbon metrics, not a separate concern from real-time action.
 2.  Survey of the cloud carbon accounting landscape (27 providers evaluated; only Y report customer-level carbon; coarse, delayed, fallback-dominated) exposed through a reconcilability lens.
-3.  **rSCI**: an extension of the SCI → oSCI → tSCI taxonomy that fixes the sunk carbon fallacy *and* reconciles with top-down provider reports via residual bridges.
+3.  **rSCI**: an extension of the SCI → oSCI → tSCI taxonomy that fixes the sunk carbon fallacy *and* reconciles with top-down provider reports via residual bridges. Precision scales with infrastructure observability and reporting granularity.
 4.  Concrete asks on cloud providers — identified from rSCI's computability requirements — that would make reconcilable per-workload carbon feasible.
 5.  Demonstration that a bottom-up reconcilable signal exposes *upstream* methodology flaws: the lever × provider matrix showing which optimization actions actually move the reported number today, and where providers (notably Azure) break the contract.
 
@@ -72,14 +71,18 @@ Mathematically precise. The theory is the contribution, since experiments are li
 *   **What it preserves:** the oSCI real-time sensitivity. The $I_r$ term still moves with grid intensity and workload energy; the $\Delta$ term is the audited anchor.
 *   Connect each property back explicitly to §2 (sunk carbon) and §3 (fallback allocations, delay, granularity).
 
-### 5. Making rSCI Computable: Asks on the Provider Contract
-Reframed from earlier "implications" list. We acknowledge up front: **rSCI is currently not fully computable** on any major provider, because of exactly the failures documented in §3 — the "Other" bucket swallows the signal, Azure's Scope 2 = 0 breaks location-based reconciliation, and fallback allocations are revenue/cost-driven rather than physical.
+### 5. Making rSCI Computable: The "Billing Frequency" Contract
+Reframed from earlier "implications" list. We acknowledge up front: **rSCI is currently not fully computable in real-time** on any major provider, because of the failures documented in §3 — notably the delay and low frequency of top-down reporting (monthly).
 
-*   **Ask 1 — Granular reporting with fewer fallbacks:** allocate the "Other" bucket via physical telemetry (power, utilization) rather than revenue. Report at finer granularity (per resource, per hour where feasible).
-*   **Ask 2 — Methodological fidelity:** exports must match published methodology. Azure's documented location-based Scope 2 should actually appear in the exported data.
-*   **Ask 3 — Transparency on embodied and overhead allocation:** providers should make the decomposition visible enough that $\Delta^{S2}$ and $\Delta^{S3}$ can be estimated, not just the top-line number.
-*   These are the minimum conditions under which rSCI becomes a live, auditable metric. Without them, it remains a theoretical construct — and every other per-workload carbon metric remains disconnected from the corporate report.
-*   This is our honest evaluation story: not "we measured rSCI on real workloads," but "rSCI is currently blocked by specific, nameable provider methodology failures — and those failures are themselves the evidence that reconcilability is the right requirement."
+However, we argue that the solution is not for providers to expose proprietary datacenter telemetry. Instead, the fix requires aligning carbon reporting with financial billing.
+
+*   **Ask 1 — Carbon at Billing Frequency:** Financial billing (e.g., AWS CUR) provides hourly, resource-level granularity. Top-down carbon reporting must match this frequency. Monthly sampling is fundamentally incompatible with the rate of application churn, preventing real-time state estimation.
+*   **Ask 2 — Granular reporting with fewer fallbacks:** allocate the "Other" bucket via physical telemetry (power, utilization) rather than revenue. Report at finer granularity (per resource, per hour where feasible).
+*   **Ask 3 — Methodological fidelity:** exports must match published methodology. Azure's documented location-based Scope 2 should actually appear in the exported data.
+
+If providers fulfill Ask 1 (hourly/daily top-down reporting), rSCI becomes computable without requiring providers to expose their internal PUE or embodied carbon metrics. High-frequency reporting unlocks the use of standard state-estimation techniques (like Kalman filters) to derive these values dynamically (see §7).
+
+This is our honest evaluation story: not "we measured rSCI on real workloads," but "rSCI is currently blocked by specific, nameable provider methodology failures — and those failures are themselves the evidence that reconcilability is the right requirement."
 
 ### 6. Upstream Effects: A Reconcilable Bottom-Up Signal Exposes Provider Flaws
 The lever × provider matrix as the centerpiece of this section. The point: a reconcilable metric makes provider methodology choices *visible and challengeable* in a way that top-down-only reporting never did.
@@ -98,8 +101,9 @@ The lever × provider matrix as the centerpiece of this section. The point: a re
 *   Reconcilability is a *requirement*, not a feature. The residual-bridge structure is forced by it; rSCI is the first worked-out metric carrying that structure.
 *   What is open (and what we invite the community to take up): the *parameterization* of the framework.
     *   Is per-unit-energy the right $\Delta$ allocation, or should it follow $vCPU \cdot h$ or other physical proxies?
-    *   What is the right cadence for residual updates — monthly (matching top-down reports) or finer?
-    *   How should $\mu$ and $\rho$ be audited?
+    *   What is the right cadence for residual updates — monthly (matching current top-down reports) or billing-frequency (hourly)?
+    *   **Cross-tenant pooling & state estimation.** If providers adopt billing-frequency carbon reporting, the sampling rate outpaces workload churn. This unlocks Kalman filters or distributed Bayesian state estimation over pooled cross-tenant $(E_{\text{bottom-up}}, C_{\text{top-down}})$ tuples to reverse-engineer region-level $\mu$ and $\rho$ without providers exposing proprietary infrastructure. **TODO:** synthetic / toy convergence experiment to show the estimator behaves under realistic sampling rates and churn — reviewers will ask.
+    *   **Auditability of $\varepsilon_p$.** How do we standardize the energy coefficients used in the bottom-up model so rSCI is comparable across organizations?
     *   How do multi-tenant and serverless settings reshape the decomposition? (Hook to Basu Roy et al.)
     *   Who owns the resulting standard — GSF, GHG Protocol, a joint effort?
 *   The requirement is non-negotiable; the metric is a first draft.

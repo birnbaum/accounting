@@ -48,17 +48,18 @@ We extend the taxonomy with **rSCI** (reconciled SCI): a variant that reconciles
 | SCI | $`E \cdot I + M`$                                 | Bottom-up operational + bottom-up embodied                          | Sunk carbon fallacy (Bashir et al.)          |
 | oSCI | $`E \cdot I`$                                     | Bottom-up operational only                                          | Misses embodied and other overheads entirely |
 | tSCI | $`E \cdot I + O_\text{idle-infra} + M + M_\text{idle-infra}`$ | SCI + bottom-up models for operational and embodied idle overhead   | Requires bottom-up datacenter knowledge      |
-| **rSCI** | $`E \cdot I + w \cdot \Delta`$                    | Operational + estimated fraction of residuals from reporting metric | (to be found out)                            |
+| **rSCI** | $`E \cdot I + w \cdot \Delta`$                    | Operational + estimated fraction of residuals from reporting metric | Precision scales with top-down/bottom-up data quality |
 
 where $`\Delta`$ is the residual bridge and $`w`$ the per-workload weighting factor. Details below.
 
 <details>
 <summary>Benefits of rSCI</summary>
 
-- Shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but practical: learns $`\Delta_{s,r}^{\text{S2}}`$ from historical ($`O`$, $`C^{\downarrow\text{S2}}`$) pairs; $`\Delta^{\text{S1}}`$ and $`\Delta^{\text{S3}}`$ come directly from the provider report.
+- Shares tSCI's goal of allocating the full carbon footprint back to individual jobs, but practical: recovers residuals $\Delta$ from historical reporting data.
 - More comprehensive: captures *everything* between the bottom-up total and the provider-reported number, separated by scope.
 - Does **not** suffer from the sunk carbon fallacy: embodied carbon enters via $`\Delta_{s,r}^{\text{S3}}`$ and is distributed by energy share ($`E_{i,s,r}/E_{s,r}`$), not attributed per-server. Old hardware → higher $`E`$ → more residual → always looks worse.
 - **Does** reward scheduling toward lower-overhead infrastructure: $`\Delta_{s,r}^{\text{S2}}`$ and $`\Delta_{s,r}^{\text{S3}}`$ differ across services and regions. oSCI is blind to these factors.
+- **Enables State Estimation:** If top-down reports are provided at billing frequency (hourly/daily), rSCI allows using **Kalman filters** and **cross-tenant pooling** to reverse-engineer datacenter overheads ($\mu, \rho$) without requiring proprietary provider telemetry.
 </details>
 
 <details>
@@ -78,6 +79,14 @@ A provider may bundle supporting services (storage I/O, managed networking) into
 
 
 ## rSCI Definition
+
+rSCI (Reconciled Software Carbon Intensity) represents a **class of metrics** (a reconcilability framework) rather than a fixed equation.
+Its accuracy and the size of the "reconcilability gap" ($\Delta$) depend on three factors:
+1. **Bottom-up model quality**: accuracy of energy proxies and observability of sub-components.
+2. **Top-down reporting granularity**: frequency (monthly vs. hourly) and resolution (service vs. resource) of provider reports.
+3. **Unit of work definition**: the sensitivity of the chosen $R$ metric.
+
+As infrastructure observability and provider transparency improve, the residual bridge $\Delta$ shrinks, but the rSCI structure ensures that reconciliation holds by construction at any level of data fidelity.
 
 Let $`i`$ index **workload instances** — one evaluation of a workload over its period $`t_i`$.
 All per-instance quantities ($`E_i`$, $`C_i`$, $`R_i`$) are defined over one $`i`$.
@@ -235,7 +244,7 @@ Practical starting points: [Cloud Carbon Footprint](https://github.com/cloud-car
 Note: absolute $`\varepsilon_p`$ error is absorbed by $`\mu`$ (overestimate $`\varepsilon`$ → higher $`E`$ → lower $`\mu`$; reconciliation still holds).
 The real sensitivity is *relative* accuracy across resource types — if $`\varepsilon_{\text{GPU}}/\varepsilon_{\text{vCPU}}`$ is wrong, workloads are compared on a skewed basis.
 2. **Cold start and pooling:** Without historical data, $`\hat{\mu}`$ and $`\hat{\rho}`$ are unknown ($`\widehat{\text{rSCI}}`$ degrades to oSCI).
-Since $`\mu`$ and $`\rho`$ are driven by provider methodology (PUE, hardware mix), not individual customers, pooling per provider × service × region could provide priors for new customers.
+Since $`\mu`$ and $`\rho`$ are driven by provider methodology (PUE, hardware mix), not individual customers, pooling per provider × service × region could provide priors for new customers. With billing-frequency reporting, this pooling enables collaborative state estimation (e.g., **Kalman filters**) to lock onto these values in real-time.
 3. **Non-stationarity:** $`\mu`$ and $`\rho`$ can drift over time (seasonal PUE, hardware refreshes, methodology changes).
 How to detect regime shifts and update estimates?
 4. **Provider methodology opacity:** rSCI reconciles to whatever the provider reports.
