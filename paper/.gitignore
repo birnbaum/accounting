@@ -26,3 +26,5 @@
 *.synctex.gz
 *.fdb_latexmk
 *.fls
+
+paper.pdf

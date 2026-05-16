@@ -1,6 +1,6 @@
 # Reconcilable Software Carbon Intensity: Bridging Cloud Carbon Accounting and Actionable Metrics
 
-Target venue: **SoCC vision track** (6 pages) or **HotCarbon** (5 pages) depending on how much evaluation/experiments we'll be able to do.
+Target venue: **SoCC vision track** (6 pages).
 
 ## Framing decision: "solves the framework, instantiates the parameterization"
 
@@ -127,3 +127,31 @@ The lever × provider matrix as the centerpiece of this section. The point: a re
 *   Reviewers may ask for evaluation we don't have. Our answer: §5 reframes the lack of evaluation as itself the evidence — rSCI is blocked by the exact failures that motivate the paper.
 *   Tone risk: the "solves the framework, instantiates the parameterization" split must be held consistently — drift toward pure "solves" overclaims deployability, drift toward pure "instantiates" gives up the theorem-level wins.
 *   Vendor-naming: Azure S2=0 and AWS "Other"=70% both name providers. Frame as *structural failure classes* any provider could exhibit, using AWS/Azure as instances.
+
+## Findings and ideas to POTENTIALLY integrate (from May 2026 discussion)
+
+Recorded here so they survive the next round of restructuring; existing §1–§7 structure preserved for now.
+
+**Empirical findings from the AWS Frankfurt case study (9 months, single customer):**
+- Of total reported emissions: **30.1%** attributable to EC2 (the only telemetry-modelable service), **69.9%** to "Other" (revenue-allocated).
+- Within reported emissions: **64.4%** is Scope 2 LBM (the only slice grid-intensity optimization can touch); **35.6%** is Scope 1 + Scope 3 (S1 tiny, S3 ≈ 35%).
+- Three-tier reachability decomposition: **19.8% addressable** (EC2 S2 LBM) / **10.3% visible but electricity-inelastic** (EC2 S1+S3) / **69.9% invisible** (Other, all scopes). Figure exists: `paper/figures/reachability_bound.pdf`.
+- **$\xi_{s,r}$ stability**: addressable share ranges 61.3–67.5% across 9 months despite ~10× variation in absolute emissions (0.005 → 0.058 mt). Cheap positive empirical hook supporting the real-time-estimation claim in README §"Real-time Estimation".
+- Illustrative-but-not-yet-derived: realistic temporal-shifting ceiling ≈ 2% of reported footprint (needs intra-day Frankfurt grid-intensity variance); spatial shifting FRA→ARN ceiling ≈ 17% (needs FRA vs ARN LBM factor differential). TODO substantiate before claiming in paper.
+
+**Sharper thesis candidate (alt-framing, not yet committed):**
+"Carbon-aware computing optimizes for grid intensity, but provider methodologies can only resolve a small fraction of customer emissions at that granularity, so the field is structurally capped on its effect on the *reported* footprint." rSCI demotes from "the contribution" to "the diagnostic framework that exposes the ceiling and concretizes the asks." Foil shifts from GSF "reporting vs. action" to the carbon-aware computing literature itself (Wiesner, Radovanović, Acun, Lin et al.). Provisional title: *"The 20% Ceiling: Why Carbon-Aware Computing Cannot Move the Numbers Its Cloud Provider Reports."*
+
+**Three-stakeholder agenda (alt to current §7 framing):**
+Each stakeholder controls one missing piece. (1) Carbon-aware computing research: broaden beyond $E \cdot I$ to actions that target provider-resolvable terms — embodied amortization via right-sizing/longevity, idle-capacity reduction, hardware-aware placement; validate gains against reconcilable metrics. (2) Providers: billing-frequency reporting; eliminate revenue allocation in favor of physical telemetry; publish methodology at reconciliation granularity. (3) GHG reporting standards: close LBM/MBM gap without erasing the grid-intensity signal carbon-aware computing depends on. Goal: metrics whose improvement provably contributes to grid decarbonization and renewable-heavy grid stability — a property no current carbon-aware metric has.
+
+**Data story updates:**
+- Add GCP case study (best-in-production contrast to AWS's worst-case). Without it, reviewers will say AWS is an outlier.
+- The 19.8% / 69.9% numbers are N=1. Defense options: (a) frame the *decomposition* as universal even if the *number* is case-specific; (b) GCP case to bound the spectrum; (c) cite any provider-published aggregate statistics on "Other"-share if they exist.
+
+**New risk:**
+- Single-customer generalization. Reviewers will hammer this. The decomposition framework (addressable / visible-inelastic / invisible) is universal; the percentages are not. Hold this distinction explicitly.
+
+**GHG-reporting critique (to draft as §7 sketch, do not formalize):**
+Brief paragraph: LBM vs MBM divergence, contractual instruments (PPAs, EACs) decoupled from physical generation, hourly matching debates. Cite RW. Mark as future work, not contribution.
+
