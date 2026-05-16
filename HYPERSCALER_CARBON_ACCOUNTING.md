@@ -17,7 +17,7 @@ Based on:
 | Attribute | AWS | Google Cloud | Azure |
 |---|---|---|---|
 | **Tool name** | Customer Carbon Footprint Tool (CCFT) | Google Cloud Carbon Footprint | Emissions Impact Dashboard (EID); Carbon Optimization (Azure portal + REST API) |
-| **Launched** | 2022 | 2021 | 2020 |
+| **Launched** | March 2022 (CCFT) | October 2021 (Carbon Footprint, GA) | January 2020 (as Microsoft Sustainability Calculator; renamed Emissions Impact Dashboard later) |
 | **Scope 3 added** | April 2024 (Cat. 2 IT hardware); expanded Oct 2025 in Model 3.0 (Cat. 2 buildings + non-IT, Cat. 3 FERA, Cat. 4 upstream transport) | 2021 (embodied carbon from launch) | 2021 (methodology whitepaper) |
 | **Primary calculation approach** | Usage allocation for foundational services (instance-hours); economic (revenue) fallback for non-foundational services | Two-stage: physical machine-level power telemetry internally → usage allocation at customer boundary (vCPU-hours × price-derived SKU factor) | LCA-based embodied carbon (CHEM) + usage allocation via customer usage factors per datacenter region |
 | **Claimed GHG standard** | GHG Protocol Corporate + Scope 3 | Same | Same |
@@ -61,7 +61,6 @@ All three report both location-based (LBM) and market-based (MBM), as required b
 | **MBM instrument** | Energy Attribute Certificates (EACs) | PPAs + EACs | PPAs |
 | **EAC/PPA temporal matching** | Not disclosed (likely annual) | Hourly CFE % reported per region | Not disclosed |
 | **EAC/PPA spatial matching** | Not disclosed | Region-level | Not disclosed |
-| **Uncertainty (LBM)** | Medium (~5–15%) | Low–Medium (~5–10%) | Medium (~5–15%) |
 
 **Key differences:** GCP's hourly Electricity Maps data captures intra-day grid variation that monthly factors average out; GCP is the only provider reporting hourly CFE percentages per region. AWS and Azure do not disclose EAC/PPA matching methodology, suggesting likely annual matching. Hourly, location-matched matching is best practice per GHG Protocol Scope 2 Technical Guidance and GSF Real-Time Energy and Carbon Standard.
 
@@ -101,23 +100,23 @@ Allocation determines how data-center-level emissions are attributed to customer
 
 ### 5.1 AWS — Usage Allocation with Economic Fallback
 
-**Tier 1 (foundational services — EC2, S3, RDS, etc.):** Described as physical allocation based on resource utilization (CPU, memory, storage I/O, network). At the customer level the unit is instance-hours — usage allocation. Whether internal utilization telemetry feeds the per-instance-hour factor is not publicly disclosed.
+**Tier 1 (foundational services — defined in Model 3.0 as "AWS services that have dedicated server racks in AWS data centers"):** Described as physical allocation based on resource utilization (CPU, memory, storage I/O, network). At the customer level the unit is instance-hours — usage allocation. Whether internal utilization telemetry feeds the per-instance-hour factor is not publicly disclosed.
 
-**Tier 2 (non-foundational services — Lambda, SageMaker, Athena, Redshift, and many managed services):** Economic allocation based on equivalent revenue share. Revenue is a proxy for resource consumption.
+**Tier 2 (non-foundational services):** Per the Model 3.0 methodology document, non-foundational services are defined as "AWS services with no dedicated server racks, which rely on foundational services to provide functionality to end customers." Allocated by **equivalent revenue** — defined in the methodology as "a standardized measure of usage-based revenue that excludes pricing variation factors such as discounts, and other adjustments." Revenue is used as a proxy for resource consumption.
 
-**Critical weakness:** The list of non-foundational services and the share of total emissions subject to economic allocation are not disclosed. Revenue is a poor proxy — a high-margin service can be allocated more emissions despite consuming fewer resources. Estimated uncertainty for non-foundational allocation: ~20–40%.
+**Critical transparency gap:** The Model 3.0 methodology document defines the foundational vs. non-foundational distinction but **does not publish an explicit list of which AWS services fall into each category.** It mentions EC2, S3, EBS, Lambda, and SageMaker by name as covered services without classifying them. The share of total CCFT emissions subject to economic allocation is also not disclosed. Revenue is a poor proxy for resource consumption — a high-margin service can be allocated more emissions despite consuming fewer resources.
 
 ### 5.2 GCP — Two-Stage Allocation
 
-**Stage 1 (internal, physical):** Machine-level power monitoring at rack level. Each machine's power is decomposed into dynamic power (workload-driven, allocated proportional to GCU usage) and idle power (allocated by resource-weighted shares). Shared internal services (Colossus, Spanner, Bigtable) are reallocated to end-user teams via resource-based or cost-based methods. This stage is best-in-class. Uncertainty: ~5–15%.
+**Stage 1 (internal, physical):** Machine-level power monitoring via Borg telemetry. Each machine's power is decomposed into dynamic power (workload-driven, allocated proportional to GCU — Google Compute Unit — usage) and idle power (allocated by resource-weighted shares of GCU, RAM, etc.). Idle power is approximately 60% of average server energy consumption (Schneider & Mattia 2024, citing prior work). Shared internal services (e.g., Cloud Storage built on Blobstore/Colossus) are reallocated to end-user teams.
 
-**Stage 1.5 (cost-based fallback):** Where internal services lack sufficient usage data, GCP uses back-charged costs to reallocate shared infrastructure energy — an economic fallback at the internal level. Affected fraction not disclosed.
+**Stage 1.5 (cost-based fallback for shared services):** Where shared internal services lack sufficient usage data, GCP reallocates energy by back-charged internal costs ("cost-based approach... typically less desirable than a resource-based approach"). Implemented as two rounds of reallocation. Affected service set and emission fraction not disclosed.
 
-**Stage 2 (customer-facing):** Each internal team's total energy is distributed across customer-facing SKUs proportional to "their usage (quantity purchased) and list prices (all in US dollars)." Customers are then allocated by **usage units** (vCPU-hours for Compute Engine, GiB-months for storage, etc.). A VM at 5% and one at 95% CPU receive identical carbon allocation for the same vCPU-hours and SKU. The physical signal from Stage 1 is preserved in aggregate but washed out at the individual customer level.
+**Stage 2 (customer-facing, price-proportional):** Each internal team's energy is distributed across customer-facing SKUs by a formula in which energy per usage unit is **proportional to list price** (commitment, committed-use, and sustained-use discounts excluded). Customers are then allocated by usage units (vCPU-hours for Compute Engine, GiB-months for storage, etc.). The paper explicitly notes (§3.6): "One limitation of this approach is that customers do not receive a signal about how switching from SKU A to SKU B can reduce their actual emissions, but rather their allocated emissions based on list prices."
 
-**Non-electricity Scope 3 (embodied, FERA, transport):** Allocated by proportional ratio: customer electricity / total GCP electricity. Assumes non-electricity emissions track electricity consumption. Uncertainty: ~20–35%.
+**Non-electricity Scope 3 (embodied, FERA, transport):** Per the Carbon Footprint documentation, allocated by proportional ratio of customer electricity to total GCP electricity — i.e., assumes non-electricity emissions track electricity consumption.
 
-**Strengths:** Internal machine-level telemetry is the most accurate approach for electricity-related emissions; the two-stage methodology (Schneider & Mattia 2024) is the only one fully published. **Weakness:** Customer-facing allocation does not reflect actual compute utilization — only resource-time (the paper acknowledges "cost-based allocation doesn't signal actual efficiency differences"); proportional non-electricity allocation may not match distribution across workload mixes (e.g., GPU AI vs. CPU compute).
+**Strengths:** Internal machine-level telemetry (the only published example among the three providers); the two-stage methodology (Schneider & Mattia 2024) is fully documented. **Weakness:** Customer-facing allocation does not reflect actual compute utilization — only resource-time scaled by list price; proportional non-electricity allocation may not match distribution across workload mixes (e.g., GPU AI vs. CPU compute).
 
 ### 5.3 Azure — Usage Allocation (Normalized Cost Metric)
 
@@ -126,7 +125,7 @@ Azure uses usage allocation via customer usage factors per datacenter region, co
 - **2021 Whitepaper:** Azure usage is "the normalized cost metric associated with IaaS, PaaS or SaaS... normalized to exclude discounts and other variables." This is closer to economic allocation than the term "usage" suggests.
 - **2025 Carbon Optimization docs:** Usage is described as "compute, storage, and data transfer" time — implying resource-time allocation.
 
-It is unclear whether this is a methodology evolution or different terminology for the same approach. The internal derivation of the usage factor is not disclosed, limiting independent verification. Uncertainty: ~15–30%.
+It is unclear whether this is a methodology evolution or different terminology for the same approach. The internal derivation of the usage factor is not disclosed, limiting independent verification. (The CHEM 2026 whitepaper notes that Microsoft "shifted from financial proxies to pLCA" for *embodied carbon* modeling — a separate methodology track from customer-level allocation.)
 
 **Methodology pipeline (2021 Whitepaper, 8 stages):**
 1. **Component LCA:** Material Circularity and Life Cycle Carbon Emission Calculator v7.3 applied to components (rack, disk drive, server blades, FPGA, PSU, other)
@@ -153,7 +152,7 @@ It is unclear whether this is a methodology evolution or different terminology f
 | **Compute utilization reflected** | No | No | No |
 | **Allocation parameters disclosed** | Partial | Full (Schneider & Mattia 2024) | Partial (usage factor definition undisclosed) |
 
-**GHG Protocol alignment at customer boundary:** All three are usage-based — GCP by vCPU-hours per SKU, AWS foundational by instance-hours per service, Azure by usage time per region. GCP measures power physically internally but introduces price-based proportionality at the customer step (Schneider & Mattia 2024, Eq. 10). Without full disclosure of per-instance-hour or usage-factor derivations, precise GHG Protocol alignment cannot be confirmed for any provider.
+**GHG Protocol alignment at customer boundary:** All three are usage-based — GCP by vCPU-hours per SKU, AWS foundational by instance-hours per service, Azure by usage time per region. GCP measures power physically internally but introduces price-based proportionality at the customer step (Schneider & Mattia 2024, §3.6). Without full disclosure of per-instance-hour or usage-factor derivations, precise GHG Protocol alignment cannot be confirmed for any provider.
 
 ---
 
@@ -167,71 +166,68 @@ It is unclear whether this is a methodology evolution or different terminology f
 | **GCP** | **4 years** | Included in customer tool | Excluded | Cradle-to-gate |
 | **Azure** | 6 years | Excluded from customer tool | Included (CHEM) | Cradle-to-grave |
 
-GCP's 4-year assumption produces **~50% higher** annual amortized embodied carbon than 6-year for the same hardware. GCP acknowledges this is a financial accounting convention and that real lifetimes are longer. AWS/Azure's 6 years is closer to the physical median of hyperscale refresh cycles (3–7 years) but may understate annual embodied carbon relative to actual utilization. The GHG Protocol does not specify a required lifetime.
+GCP's 4-year assumption produces **50% higher** annual amortized embodied carbon than 6-year for the same hardware (6/4 = 1.5). GCP acknowledges this is a financial accounting convention and that real lifetimes are longer. The GHG Protocol does not specify a required lifetime.
 
 ### 6.2 Post-Amortization Treatment
 
-All three report **zero amortized embodied carbon** for equipment beyond its assumed lifetime. AWS's methodology states `active_time = 0 ⟹ amortized_E = 0` (CCFT §3.3.4.3), justified as "avoiding overallocation/double counting." GCP: "dropping those at the 4-year mark." Azure EID behaves identically at 6 years.
+All three report **zero amortized embodied carbon** for equipment beyond its assumed lifetime. AWS's methodology specifies that hardware past its planned retirement contributes zero, justified as avoiding overallocation/double counting. GCP states: "dropping those at the 4-year mark." Azure EID behaves identically at 6 years.
 
-Total embodied carbon is fully allocated over the amortization period (sum equals total embodied carbon per AWS Eq. 30), but in any given month, equipment past its window contributes zero — so fleet-wide monthly Scope 3 decreases as equipment ages.
-
-**Azure asymmetry:** If equipment retires *before* 6 years (e.g., at 4 years), emissions are still counted for the full 6-year period — preventing a perverse incentive to retire early to reduce reported emissions.
+Total embodied carbon is fully allocated over the amortization period, but in any given month, equipment past its window contributes zero — so fleet-wide monthly Scope 3 decreases as equipment ages past the assumed lifetime.
 
 ### 6.3 LCA Methodology
 
 | Provider | Approach | Source | Verification |
 |---|---|---|---|
-| **AWS** | Supplier EPDs (primary); AI/LLM estimation (fallback for undocumented components) | EPDs | Apex (limited, ISO 14064-3:2019) |
+| **AWS** | "Component-level hybrid LCA" waterfall (Model 3.0): (1) Process-based LCA with engineering attributes (PLCA-Eng); (2) ML-based interpolation/extrapolation from PLCA data points (Extrap.); (3) Representative Category Average LCA with K-Nearest-Neighbors classification (RCA-LCA); (4) Component-level EIO-LCA (cost-based) fallback. Data sources: supplier primary data, ecoinvent, GaBi, imec.netzero, USEEIO, TechInsights | Component BOMs + EMT attributes | Apex (limited, ISO 14064-3:2019) |
 | **GCP** | Component-level LCA | Internal LCA + Fraunhofer IZM review | Fraunhofer IZM critical review (ISO 14040/14044) |
-| **Azure** | Component-level LCA via CHEM; AI-augmented at scale (2026 whitepaper) | CHEM | WSP USA (methodology document only) |
+| **Azure** | Process-based LCA via CHEM; integrates Microsoft PDM/FMD data + automated material-to-LCI mapping (Makersite); semiconductor data from imec SSTS; ecoinvent LCI database; AI-augmented proxy selection (CHEM whitepaper 2026) | CHEM | WSP USA (methodology document only) |
 
-AWS's AI/LLM fallback for components without EPDs introduces ~20–50% uncertainty for affected components; the fleet proportion relying on it is not disclosed. AWS amortizes data center buildings over 50 years; a 30-year assumption (more conservative, arguably more appropriate) would raise annual building embodied carbon by ~40–60%.
+AWS's pathway selection is based on materiality and data availability — components with primary data go through PLCA-Eng; long-tail/low-frequency components fall back to RCA-LCA or Comp-EIO-LCA (cost-based, using NAICS sector emission factors). The fleet proportion relying on each pathway is not disclosed. AWS amortizes data center buildings over 50 years; a 30-year assumption would raise annual building embodied carbon by ~67% (50/30) — arithmetic identity, not an empirical estimate.
 
 ---
 
-## 7. Key Variables, Uncertainty, and Update Cadence
+## 7. Key Variables and Update Cadence
 
-**Caveat:** Uncertainty ranges below are estimates from methodology documentation, academic literature (notably Bhagavathula et al. HotCarbon 2024, finding up to 1.45× deviation across embodied carbon models), and expert judgment — not published provider values.
+Sources and cadence are drawn directly from each provider's methodology documentation. (Quantitative uncertainty ranges per variable are not published by any provider and are not included here.) For context on embodied-carbon model variance, Bhagavathula et al. (HotCarbon 2024) report variations as much as **1.5× across iMec process-node assessments published in different years** and **>4× across 94 published SSD embodied-carbon LCAs** (the latter compiled by Tannu & Nair).
 
 ### 7.1 AWS Variables
 
-| Variable | Source | Uncertainty | Update | Recast |
-|---|---|---|---|---|
-| Energy consumption (MWh) | Utility meters | Low (~2–5%) | Monthly | Yes |
-| LBM emission factor | Regional grid; IEA | Medium (~5–15%) | Annual | Yes |
-| MBM emission factor | EACs | Medium (~5–10%) | Annual | Yes |
-| Service allocation — foundational | Internal telemetry | Low–Medium (~5–10%) | Monthly | Yes |
-| **Service allocation — non-foundational** | Internal revenue data | **High (~20–40%)** | Not disclosed | Unknown |
-| Embodied carbon — IT (EPD-backed) | Supplier EPDs | Low–Medium (~10–15%) | Methodology updates | Yes |
-| **Embodied carbon — IT (AI/LLM fallback)** | AI/LLM | **High (~20–50%)** | Not disclosed | Unknown |
-| Embodied carbon — buildings | Engineering assessments | Medium–High (~15–25%) | Infrequent | Yes |
-| Lifetime — IT (6 yr) / buildings (50 yr) | Internal assumption | Medium (~10–20%) | Rarely | Yes |
+| Variable | Source | Update | Recast |
+|---|---|---|---|
+| Energy consumption (MWh) | Utility meters | Monthly | Yes |
+| LBM emission factor | Regional grid; IEA | Annual | Yes |
+| MBM emission factor | EACs | Annual | Yes |
+| Service allocation — foundational | Internal telemetry | Monthly | Yes |
+| **Service allocation — non-foundational** | Internal revenue data | Not disclosed | Unknown |
+| Embodied carbon — IT (PLCA-Eng / Extrap.) | Component BOMs + EMT attributes; imec.netzero, ecoinvent, GaBi | Methodology updates | Yes |
+| Embodied carbon — IT (RCA-LCA / Comp-EIO-LCA fallback) | Mass + KNN classification; NAICS sector emission factors | Methodology updates | Yes |
+| Embodied carbon — buildings | Engineering assessments | Infrequent | Yes |
+| Lifetime — IT (6 yr) / buildings (50 yr) | Internal assumption | Rarely | Yes |
 
 ### 7.2 GCP Variables
 
-| Variable | Source | Uncertainty | Update | Recast |
-|---|---|---|---|---|
-| Machine-level power | Hardware telemetry | **Very Low (~1–3%)** | Continuous | Yes |
-| Grid factor — Electricity Maps | Electricity Maps API | Low–Medium (~5–10%) | Hourly | Yes |
-| Grid factor — IEA fallback | IEA annual | Medium–High (~10–20%) | Annual | Yes |
-| CFE % | Electricity Maps; PPAs | Low–Medium (~5–10%) | Hourly | Yes |
-| SKU-level carbon intensity | Internal telemetry | Low–Medium (~5–15%) | Monthly | Yes |
-| **Non-electricity Scope 3 ratio** | Internal electricity data | **High (~20–35%)** | Monthly | Yes |
-| Embodied carbon — IT | Fraunhofer IZM LCA | Low–Medium (~10–15%) | LCA updates | Yes |
-| Lifetime — IT (4 yr) | Internal assumption | Medium (~10–20%) | Rarely | Yes |
+| Variable | Source | Update | Recast |
+|---|---|---|---|
+| Machine-level power | Borg hardware telemetry | Continuous | Yes |
+| Grid factor — Electricity Maps | Electricity Maps API | Hourly | Yes |
+| Grid factor — IEA fallback | IEA annual | Annual | Yes |
+| CFE % | Electricity Maps; PPAs | Hourly | Yes |
+| SKU-level carbon intensity | Internal telemetry | Monthly | Yes |
+| Non-electricity Scope 3 ratio | Internal electricity data | Monthly | Yes |
+| Embodied carbon — IT | Internal LCA + Fraunhofer IZM | LCA updates | Yes |
+| Lifetime — IT (4 yr) | Internal assumption | Rarely | Yes |
 
 ### 7.3 Azure Variables
 
-Reporting delay: 19 days; retention: 12 months (Carbon Optimization) / 60 months (EID).
+Reporting delay: ~19 days; retention: 12 months (Carbon Optimization) / 60 months (EID).
 
-| Variable | Source | Uncertainty | Update | Recast |
-|---|---|---|---|---|
-| Hardware LCA factor (EPD-backed) | CHEM | Low–Medium (~10–20%) | CHEM updates | Yes (12-mo) |
-| Hardware LCA factor (AI-augmented) | CHEM 2026 | Medium–High (~15–30%) | CHEM updates | Yes (12-mo) |
-| Lifetime — IT (6 yr; asymmetric for early retirement) | Internal assumption | Medium (~10–20%) | Rarely | Yes (12-mo) |
-| **Usage factor** | 2021: "normalized cost metric"; 2025: "compute/storage/data-transfer time" | **High (~15–30%)** | Monthly | Yes (12-mo) |
-| Regional electricity factor | Regional grid; IEA | Medium (~5–15%) | Annual | Yes (12-mo) |
-| End-of-life disposition | Microsoft programs | Medium (~10–20%) | CHEM updates | Yes (12-mo) |
+| Variable | Source | Update | Recast |
+|---|---|---|---|
+| Hardware LCA factor | CHEM (pLCA + Makersite + imec SSTS + ecoinvent) | CHEM updates | Yes (12-mo) |
+| Lifetime — IT (6 yr default) | Internal assumption | Rarely | Yes (12-mo) |
+| **Usage factor** | 2021: "normalized cost metric"; 2025 docs: "compute/storage/data-transfer time" | Monthly | Yes (12-mo) |
+| Regional electricity factor | Regional grid; IEA | Annual | Yes (12-mo) |
+| End-of-life disposition | Microsoft programs | CHEM updates | Yes (12-mo) |
 
 ---
 
@@ -247,7 +243,7 @@ All three providers now offer sub-month reporting delays.
 
 | Provider | Recast Scope | Trigger | Retention |
 |---|---|---|---|
-| **AWS** | Full to January 2020 | Any methodology change | 38 months |
+| **AWS** | Recast to January 2020 | "At least annually upon completion of third-party assurance of Amazon's footprint or when significant methodology updates are introduced" (Model 3.0 §1) | 38 months |
 | **GCP** | Full historical | Methodology changes; manual via BigQuery | Unlimited (BigQuery) |
 | **Azure** | 12-month window only | Methodology changes | 12 months (Carbon Optimization) / 60 months (EID) |
 
@@ -354,29 +350,29 @@ Where the standard does not fully specify the correct approach:
 ### 12.1 AWS
 
 **Critical:**
-1. **Economic allocation fallback for non-foundational services.** Revenue-based allocation for an undisclosed set (Lambda, SageMaker, Athena, Redshift, many managed services). Revenue is a poor proxy for resource consumption. The list of affected services and the share of total emissions under this fallback are not disclosed. Uncertainty ~20–40% — the largest source of opacity in CCFT.
+1. **Economic allocation fallback for non-foundational services.** Equivalent-revenue allocation applied to "AWS services with no dedicated server racks" (Model 3.0 definition). The methodology document does **not publish the list of services classified as non-foundational**, nor the share of total CCFT emissions allocated this way. Revenue is a poor proxy for resource consumption — a high-margin service can be allocated more emissions despite consuming fewer resources. This is the largest source of opacity in CCFT.
 
 **High:**
-2. **AI/LLM fallback for embodied carbon.** Used for components without supplier EPDs. Uncertainty ~20–50% for affected components; fleet proportion not disclosed.
+2. **Cost-based EIO-LCA fallback for embodied carbon.** When primary data, parametric models, and mass-based representative LCA are all unavailable, AWS falls back to Component-level EIO-LCA — sector-level emission factors (kgCO2e/$) from NAICS codes multiplied by component cost. This is a cost-based proxy, not a physical measurement. The fleet proportion relying on each of the four LCA pathways is not disclosed.
 3. **Limited (vs. reasonable) assurance.** Apex's engagement is limited assurance — adequate but the weaker available level. Negative-form conclusion language ("nothing has come to our attention").
 4. **Business travel and employee commuting excluded.** Cat. 6 and 7 excluded; no materiality assessment justifying exclusion.
 5. **Allocation methodology opacity.** Foundational vs. non-foundational classification criteria and revenue data for economic allocation not publicly disclosed — replication impossible.
 
 **Medium:**
-6. **50-year building amortization may understate annual carbon.** A 30-year assumption would raise annual building embodied carbon ~40–60%.
+6. **50-year building amortization may understate annual carbon.** A 30-year assumption would raise annual building embodied carbon by ~67% (50/30 arithmetic).
 7. **Monthly-only customer-facing granularity.**
 8. **EAC matching not disclosed** — likely annual, overstating renewable energy impact vs. hourly location-matched matching.
 
 ### 12.2 GCP
 
 **Critical:**
-1. **End-of-life hardware excluded from customer tool.** Cradle-to-gate only; end-of-life is ~5–15% of hardware lifecycle emissions, included in internal LCA but not exposed.
+1. **End-of-life hardware excluded from customer tool.** Methodology is cradle-to-gate; end-of-life emissions of hardware and buildings are explicitly excluded per the GCP methodology document.
 
 **High:**
-2. **Non-electricity Scope 3 uses simplified proportional allocation.** Customer-electricity / total-electricity ratio applied to all non-electricity Scope 3 (embodied, FERA, transport). May not hold for GPU AI vs. CPU workloads. Uncertainty ~20–35%.
+2. **Non-electricity Scope 3 uses simplified proportional allocation.** Customer-electricity / total-electricity ratio applied to all non-electricity Scope 3 (embodied, FERA, transport). May not hold for GPU AI vs. CPU workloads.
 3. **No formal third-party GHG assurance of customer tool.** Fraunhofer review covers LCA methodology only.
-4. **4-year amortization shorter than real life.** Financial accounting standard; actual hardware lifetimes are longer — overstates yearly allocation if hardware is actually used for 8–10 years.
-5. **IEA annual fallback** for regions not covered by Electricity Maps. Uncertainty ~10–20%; affected regions not disclosed.
+4. **4-year amortization shorter than real hardware life.** Financial accounting standard; GCP acknowledges actual hardware lifetimes are longer.
+5. **IEA annual fallback** for regions not covered by Electricity Maps. Affected regions not disclosed.
 
 **Medium:**
 6. **Waste (Cat. 5) excluded.** No materiality assessment published.
@@ -385,13 +381,13 @@ Where the standard does not fully specify the correct approach:
 ### 12.3 Azure
 
 **Critical:**
-1. **Allocation parameters undisclosed; "usage" may be a normalized cost metric.** 2021 Whitepaper defines Azure usage as a "normalized cost metric... normalized to exclude discounts and other variables" — closer to economic than physical allocation. 2025 docs describe it as "compute, storage, and data transfer" time. Unclear whether evolution or rephrasing. Internal derivation of the usage factor is not disclosed. Uncertainty ~15–30%.
+1. **Allocation parameters undisclosed; "usage" may be a normalized cost metric.** 2021 Whitepaper defines Azure usage as a "normalized cost metric... normalized to exclude discounts and other variables" — closer to economic than physical allocation. 2025 docs describe it as "compute, storage, and data transfer" time. Unclear whether evolution or rephrasing. Internal derivation of the usage factor is not disclosed.
 
 **High:**
 2. **FERA (Cat. 3) excluded.** Azure lists categories 1, 2, 4, 5, 9, 12; FERA is omitted. Both AWS and GCP include it; FERA is typically material for energy-intensive operations.
 3. **Building embodied carbon excluded.** No announced plans. Material omission for an operator with 200+ data centers.
 4. **WSP USA verification does not cover customer tool accuracy.** Covers methodology document only.
-5. **Methodology inconsistency with Microsoft corporate GHG disclosure.** The sum of customer-reported EID emissions does not equal Microsoft's corporate Scope 3 disclosure. Not publicly reconciled.
+5. **Methodology inconsistency with Microsoft corporate GHG disclosure (explicitly acknowledged).** The 2021 Scope 3 Whitepaper footnote 2 states: "Microsoft Cloud is exploring new methods for emissions reporting that Microsoft has not yet adopted in its corporate disclosure. The underlying methodologies and emissions findings generated from the calculator will differ from those reflected in Microsoft's corporate disclosure." Microsoft has not publicly reconciled the two numbers.
 6. **12-month recasting window insufficient for GHG Protocol base year recalculation.** EID's 5-year retention mitigates trend-analysis limitation; recasting scope remains 12 months.
 
 **Medium:**
@@ -460,7 +456,7 @@ Status codes: **Full** = fully met; **Partial** = partially met or with caveats;
 | **Building embodied carbon** | Yes (Model 3.0, Oct 2025) | Yes | No |
 | **End-of-life hardware** | No | No | Yes |
 | **Allocation method** | Usage (foundational) + economic fallback | Physical internally; usage at customer (vCPU-hr × price factor) + proportional proxy for non-electricity Scope 3 | Usage (normalized cost metric / compute-storage-data-transfer time; parameters undisclosed) |
-| **Post-amortization treatment** | Zero after 6 yr | Zero after 4 yr | Zero after 6 yr (asymmetric: ≥6 yr even if life shorter) |
+| **Post-amortization treatment** | Zero after 6 yr | Zero after 4 yr | Zero after 6 yr |
 | **Reporting delay** | ≤21 days | ~15 days | ~19 days |
 | **Recasting** | Full to Jan 2020 | Full (unlimited) | 12-month window |
 | **Retention** | 38 months | Unlimited | 12 months (CO) / 60 months (EID) |

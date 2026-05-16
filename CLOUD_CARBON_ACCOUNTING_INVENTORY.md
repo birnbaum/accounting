@@ -14,21 +14,22 @@ Status legend (rough first pass, refine later):
 
 ## 1. Hyperscalers
 
-### AWS — Customer Carbon Footprint Tool (CCFT)
+### AWS — Sustainability Console (built on CCFT)
 Status: **Tool**.
-- Landing page: https://aws.amazon.com/sustainability/tools/aws-customer-carbon-footprint-tool/
-- Console docs: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/what-is-ccft.html
+- **Sustainability Console landing**: https://aws.amazon.com/sustainability/tools/console/
+- **Sustainability Console launch blog (31 Mar 2026)**: https://aws.amazon.com/blogs/aws/announcing-the-aws-sustainability-console-programmatic-access-configurable-csv-reports-and-scope-1-3-reporting-in-one-place/
+- CCFT landing (legacy): https://aws.amazon.com/sustainability/tools/aws-customer-carbon-footprint-tool/
+- CCFT docs: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/what-is-ccft.html
 - Overview & coverage: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ccft-overview.html
 - Estimation method: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ccft-estimation.html
-- Methodology PDF (v3.0): https://sustainability.aboutamazon.com/aws-customer-carbon-footprint-methodology.pdf
-- Methodology assurance PDF: https://sustainability.aboutamazon.com/aws-customer-carbon-footprint-tool-methodology-assurance.pdf
+- Methodology PDF (Model 3.0, Oct 2025): https://sustainability.aboutamazon.com/aws-customer-carbon-footprint-methodology.pdf
+- Methodology assurance PDF (Apex, ISO 14064-3:2019 limited): https://sustainability.aboutamazon.com/aws-customer-carbon-footprint-tool-methodology-assurance.pdf
 - Amazon-wide carbon methodology: https://sustainability.aboutamazon.com/carbon-methodology.pdf
 - Release notes: https://docs.aws.amazon.com/ccft/latest/releasenotes/what-is-ccftrn.html
 - Scope-3 expansion blog: https://aws.amazon.com/blogs/aws/aws-customer-carbon-footprint-tool-now-includes-scope-3-emissions/
 - Methodology-update blog: https://aws.amazon.com/blogs/aws-cloud-financial-management/updated-carbon-methodology-for-the-aws-customer-carbon-footprint-tool/
-- New AWS Sustainability console (CSV / Scope 1–3 / API): https://aws.amazon.com/blogs/aws/announcing-the-aws-sustainability-console-programmatic-access-configurable-csv-reports-and-scope-1-3-reporting-in-one-place/
 
-Notes: third-party assured by Apex; default view is market-based, LBM toggleable; includes FERA.
+Notes: Sustainability Console (launched 31 Mar 2026) supersedes the CCFT-only Billing-console surface — adds a public REST API (`get-estimated-carbon-emissions`), SDK + CLI, filterable CSV exports (Region / service / account / Scope), monthly granularity, history back to Jan 2022, fiscal-year configuration, and IAM permissions independent of Billing. Underlying methodology is still CCFT Model 3.0. Third-party assured by Apex (limited, ISO 14064-3:2019, ±5% materiality, methodology scope only). Default view market-based; LBM toggleable; includes FERA.
 
 ### Microsoft Azure — Emissions Impact Dashboard (EID)
 Status: **Tool**.
