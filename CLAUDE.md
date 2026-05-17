@@ -18,13 +18,24 @@ Before writing or repeating **any claim about prior work, a provider methodology
 
 This rule overrides convenience. Always open the source.
 
+## Living files (update as you go)
+
+The following are **living files** — update them whenever new information is verified, a new source is added, or terminology drift is uncovered. Don't let them get stale:
+
+- `references/INDEX.md` — when a PDF or per-provider folder is added/removed/renamed, update the layout map and the "Missing" list.
+- `references/terminology.md` — when a new term-collision or version-drift is uncovered (e.g., Azure's "usage" definition changing between 2021/2025/2026 docs), add a new row with the citation.
+- `references/carbon_accounting_methodologies/<provider>/README.md` — when a provider ships a methodology revision (e.g., AWS Model 3.0 → 3.0.1, GCP AI-inference allocation update, Oracle Feb-2026 power-based standardization), update the relevant per-provider README before the change leaks into `paper/paper.tex`.
+
+A useful habit: every time you verify a new fact for the paper, ask "should this also land in `terminology.md` or a provider README?" If yes, do it in the same turn.
+
 ## Where to find things
 
 ### Authoritative for prior work and standards
 - `references/INDEX.md` — top-level index. Read this first when entering the project.
 - `references/SCI.md`, `references/SCI_AI.md`, `references/SCI_SUNK_CARBON.md` — GSF SCI spec, AI extension, Bashir summary.
-- `references/pdfs/` — academic priors (Bashir, GreenSKU) and GHG Protocol standards.
+- `references/sources/` — academic priors (Bashir TeX sources, GreenSKU) and GHG Protocol standards.
 - `references/terminology.md` — terminology drift across sources (esp. "usage", embodied scope, SCI variants, S1/2/3, FERA, LBM/MBM).
+- `references/cross_provider_synthesis.md` — Big-3 GHG-Protocol compliance posture, gold-standard scorecard, cross-cutting findings, and the three methodology families used in `paper/paper.tex` §3.
 
 ### Authoritative for provider methodologies
 - `references/carbon_accounting_methodologies/<provider>/README.md` — per-provider consolidated methodology summary, plus any PDFs in the same folder.
@@ -39,8 +50,6 @@ This rule overrides convenience. Always open the source.
 ### Working notebooks (NOT authoritative for claims)
 - `README.md` — core framework definition (rSCI). Living research document.
 - `vision_paper_notes.md` — paper outline + working notes. May contain inaccuracies; verify against `references/` before using.
-- `HYPERSCALER_CARBON_ACCOUNTING.md`, `CLOUD_CARBON_ACCOUNTING_DEEPDIVE.md` — working inventories used for the original §3 build. Useful for cross-checking but not citable.
-- `SCHEMA.md` — provider profile schema.
 
 ### Data
 - `gcp/` — GCP benchmark experiments.

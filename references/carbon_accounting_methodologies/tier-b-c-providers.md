@@ -117,8 +117,8 @@ Marketing-level renewable/PUE statements; no methodology and no per-customer acc
 
 | Provider | Category | Published | Source |
 |---|---|---|---|
-| Hetzner | Tier-2 | "100% renewable" (hydropower DE/FI); PUE ~1.13; EMAS-certified DE sites; building own solar via HT Clean Energy | [Sustainability](https://www.hetzner.com/unternehmen/nachhaltigkeit) |
-| Vultr | Tier-2 | Net-zero-by-2029 ambition; Sabey hydropower DC partnership | [Sabey press](https://www.businesswire.com/news/home/20240305527534/en/Vultr-Expands-Footprint-with-New-NVIDIA-Cloud-GPU-Capacity-Using-Clean-Renewable-Hydropower-in-Sabey-Data-Centers) |
+| Hetzner | Tier-2 | Solar-generation shift (HT clean energy GmbH 2025); CSRD reporting from 2026; PUE 1.13 | [Sustainability](https://www.hetzner.com/unternehmen/nachhaltigkeit) |
+| Vultr | Tier-2 | Net-zero 2029; 2026 focus on GPU orchestration (NVIDIA Rubin) and silicon efficiency | [Impact](https://www.vultr.com/about/sustainability/) |
 | STACKIT | Sovereign EU | Green-electricity DCs in DE/AT; DC10 Ostermiething PUE 1.1; Schwarz Group net-zero-by-2050 | [Sustainability](https://stackit.com/en/learn/knowledge/cloud/sustainability) |
 | GreenGeeks | Niche green | REC-based "300% renewable" via Bonneville Environmental Foundation; US EPA Green Power Partner since 2009 | [Going green](https://www.greengeeks.com/going-green) |
 | Krystal | Niche green | Direct renewable PPAs preferred over RECs; Gold-Standard projects; tree-planting via Veritree | [Green hosting](https://krystalhosting.com/green) |

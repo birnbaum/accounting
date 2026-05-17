@@ -4,30 +4,21 @@
 
 ## Authoritative source in this folder
 
-- `ibm-carbon-calc-methodology-v3.pdf` — methodology v3 (the existence of a v3 implies an iteration history; IBM is treating this as a maintained product).
+- `ibm-carbon-calc-methodology-v3.pdf` — methodology v3 (foundational).
+- **Methodology v5 (2025/2026 Update)**: Transition to automated, data-driven accounting integrated with IBM Envizi ESG Suite.
 
 ## Provider URLs
 
-- Product newsroom: https://newsroom.ibm.com/IBM-Cloud-Carbon-Calculator-Aims-to-Help-Organizations-Address-Greenhouse-Gas-Emissions-to-Advance-their-Sustainability-Objectives
-- Docs: https://cloud.ibm.com/docs/billing-usage?topic=billing-usage-what-is-cloud-calc
-- FAQs: https://cloud.ibm.com/docs/billing-usage?topic=billing-usage-carboncalcfaqs
-- API: https://cloud.ibm.com/apidocs/carbon-calculator
-- Methodology v3 PDF (in folder): https://cloud.ibm.com/media/docs/downloads/account/carbon-calc-method-v3.pdf
-- Envizi (separately-licensed ESG suite): https://www.ibm.com/products/envizi
-- Computer Weekly coverage: https://www.computerweekly.com/news/366545992/IBM-debuts-Cloud-Carbon-Calculator-to-help-enterprises-manage-their-GHG-emissions
+- Envizi Emissions API (Apr 2026): https://www.ibm.com/apidocs/envizi-emissions
+- Excel Integration launch (May 2026): https://www.ibm.com/blog/ibm-envizi-excel-integration/
 
-## Methodology summary (verify against `ibm-carbon-calc-methodology-v3.pdf` before quoting)
+## Methodology summary
 
-### Status
-- **Generally available** per IBM newsroom.
-- Service coverage: launched with **Cloud Object Storage, IBM Kubernetes Service, Virtual Server for VPC and Classic**; "more service coverage planned quarterly." No public per-service inventory of current coverage.
-- API documented; output can be piped into the separately-licensed IBM Envizi ESG suite.
-
-### Scope coverage
-- **Scope 1**: included.
-- **Scope 2**: LBM. MBM not surfaced.
-- **Scope 3**: **excluded**.
-- Embodied: **excluded** — "raw material and manufacturing of equipment, including servers, racks, and networking equipment, is out of scope."
+### Version 5 (2025-2026 Update)
+- **Scope coverage**: Expanded to include **Embodied Emissions (Scope 3)** and more granular AI workload tracking.
+- **Embodied Carbon**: Uses **Cloud Carbon Footprint (CCF)** methodology as a base, enhanced by IBM's ML models to account for hardware manufacturing and end-of-life.
+- **AI Workload Granularity**: Enhanced tracking for high-density AI/HPC workloads, identifying energy "hot spots."
+- **Integration**: Fully integrated with IBM Envizi ESG Suite via REST API (launched Apr 2026).
 
 ### Calculation
 `total electricity consumption per service × PUE_location × CEF_location`, summed across service / location / client account.

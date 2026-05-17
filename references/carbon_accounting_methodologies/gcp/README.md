@@ -30,9 +30,10 @@
 - **Scope 3**: Cat 2 (capital goods, **including buildings**), Cat 3 (FERA), Cat 6 (business travel), Cat 7 (employee commuting).
 - **Excluded**: Cat 5 (waste), Cat 9, Cat 12 end-of-life. End-of-life explicitly excluded.
 
-### Service coverage (verified 2026-05-15)
+### Service coverage
 - **100+ services** covered. Compute Engine, App Engine, Cloud Run, GKE, Cloud TPU, BigQuery, Dataflow, Dataproc, Composer, AlloyDB, Cloud SQL, Spanner, Bigtable, Vertex AI, Gemini API, Cloud ML Engine, Cloud Storage, Filestore, Cloud DNS, Firebase, Pub/Sub, Logging, Secret Manager, and others.
 - **Explicit exclusions**: Apigee, AppSheet, Google Security Operations, Looker. "Any services not listed are not covered by Carbon Footprint."
+- AI-inference emissions attributed directly to associated services (Vertex AI, Cloud Natural Language, Speech APIs, Dialogflow, $\ldots$) at the SKU level.
 
 ### Embodied carbon (Cat 2)
 - Component-level LCA; Fraunhofer IZM critical review (ISO 14040/44).

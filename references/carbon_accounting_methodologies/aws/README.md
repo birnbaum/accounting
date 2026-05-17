@@ -1,10 +1,10 @@
 # AWS Carbon Accounting
 
-**Customer tool:** AWS Sustainability Console (launched 31 Mar 2026), built on the Customer Carbon Footprint Tool (CCFT) methodology Model 3.0.
+**Customer tool:** AWS Sustainability Console. Built on methodology Model 3.0.1 (Apr 2026).
 
 ## Authoritative sources in this folder
 
-- `aws-ccft-methodology-model3.pdf` — methodology document, Oct 2025. The canonical reference for any AWS claim.
+- `aws-ccft-methodology-model3.pdf` — methodology document (the canonical reference for any AWS claim). **Note:** this PDF is the Oct~2025 Model~3.0 version; the upstream URL now serves the Apr~2026 Model~3.0.1 revision. Re-download if a 3.0.1-specific claim is needed.
 - `aws-ccft-assurance.pdf` — Apex Companies LLC assurance statement (ISO 14064-3:2019, *limited* assurance, ±5% materiality). **Scope of assurance: Scope-3 Cat 2/3/4 methodology only.** Scope 1, Scope 2, and tool implementation are *not* within the assurance boundary.
 - `amazon-carbon-methodology.pdf` — Amazon corporate-wide carbon methodology. Use this for the *corporate-disclosure* side when comparing to the customer-tool side (the gap is the rSCI residual at AWS).
 

@@ -258,10 +258,16 @@ See also [`SCHEMA.md`](SCHEMA.md) for schema-specific and provider-profile quest
 ## Repository Structure
 
 ```text
-├── README.md                            # this file
-├── HYPERSCALER_CARBON_ACCOUNTING.md     # detailed provider methodology comparison
-├── SCHEMA.md                            # provider profile schema and populated profiles
-├── references/SCI.md                    # Software Carbon Intensity standard
-├── references/SCI_AI.md                 # SCI for AI standard
-├── references/SCI_SUNK_CARBON.md        # Bashir et al. (2024) — sunk carbon fallacy, oSCI/tSCI
+├── README.md                            # this file (rSCI framework definition)
+├── CLAUDE.md                            # collaboration rules + source-grounding rule
+├── vision_paper_notes.md                # paper outline + working notes
+├── paper/                               # SoCC vision-track LaTeX
+├── references/
+│   ├── INDEX.md                         # source-of-truth index
+│   ├── terminology.md                   # cross-source terminology drift
+│   ├── cross_provider_synthesis.md      # Big-3 GHG-Protocol synthesis
+│   ├── SCI.md / SCI_AI.md / SCI_SUNK_CARBON.md  # GSF specs + Bashir summary
+│   ├── sources/                         # academic priors + standards (PDFs / TeX)
+│   └── carbon_accounting_methodologies/ # one folder per provider
+└── aws/, azure/, gcp/                   # case-study data and analysis
 ```

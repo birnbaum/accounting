@@ -1,5 +1,7 @@
 # Terminology drift across sources
 
+**This is a living file.** Add a new row whenever a term-collision or version-drift is uncovered — e.g., a provider revises a methodology and redefines a term, or a paper's definition diverges from a standard's. Don't trust the table to be complete; trust the source-grounding rule in `CLAUDE.md`.
+
 Same word, different meaning across providers / standards / paper versions.
 When the paper writes one of these terms, the exact reading should be specified.
 Entries are sourced from `references/pdfs/` — every line links to the file that defines it.

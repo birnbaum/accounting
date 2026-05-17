@@ -32,10 +32,10 @@ This framing is reflected in §1 (thesis), §4 (math-forward, claims the theorem
 
 ### 2. The SCI Taxonomy and the Sunk Carbon Fallacy
 *   Define SCI (GSF / ISO): carbon per unit of work, covering operational *and* embodied carbon.
-*   Bashir et al.'s taxonomy refinement:
-    *   **SCI** — includes embodied carbon; vulnerable to sunk carbon fallacy.
-    *   **oSCI** — operational only; sensitive and real-time, but blind to facility overhead, idle capacity, and embodied share.
-    *   **tSCI** — total; folds embodied carbon back in; re-inherits the sunk carbon behavior.
+*   Bashir et al.'s taxonomy refinement (source: `references/SCI_SUNK_CARBON.md`; verify against `references/pdfs/bashir-2024-sunk-carbon.pdf`):
+    *   **SCI** (GSF) = `(E·I + M)/R` — includes the *active server's* amortised embodied carbon; **vulnerable to the sunk-carbon fallacy** (per-job decisions biased toward older, less-efficient hardware with lower per-hour amortised embodied cost).
+    *   **oSCI** (Bashir) = `(E·I)/R` — operational only; sensitive and real-time; blind to facility overhead, idle capacity, and embodied share. **Avoids the sunk-carbon fallacy.**
+    *   **tSCI** (Bashir) = `(tO + tM)/R` — distributes the *entire infrastructure's* operational + embodied carbon proportionally across jobs (not just the active server's). **Also avoids the sunk-carbon fallacy** — per-job number does not depend on the already-committed embodied carbon of the specific server it lands on.
 *   Explain the sunk carbon fallacy in detail: amortized embodied carbon shrinks on older hardware, so the per-unit-work number *drops* as the machine ages and gets less efficient — rewarding exactly the wrong placement decision.
 *   None of SCI/oSCI/tSCI was designed with reconciliation to top-down reports in mind. That is the opening we fill.
 *   (No GHG Protocol scopes or provider-reported numbers introduced yet — those arrive in §3.)

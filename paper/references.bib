@@ -1,66 +1,19 @@
-@misc{gsf-measuring,
-  title = {Measuring for Reporting vs.\ Measuring for Action},
-  author = {{Green Software Foundation}},
-  howpublished = {\url{https://greensoftware.foundation/articles/measuring-for-reporting-vs-measuring-for-action}},
-  year = {2024}
-}
+% ============================================================
+% Bibliography
+%
+% Source-grounding rule (see /CLAUDE.md): every entry below should be backed by a primary
+% source in /references/. The `localfile` and `note` fields point to the local artifact.
+% If `localfile = {MISSING}`, the cite is unverified and should not appear in paper.tex
+% camera-ready --- add the source to /references/ first.
+% ============================================================
 
-@misc{sci-spec,
-  title = {Software Carbon Intensity ({SCI}) Specification},
-  author = {{Green Software Foundation}},
-  howpublished = {\url{https://sci.greensoftware.foundation/}},
-  year = {2024}
-}
+% ----- Prior work -----
 
 @article{bashir2024,
   title = {The Sunk Carbon Fallacy: Rethinking Carbon Footprint Metrics for Effective Carbon-Aware Scheduling},
   author = {Bashir, Noman and Kazhamiaka, Fiodar and Engmann, Christopher and Keshav, Srinivasan and Rada{\v{c}}, Abel},
   journal = {arXiv preprint arXiv:2410.15087},
   year = {2024}
-}
-
-@misc{ccf,
-  title = {Cloud Carbon Footprint},
-  author = {{Thoughtworks}},
-  howpublished = {\url{https://github.com/cloud-carbon-footprint/cloud-carbon-footprint}},
-  year = {2024}
-}
-
-@misc{gcp-carbon,
-  title = {{Google Cloud} Carbon Footprint: Covered Services},
-  author = {{Google Cloud}},
-  howpublished = {\url{https://docs.google.com/carbon-footprint/docs/covered-services}},
-  year = {2024}
-}
-
-@misc{azure-carbon,
-  title = {{Azure} Carbon Optimization Overview},
-  author = {{Microsoft}},
-  howpublished = {\url{https://learn.microsoft.com/en-us/azure/carbon-optimization/overview}},
-  year = {2024}
-}
-
-@misc{aws-ccft,
-  title = {{AWS} Customer Carbon Footprint Tool Overview},
-  author = {{Amazon Web Services}},
-  howpublished = {\url{https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ccft-overview.html}},
-  year = {2024}
-}
-
-@misc{aws-ccft-model3,
-  title = {{AWS} Customer Carbon Footprint Tool Methodology (Model 3.0)},
-  author = {{Amazon Web Services}},
-  howpublished = {\url{https://sustainability.aboutamazon.com/aws-customer-carbon-footprint-methodology.pdf}},
-  year = {2025},
-  note = {October 2025}
-}
-
-@misc{microsoft-s3-2021,
-  title = {{The Carbon Benefits of Cloud Computing: A Study of the Microsoft Cloud}},
-  author = {{Microsoft and WSP}},
-  howpublished = {\url{https://download.microsoft.com/download/7/3/9/739BC4AD-A855-436E-961D-9C95EB51DAF9/Microsoft_Cloud_Carbon_Study_2018.pdf}},
-  year = {2021},
-  note = {2021 Scope~3 Whitepaper update, footnote~2 acknowledges customer-tool/corporate-disclosure non-reconciliation}
 }
 
 @article{schneider-mattia-2024,
@@ -70,10 +23,150 @@
   year = {2024}
 }
 
+@inproceedings{greensku-2024,
+  title = {{GreenSKU}: Reducing Carbon Footprint of Cloud Servers with Aged Hardware},
+  author = {{Microsoft Research}},
+  booktitle = {Proc.\ ISCA},
+  year = {2024}
+}
+
+% ----- Standards -----
+
+@misc{sci-spec,
+  title = {Software Carbon Intensity ({SCI}) Specification v1.1},
+  author = {{Green Software Foundation}},
+  howpublished = {\url{https://sci.greensoftware.foundation/}},
+  year = {2024}
+}
+
+@misc{sci-ai-spec,
+  title = {Software Carbon Intensity for {AI} Specification},
+  author = {{Green Software Foundation}},
+  howpublished = {\url{https://sci.greensoftware.foundation/}},
+  year = {2025}
+}
+
+@misc{ghg-protocol-corp,
+  title = {{The Greenhouse Gas Protocol}: A Corporate Accounting and Reporting Standard (Revised)},
+  author = {{World Resources Institute and World Business Council for Sustainable Development}},
+  howpublished = {\url{https://ghgprotocol.org/}},
+  year = {2004}
+}
+
+@misc{ghg-protocol-scope3,
+  title = {Corporate Value Chain (Scope~3) Accounting and Reporting Standard},
+  author = {{World Resources Institute and World Business Council for Sustainable Development}},
+  howpublished = {\url{https://ghgprotocol.org/}},
+  year = {2011}
+}
+
+@misc{ghg-protocol-scope2,
+  title = {{GHG Protocol} Scope~2 Guidance},
+  author = {{World Resources Institute}},
+  howpublished = {\url{https://ghgprotocol.org/}},
+  year = {2015}
+}
+
+% ----- AWS -----
+
+@misc{aws-ccft-model3,
+  title = {{AWS} Customer Carbon Footprint Tool Methodology, Model 3.0.1},
+  author = {{Amazon Web Services}},
+  howpublished = {\url{https://sustainability.aboutamazon.com/aws-customer-carbon-footprint-methodology.pdf}},
+  year = {2026}
+}
+
+@misc{aws-ccft-assurance,
+  title = {{AWS} Customer Carbon Footprint Tool Methodology Assurance Statement},
+  author = {{Apex Companies LLC}},
+  year = {2025}
+}
+
+@misc{amazon-carbon-methodology,
+  title = {{Amazon} Carbon Methodology},
+  author = {{Amazon}},
+  howpublished = {\url{https://sustainability.aboutamazon.com/carbon-methodology.pdf}},
+  year = {2025}
+}
+
+% ----- Azure / Microsoft -----
+
 @misc{azure-methodology-2026,
   title = {{Azure} Emissions Calculation Methodology},
   author = {{Microsoft}},
   howpublished = {\url{https://learn.microsoft.com/en-us/power-bi/connect-data/azure-emissions-calculation-methodology}},
   year = {2026},
-  note = {Updated January 2026}
+  note = {Web-only source; not yet captured locally.}
+}
+
+@misc{azure-chem-2026,
+  title = {Cloud Hardware Emissions Methodology ({CHEM}) Whitepaper},
+  author = {{Microsoft}},
+  year = {2026}
+}
+
+@misc{microsoft-cloud-carbon-2020,
+  title = {The Carbon Benefits of Cloud Computing: A Study on the {Microsoft Cloud} in Partnership with {WSP}},
+  author = {{Microsoft and WSP}},
+  howpublished = {\url{https://download.microsoft.com/download/7/3/9/739BC4AD-A855-436E-961D-9C95EB51DAF9/Microsoft_Cloud_Carbon_Study_2018.pdf}},
+  year = {2020}
+}
+
+@misc{microsoft-s3-2021,
+  title = {{Microsoft Cloud} Scope-3 Whitepaper},
+  author = {{Microsoft}},
+  year = {2021}
+}
+
+@misc{microsoft-carbon-aware-2023,
+  title = {Carbon-Aware Computing Whitepaper},
+  author = {{Microsoft}},
+  year = {2023}
+}
+
+% ----- Other providers -----
+
+@misc{oracle-carbon-guidance,
+  title = {{Oracle Cloud Infrastructure} Technical Carbon Calculation Guidance},
+  author = {{Oracle}},
+  howpublished = {\url{https://www.oracle.com/a/ocom/docs/corporate/technical-carbon-calculation-guidance.pdf}},
+  year = {2025}
+}
+
+@misc{ibm-carbon-calc-v3,
+  title = {{IBM Cloud} Carbon Calculator: Energy \& Carbon Quantification Methodology v3},
+  author = {{IBM}},
+  howpublished = {\url{https://cloud.ibm.com/media/docs/downloads/account/carbon-calc-method-v3.pdf}},
+  year = {2024}
+}
+
+@misc{ovh-eit-v2,
+  title = {{OVHcloud} Environmental Impact Tracker Methodology v2.0},
+  author = {{OVHcloud}},
+  howpublished = {\url{https://corporate.ovhcloud.com/sites/default/files/2025-07/environmental_impact_tracker_-_methodology.pdf}},
+  year = {2025}
+}
+
+@misc{cloudflare-impact-2023,
+  title = {{Cloudflare} Impact Report},
+  author = {{Cloudflare}},
+  year = {2023}
+}
+
+% ----- Foil / context -----
+
+@misc{gsf-measuring,
+  title = {Measuring for Reporting vs.\ Measuring for Action},
+  author = {{Green Software Foundation}},
+  howpublished = {\url{https://greensoftware.foundation/articles/measuring-for-reporting-vs-measuring-for-action}},
+  year = {2024},
+  note = {Web-only source; not yet captured locally.}
+}
+
+@misc{ccf,
+  title = {Cloud Carbon Footprint},
+  author = {{Thoughtworks}},
+  howpublished = {\url{https://github.com/cloud-carbon-footprint/cloud-carbon-footprint}},
+  year = {2024},
+  note = {Open-source tool; not a primary source.}
 }

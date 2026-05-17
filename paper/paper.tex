@@ -23,7 +23,13 @@
 
 \begin{document}
 
-\title{Title}
+\title{Title (we decide on exact framing later)}
+% \title{Reconciling Software Sustainability Metrics with Cloud~Carbon~Accounting}
+% \title{\texttt{rSCI}: Software Sustainability Metrics Should Reconcile with Cloud~Carbon~Accounting}
+% \title{Reconcilable Software Carbon Intensity:\\Connecting Bottom-Up Metrics to Cloud Carbon Accounting}
+% \title{Reconcilable SCI: Connecting Bottom-Up Sustainability Metrics with Cloud~Carbon~Accounting}
+% \title{Reconciling Actionable Sustainability Metrics with Cloud~Carbon~Accounting}
+% Reconcilable SCI: From Bottom-Up Metrics to Cloud Carbon Accounting
 
 \author{Philipp Wiesner}
 \affiliation{%
@@ -39,18 +45,52 @@ Abstract goes here.
 \maketitle
 
 \section{Introduction}
+% TODO: full Introduction + Abstract framing is deferred until §8 (Evaluation/case study)
+% results land. The thesis sentence, contributions list, and abstract will be tightened
+% once we know what the empirical story actually supports. §2--§6 math and content are
+% committed; the framing wrapper around them is the moving piece.
 Introduction goes here.
 
-\section{Related Work}
+\section{Background: SCI and the Sunk Carbon Fallacy}
+\label{sec:background}
+
+The community's per-workload carbon metric is the \emph{Software Carbon Intensity} (\textsc{sci}),
+codified by the Green Software Foundation and adopted as ISO/IEC 21031~\cite{sci-spec}:
+\[
+\textsc{sci} \;=\; \frac{E \cdot I \;+\; M}{R},
+\]
+where $E$ is the energy consumed running the workload, $I$ the carbon intensity of that
+energy, $M$ the amortised embodied carbon of the server, and $R$ a unit of work
+(API call, transaction, training run, $\ldots$). The metric is real-time-sensitive,
+applicable from a single function to a datacenter, and intended to drive engineering
+optimisation.
+
+Bashir et al.~\cite{bashir2024} show that \textsc{sci} contains a structural bug they
+call the \emph{sunk-carbon fallacy}: because $M$ is amortised flat over the server's
+financial lifetime, the per-unit-work number \emph{drops} as the hardware ages and gets
+less efficient. A carbon-aware scheduler optimising \textsc{sci} is therefore biased
+toward older, less efficient servers --- the opposite of what total-footprint
+minimisation requires. To fix this, they introduce two refinements:
+\[
+\textsc{o-sci} = \frac{E \cdot I}{R}, \qquad
+\textsc{t-sci} = \frac{tO + tM}{R},
+\]
+where \textsc{o-sci} drops the embodied term entirely, and \textsc{t-sci} keeps it but
+allocates the \emph{entire datacenter's} operational and embodied carbon (active and
+idle servers alike) across jobs by time, idle, and usage fractions. Both avoid the
+sunk-carbon fallacy --- the per-job number no longer depends on the specific server it
+lands on. \textsc{o-sci} is cheap to compute; \textsc{t-sci} is sound but demands
+datacenter-wide telemetry that public-cloud customers cannot
+access~\cite[\S3.1]{bashir2024}.
+
+Bashir's critique exposes one weakness of \textsc{sci}: embodied-carbon mis-allocation
+biasing scheduling. We argue there is a second, structurally distinct weakness: every
+member of the \textsc{sci} family is constructed without reference to the top-down
+provider report it must reconcile with. The next section grounds this critique in what
+providers actually publish today.
 
 \section{State of the Art in Cloud Carbon Accounting}
 \label{sec:sota}
-
-% NOTE for §2 (when drafted): end §2 with the bridge sentence:
-% "Bashir's critique exposes one weakness of SCI -- embodied-carbon mis-allocation. We argue
-% there is a second, structurally distinct weakness: SCI is constructed without reference
-% to the top-down provider report it must reconcile with. The next section grounds this
-% second critique in what providers actually publish today."
 
 \paragraph{Landscape.}
 A survey of 40+ cloud providers (May~2026) finds that only eleven ship a first-party,
@@ -110,7 +150,7 @@ Per-region usage factor (parameters undisclosed; ``normalized cost'' per 2021 wh
 WSP USA (S3 \emph{document} only; tool implementation not audited) \\
 
 \textbf{Oracle} (OCI) \newline Carbon Emissions Analysis &
-Power-based for a subset of Gen-2 services; spend-based for the rest\tnote{i} &
+Power-based (primary, for CSRD/SB-253 compliance) covers Compute, Storage, Database; spend-based for other services\tnote{i} &
 \na & \yes & \yes\tnote{j} & \na & \no &
 Power-based: kWh $\times$ regional EF; Spend-based: pre-discount~\$ $\times$ regional EF &
 \na \\
@@ -160,9 +200,9 @@ CPU-time apportionment (Compute); transfer volume (Delivery); 25\,\% PDU-overhea
 \bottomrule
 \end{tabularx}
 \begin{tablenotes}[para,flushleft]\scriptsize
-\item[\textit{a}] AWS's Model~3.0 methodology document defines a ``foundational vs.\ non-foundational'' service distinction but publishes neither the list of services in each tier nor the share of total emissions allocated by equivalent revenue.
+\item[\textit{a}] AWS's Model~3.0.1 methodology (Apr~2026) defines a ``foundational vs.\ non-foundational'' service distinction but publishes neither the list of services in each tier nor the share of total emissions allocated by equivalent revenue.
 \item[\textit{b}] Apigee, AppSheet, Google Security Operations, Looker.
-\item[\textit{c}] GCP covers Cat~2 (incl.\ buildings), Cat~3 (FERA), Cat~6 (business travel) and Cat~7 (employee commuting). End-of-life and Cat~5 are excluded.
+\item[\textit{c}] GCP covers Cat~2 (incl.\ buildings), Cat~3 (FERA), Cat~6 (business travel) and Cat~7 (employee commuting); Cat~5 and end-of-life excluded. Since Feb~2026 the customer surface attributes AI-inference emissions directly to associated services (Vertex AI, Cloud Natural Language, Speech APIs, Dialogflow, $\ldots$) at the SKU level.
 \item[\textit{d}] Schneider \& Mattia (2024, §3.6) note that customers therefore receive a signal proportional to list price, not to the physical emissions of switching SKUs.
 \item[\textit{e}] Per the January~2026 Microsoft Learn methodology page, these regions are not in the customer dashboard --- coverage is not uniform across Microsoft's own footprint.
 \item[\textit{f}] Methodology documents both LBM and MBM, but the exported data carries only MBM; LBM is effectively zero in customer exports (confirmed empirically on our Frankfurt case study).
@@ -258,12 +298,12 @@ subset of what the provider measures internally.
 Concrete evidence from three of the Big-3:
 (i) Microsoft's 2021 Scope-3 Whitepaper (footnote~2) acknowledges that the customer-tool
 methodology and the corporate-disclosure methodology have not been
-reconciled~\cite{microsoft-s3-2021};
+reconciled~\cite{microsoft-s3-2021};\footnote{\textbf{TODO --- verification pending.} The PDF currently in \texttt{references/carbon\_accounting\_methodologies/azure/} is the 2018/2020 Microsoft+WSP cloud-carbon study, not the 2021 Scope-3 Whitepaper. Verify the footnote-2 wording against the actual 2021 doc before camera-ready.}
 (ii) GCP measures machine-level power via Borg telemetry hourly, but the customer
 surface is monthly and uses a \emph{list-price-proportional} SKU factor that does not
 reflect the underlying physical
 measurement~\cite{schneider-mattia-2024};
-(iii) AWS's Model~3.0 defines a foundational/non-foundational service split but
+(iii) AWS's Model~3.0.1 (Apr~2026) defines a foundational/non-foundational service split but
 publishes neither the service list nor the emissions share allocated by equivalent
 revenue~\cite{aws-ccft-model3}. What providers measure internally is methodologically
 richer than what they ship to customers; the size of that gap is precisely the
@@ -272,8 +312,110 @@ residual that \S\ref{sec:rsci} makes explicit through the rSCI decomposition.
 \section{rSCI: Reconciling Bottom-Up and Top-Down}
 \label{sec:rsci}
 
-% TODO: see vision_paper_notes.md §4. Math-forward; the residual decomposition is the
-% theorem-level contribution.
+% NOTE: high-level framing (one-sentence thesis at the open, properties-and-implications
+% paragraph at the close, choice of "solves the framework / instantiates the
+% parameterization" emphasis) is deferred until the case-study results land in §8.
+% The math below is committed; the framing wrapper around it will be tightened once
+% we know what the empirical story supports.
+
+\paragraph{Setup.}
+Let $i$ index \emph{workload instances} --- one evaluation of a workload over period
+$t_i$. The provider issues a top-down report broken into Scope-1, Scope-2, and
+Scope-3 totals at the level of a \emph{reporting slice} indexed by service $s$ and
+region $r$ (the finest granularity providers publish: per-month, per-project, per-service).
+Let $C_{s,r}^{\downarrow\text{S1}}$, $C_{s,r}^{\downarrow\text{S2}}$, and
+$C_{s,r}^{\downarrow\text{S3}}$ denote the reported per-scope emissions of slice $(s,r)$.
+
+\paragraph{Bottom-up energy.}
+For workload $i$ in slice $(s,r)$ we estimate energy from per-resource quantities:
+\[
+E_{i,s,r} \;=\; \sum_{p} q_p \cdot \varepsilon_p \quad [\text{Wh}],
+\]
+where $p$ indexes resource types (vCPU-hours, GPU-hours, GB-hours of storage, I/O ops,
+network GB) and $\varepsilon_p$ is a per-type energy coefficient. The implied bottom-up
+operational carbon for the slice is
+$O_{s,r} = \sum_i E_{i,s,r}\cdot I_r$, with $I_r$ the location-based grid intensity
+of region $r$. Unobservable resource types simply enlarge the residual below.
+
+\paragraph{Residual bridges.}
+We define one residual per scope:
+\[
+\Delta_{s,r}^{\text{S1}} = C_{s,r}^{\downarrow\text{S1}},
+\quad
+\Delta_{s,r}^{\text{S2}} = C_{s,r}^{\downarrow\text{S2}} - O_{s,r},
+\quad
+\Delta_{s,r}^{\text{S3}} = C_{s,r}^{\downarrow\text{S3}}.
+\]
+$\Delta^{\text{S1}}$ absorbs diesel and refrigerant emissions (bottom-up un-modellable).
+$\Delta^{\text{S2}}$ absorbs PUE, idle capacity, market-vs-location adjustments, and
+energy-model error. $\Delta^{\text{S3}}$ absorbs embodied hardware, building embodied,
+FERA, upstream transport, and the other Scope-3 categories enumerated in
+Table~\ref{tab:bigthree-s3}.
+
+\paragraph{Definition.}
+Reconciliation is performed per $(s,r)$. By default each scope residual is allocated
+across workloads by energy share $w_{i,s,r} = E_{i,s,r}/E_{s,r}$:
+\[
+\text{rSCI}_i
+\;=\;
+\frac{1}{R_i}\sum_{s,r}\Bigl(O_{i,s,r}
+\;+\; w_{i,s,r}\bigl(\Delta_{s,r}^{\text{S1}} + \Delta_{s,r}^{\text{S2}} + \Delta_{s,r}^{\text{S3}}\bigr)\Bigr),
+\]
+which collapses to a single per-slice intensity term:
+\[
+\text{rSCI}_i \;=\; \frac{1}{R_i}\sum_{s,r} E_{i,s,r}\cdot\xi_{s,r},
+\quad
+\xi_{s,r} = I_r + \frac{\Delta_{s,r}^{\text{S1}}+\Delta_{s,r}^{\text{S2}}+\Delta_{s,r}^{\text{S3}}}{E_{s,r}}.
+\]
+The only workload-specific term is $E_{i,s,r}$; $\xi_{s,r}$ is a slice-level effective
+intensity that depends only on grid intensity and per-scope residuals.
+
+\paragraph{Reconciliation by construction.}
+Because $\sum_i w_{i,s,r} = 1$ within a slice, the per-workload metric sums to the
+top-down report:
+\[
+\sum_i \text{rSCI}_i \cdot R_i \;=\; \sum_{s,r}\bigl(C_{s,r}^{\downarrow\text{S1}} + C_{s,r}^{\downarrow\text{S2}} + C_{s,r}^{\downarrow\text{S3}}\bigr).
+\]
+Reconciliation is not a property to check empirically; it is forced by the
+energy-share weighting of the residual bridges.
+
+\paragraph{Why the sunk-carbon fallacy does not arise.}
+In \textsc{sci}, the embodied term $M$ is amortised per server and enters
+\emph{per unit of work} $R$, so it shrinks as inefficient hardware ages
+(\S\ref{sec:background}). In rSCI, embodied carbon lives in
+$\Delta^{\text{S3}}$ and is allocated \emph{per unit of energy}:
+$w_{i,s,r}\Delta^{\text{S3}}_{s,r} \propto E_{i,s,r}$.
+A workload run on older, less efficient hardware draws more energy, takes a larger
+share of the residual, and reports a \emph{higher} rSCI --- the opposite of the
+\textsc{sci} pathology. Routing to legacy hardware therefore stops looking green.
+
+\paragraph{Real-time estimation.}
+The retrospective definition requires $\Delta$ and $E_{s,r}$ from the provider's
+delayed report. To use rSCI as a real-time optimisation signal we factor out grid
+intensity:
+\[
+\xi_{s,r} \;=\; \mu_{s,r}\cdot I_r \;+\; \rho_{s,r},
+\]
+where $\mu_{s,r} = C_{s,r}^{\downarrow\text{S2}}/(E_{s,r}\cdot I_r)$ is the
+\emph{Scope-2 multiplier} (dimensionless; captures PUE and energy-model error) and
+$\rho_{s,r} = (C_{s,r}^{\downarrow\text{S1}}+C_{s,r}^{\downarrow\text{S3}})/E_{s,r}$
+is the \emph{non-electricity overhead intensity} (Scope~1 + 3 per Wh). Both terms are
+load-independent and slow-moving; given estimates $\hat{\mu}$, $\hat{\rho}$ from the
+last reconciled month,
+\[
+\widehat{\text{rSCI}}_i = \frac{1}{R_i}\sum_{s,r} E_{i,s,r}\bigl(\hat{\mu}_{s,r}\cdot I_r + \hat{\rho}_{s,r}\bigr),
+\]
+with current $I_r$. With no history, $\hat{\mu}=1$, $\hat{\rho}=0$, and
+$\widehat{\text{rSCI}}$ degenerates to \textsc{o-sci} --- the framework degrades
+gracefully to the prior-art operational metric when reconciliation data is
+unavailable.
+
+\paragraph{Precision scales with data fidelity.}
+rSCI is a \emph{class} of metrics, not a fixed equation. Its precision is bounded by
+three axes: bottom-up model quality (coverage and accuracy of $\varepsilon_p$),
+top-down reporting granularity (slice resolution + cadence), and the
+unit-of-work $R$. As each improves, $\Delta$ shrinks, but reconciliation holds at
+any level of data fidelity. The asks in \S\ref{sec:asks} target the second axis.
 
 \section{Making rSCI Computable}
 \label{sec:asks}

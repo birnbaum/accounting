@@ -5,7 +5,7 @@
 ## Authoritative sources in this folder
 
 - `azure-chem-2026.pdf` — **Microsoft Cloud Hardware Emissions Methodology (CHEM)** whitepaper, Jan 2026. Process-based LCA for hardware (rack, disk drive, server blades, FPGA, PSU, other). Builds on PDM/FMD data, Makersite material-to-LCI mapping, imec SSTS for semiconductors, ecoinvent LCI database, AI-augmented proxy selection.
-- `microsoft-cloud-carbon-study-2018.pdf` — **2018 Microsoft Cloud Carbon Study** (Microsoft + WSP). The foundational LCA the customer-tool methodology cites for Scope 1 + 2. *The 2021 update of this paper is the source of the famous "footnote 2" non-reconciliation disclosure between customer tool and corporate methodology. Verify which version of the PDF this folder holds before quoting the footnote.*
+- `microsoft-cloud-carbon-study-2018.pdf` — **The carbon benefits of cloud computing, A study on the Microsoft Cloud in partnership with WSP, Updated 2020**. Verified by reading the cover page on 2026-05-17 — this is the 2020 update of the 2018 study, **NOT** the 2021 Scope-3 Whitepaper. The famous "footnote 2" non-reconciliation passage between customer tool and corporate methodology is reportedly in a separate 2021 Scope-3 Whitepaper that is **not yet in this folder**. *Action item for the user*: locate and add the 2021 Scope-3 Whitepaper PDF (or confirm that "footnote 2" appears in this 2020 update, which my reading does not support). Until then, any paper.tex citation of "Microsoft 2021 Scope-3 Whitepaper footnote 2" is unverified.
 - `microsoft-carbon-aware-computing-whitepaper.pdf` — 2023 Microsoft whitepaper on carbon-aware computing. Use sparingly; mostly product-marketing rather than methodology.
 
 ## Azure-methodology page (web-only — needs manual capture)
