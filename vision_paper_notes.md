@@ -71,42 +71,29 @@ Mathematically precise. The theory is the contribution, since experiments are li
 *   **What it preserves:** the oSCI real-time sensitivity. The $I_r$ term still moves with grid intensity and workload energy; the $\Delta$ term is the audited anchor.
 *   Connect each property back explicitly to §2 (sunk carbon) and §3 (fallback allocations, delay, granularity).
 
-### 5. Making rSCI Computable: The "Billing Frequency" Contract
-Reframed from earlier "implications" list. We acknowledge up front: **rSCI is currently not fully computable in real-time** on any major provider, because of the failures documented in §3 — notably the delay and low frequency of top-down reporting (monthly).
+### 5. rSCI in Practice: Why It Cannot Be Computed Today
+**(Replaces the dropped "Making rSCI Computable: The Billing Frequency Contract" framing.)**
+The negative-result / vision part. §4 shows rSCI closes the four gaps in theory; this section shows it cannot be computed on today's provider reports because the top-down side is too coarse, too delayed, and methodologically opaque.
 
-However, we argue that the solution is not for providers to expose proprietary datacenter telemetry. Instead, the fix requires aligning carbon reporting with financial billing.
+Working hypothesis (strong prior; not yet confirmed): at monthly cadence + per-service granularity, the actionable component of $\widehat{\text{rSCI}}$ is dominated by residual noise — the bottom-up signal is not improved by reconciliation against a report whose cadence is 12$\times$ the workload churn rate. If experiments say otherwise, §5/§6 framing flexes.
 
-*   **Ask 1 — Carbon at Billing Frequency:** Financial billing (e.g., AWS CUR) provides hourly, resource-level granularity. Top-down carbon reporting must match this frequency. Monthly sampling is fundamentally incompatible with the rate of application churn, preventing real-time state estimation.
-*   **Ask 2 — Granular reporting with fewer fallbacks:** allocate the "Other" bucket via physical telemetry (power, utilization) rather than revenue. Report at finer granularity (per resource, per hour where feasible).
-*   **Ask 3 — Methodological fidelity:** exports must match published methodology. Azure's documented location-based Scope 2 should actually appear in the exported data.
+*   **Synthetic experiment (planned, marked `% TODO C3` in paper.tex).** Toy fleet × 12 months × realistic drifts (PUE seasonality, HW refresh halving $\rho$ over Q2, hourly grid variance). Degrade observability to provider reality, recover $\hat\mu,\hat\rho$, plot error vs. cadence/granularity.
+*   **Real-world vignettes.** AWS Frankfurt: ~70% revenue-allocated "Other", caps addressable share. Azure Frankfurt: LBM=0 export, spatial-shifting structurally invisible.
+*   **Lever × provider matrix** (folded into this section, was originally separate §6). Compute efficiency = structural mismatch across all Big-3. Right-sizing direct everywhere. Spatial shifting broken on Azure. Temporal shifting only approximate on GCP.
 
-If providers fulfill Ask 1 (hourly/daily top-down reporting), rSCI becomes computable without requiring providers to expose their internal PUE or embodied carbon metrics. High-frequency reporting unlocks the use of standard state-estimation techniques (like Kalman filters) to derive these values dynamically (see §7).
+### 6. Closing the Gap: A Call to Action
+**(Was §7 Discussion; renamed and restructured into three buckets.)**
+*   **Provider asks:** carbon at billing frequency (hourly, resource-level); replace revenue/cost fallbacks with physical telemetry; reconcile customer-tool with corporate disclosure; publish materiality assessments for excluded Scope-3 categories.
+*   **Estimation techniques:** cross-tenant pooling for $\hat\mu,\hat\rho$; Kalman-filter state-estimation over reconciled-month sequences; Shapley-value attribution (or proxies) for embodied carbon to sharpen the peak-shaving incentive.
+*   **Standards / policy:** cloud-specific GHG-Protocol guidance (allocation, lifetimes, EAC matching); tool-implementation assurance not just methodology-document review; reconciliation requirement between customer-tool and corporate disclosure.
 
-This is our honest evaluation story: not "we measured rSCI on real workloads," but "rSCI is currently blocked by specific, nameable provider methodology failures — and those failures are themselves the evidence that reconcilability is the right requirement."
-
-### 6. Upstream Effects: A Reconcilable Bottom-Up Signal Exposes Provider Flaws
-The lever × provider matrix as the centerpiece of this section. The point: a reconcilable metric makes provider methodology choices *visible and challengeable* in a way that top-down-only reporting never did.
-
-*   **The lever × provider matrix:**
-    *   Rows: optimization levers — compute efficiency, temporal shifting, spatial shifting, right-sizing, architecture choice.
-    *   Columns: AWS, GCP, Azure.
-    *   Cells: `direct` / `approximate` / `structural_mismatch`.
-    *   Punchline: **compute efficiency reconciles nowhere.** The signal engineers care about most is invisible in every provider's report.
-*   **Azure critique:** Azure's Scope 2 = 0 export breaks spatial shifting and grid-intensity optimization entirely; its methodology/export mismatch is a concrete case of a provider *choosing* to be unreconciled.
-*   **AWS critique:** revenue-based allocation for the "Other" bucket turns code-level optimization into bill-level optimization, which collapses carbon accounting into price accounting.
-*   **GCP:** most methodologically honest of the three; still uses cost-based fallbacks where usage data is missing.
-*   Broader claim: without a bottom-up reconcilable framework like rSCI, these provider-side methodology choices are invisible to the customer. rSCI doesn't just serve engineers — it gives the rest of the accounting ecosystem a lens to push back on providers.
-
-### 7. Discussion / Call to Action (short)
-*   Reconcilability is a *requirement*, not a feature. The residual-bridge structure is forced by it; rSCI is the first worked-out metric carrying that structure.
-*   What is open (and what we invite the community to take up): the *parameterization* of the framework.
-    *   Is per-unit-energy the right $\Delta$ allocation, or should it follow $vCPU \cdot h$ or other physical proxies?
-    *   What is the right cadence for residual updates — monthly (matching current top-down reports) or billing-frequency (hourly)?
-    *   **Cross-tenant pooling & state estimation.** If providers adopt billing-frequency carbon reporting, the sampling rate outpaces workload churn. This unlocks Kalman filters or distributed Bayesian state estimation over pooled cross-tenant $(E_{\text{bottom-up}}, C_{\text{top-down}})$ tuples to reverse-engineer region-level $\mu$ and $\rho$ without providers exposing proprietary infrastructure. **TODO:** synthetic / toy convergence experiment to show the estimator behaves under realistic sampling rates and churn — reviewers will ask.
-    *   **Auditability of $\varepsilon_p$.** How do we standardize the energy coefficients used in the bottom-up model so rSCI is comparable across organizations?
-    *   How do multi-tenant and serverless settings reshape the decomposition? (Hook to Basu Roy et al.)
-    *   Who owns the resulting standard — GSF, GHG Protocol, a joint effort?
-*   The requirement is non-negotiable; the metric is a first draft.
+### 7. Future Work
+*   **Beyond carbon.** Residual-decomposition is signal-agnostic. Replace $C^{\downarrow}_{s,r}$ with top-down water-use report → "water per unit of work" metric. Same for waste, abiotic, etc. Scaleway/OVHcloud already report water.
+*   **Attribution refinements.** Kalman filters for $\hat\mu$ state-estimation; Shapley values (or LOO proxies) for embodied carbon — sharpens peak-shaving incentive beyond plain energy-share.
+*   **tSCI ↔ rSCI parallel.** Same goal (whole-picture per-job allocation), opposite direction (tSCI bottom-up via DC telemetry; rSCI top-down via provider report). Hybrid (tSCI on provider side as the top-down anchor for rSCI on customer side) is intriguing.
+*   **Multi-tenant / serverless.** Residual allocation across tenants in a shared warm pool. Hook to Basu Roy et al.
+*   **$\varepsilon_p$ standardisation.** Sociotechnical step needed to make rSCI comparable across orgs.
+*   Open question on standards ownership (GSF / GHG Protocol / joint effort).
 
 ## Data story (internal — do not write in paper)
 

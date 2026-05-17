@@ -45,10 +45,12 @@ Abstract goes here.
 \maketitle
 
 \section{Introduction}
-% TODO: full Introduction + Abstract framing is deferred until §8 (Evaluation/case study)
-% results land. The thesis sentence, contributions list, and abstract will be tightened
-% once we know what the empirical story actually supports. §2--§6 math and content are
-% committed; the framing wrapper around them is the moving piece.
+% TODO: full Introduction + Abstract framing is deferred until §5 (rSCI in Practice)
+% analysis + experiments land. The thesis sentence, contributions list, and abstract
+% will be tightened once we know what the empirical story actually supports.
+% §2 (Background) and §4 (rSCI theory) content is committed; §5/§6 framing is
+% provisional and follows the strong prior "rSCI cannot be computed today because
+% reporting is too coarse" --- if experiments say otherwise, the framing flexes.
 Introduction goes here.
 
 \section{Background: SCI and the Sunk Carbon Fallacy}
@@ -83,11 +85,26 @@ lands on. \textsc{o-sci} is cheap to compute; \textsc{t-sci} is sound but demand
 datacenter-wide telemetry that public-cloud customers cannot
 access~\cite[\S3.1]{bashir2024}.
 
-Bashir's critique exposes one weakness of \textsc{sci}: embodied-carbon mis-allocation
-biasing scheduling. We argue there is a second, structurally distinct weakness: every
-member of the \textsc{sci} family is constructed without reference to the top-down
-provider report it must reconcile with. The next section grounds this critique in what
-providers actually publish today.
+\textsc{o-sci} resolves the sunk-carbon fallacy by dropping embodied carbon entirely,
+but this is not free. Without an embodied term, \textsc{o-sci} (i) does not reward
+frugal hardware reservation beyond what energy savings already imply; (ii) gives no
+signal to prefer hardware procured with low-embodied processes; and (iii) does not
+disincentivize peak-hour use --- the lever that delays new hardware purchases in
+capacity-constrained datacenters. \textsc{t-sci} would restore these incentives by
+construction, but, as Bashir notes, it requires comprehensive datacenter-level
+information that public-cloud customers cannot
+access~\cite[\S3.1]{bashir2024}.\footnote{The tSCI ambition --- allocating the full
+datacenter footprint to individual jobs --- is closely related to ours, but tackled
+from the opposite direction. We return to this parallel in \S\ref{sec:future-work}.}
+
+There is a second, structurally distinct weakness shared by every variant in the
+\textsc{sci} family: none of them connects to the cloud provider's customer-allocated
+GHG report. An engineering team that improves \textsc{sci}, \textsc{o-sci}, or
+\textsc{t-sci} cannot point to a matching change in the company's corporate
+sustainability disclosure. A metric whose improvement does not land in audited
+reporting will not be funded, sustained, or trusted at scale --- and the cloud
+provider's number does not move in response to bottom-up optimisation. The next
+section grounds this second critique in what providers actually publish today.
 
 \section{State of the Art in Cloud Carbon Accounting}
 \label{sec:sota}
@@ -312,11 +329,18 @@ residual that \S\ref{sec:rsci} makes explicit through the rSCI decomposition.
 \section{rSCI: Reconciling Bottom-Up and Top-Down}
 \label{sec:rsci}
 
-% NOTE: high-level framing (one-sentence thesis at the open, properties-and-implications
-% paragraph at the close, choice of "solves the framework / instantiates the
-% parameterization" emphasis) is deferred until the case-study results land in §8.
-% The math below is committed; the framing wrapper around it will be tightened once
-% we know what the empirical story supports.
+% NOTE: framing wrapper depends on §5 experiments. Math is committed; opening list
+% of "four gaps closed" follows the §2 critique structure.
+
+We introduce \emph{Reconcilable SCI} (rSCI), a per-workload metric designed to close
+four gaps identified in \S\ref{sec:background} and \S\ref{sec:sota}:
+(i) the sunk-carbon fallacy of \textsc{sci};
+(ii) the loss of embodied-carbon incentives in \textsc{o-sci};
+(iii) the absence of a peak-shaving / hardware-procurement signal in \textsc{o-sci};
+(iv) the disconnect between every \textsc{sci} variant and the cloud provider's
+top-down carbon report.
+rSCI does so by anchoring a bottom-up energy model to the provider's top-down per-scope
+report via per-slice residual bridges.
 
 \paragraph{Setup.}
 Let $i$ index \emph{workload instances} --- one evaluation of a workload over period
@@ -379,15 +403,25 @@ top-down report:
 Reconciliation is not a property to check empirically; it is forced by the
 energy-share weighting of the residual bridges.
 
-\paragraph{Why the sunk-carbon fallacy does not arise.}
-In \textsc{sci}, the embodied term $M$ is amortised per server and enters
-\emph{per unit of work} $R$, so it shrinks as inefficient hardware ages
-(\S\ref{sec:background}). In rSCI, embodied carbon lives in
-$\Delta^{\text{S3}}$ and is allocated \emph{per unit of energy}:
-$w_{i,s,r}\Delta^{\text{S3}}_{s,r} \propto E_{i,s,r}$.
-A workload run on older, less efficient hardware draws more energy, takes a larger
-share of the residual, and reports a \emph{higher} rSCI --- the opposite of the
-\textsc{sci} pathology. Routing to legacy hardware therefore stops looking green.
+\paragraph{Properties.}
+The energy-share weighting of the residuals closes the four gaps from the section
+opening. (i) \emph{Sunk-carbon}: in \textsc{sci}, the embodied term $M$ is amortised
+per server and enters \emph{per unit of work}, so it shrinks as inefficient hardware
+ages. In rSCI, embodied carbon lives in $\Delta^{\text{S3}}$ and is allocated
+\emph{per unit of energy}: $w_{i,s,r}\Delta^{\text{S3}}_{s,r}\propto E_{i,s,r}$. A
+workload on older, less-efficient hardware draws more energy, takes a larger residual
+share, and reports a \emph{higher} rSCI --- the opposite of the \textsc{sci} pathology.
+(ii) \emph{Embodied incentive}: because $\Delta^{\text{S3}}$ rides on the same
+energy-share weighting, workloads sized to fit the actual demand --- rather than
+over-reserved --- get a smaller embodied burden than under \textsc{o-sci}, which
+ignores embodied entirely. (iii) \emph{Peak-shaving / procurement deferral}: at
+provider scale, $\Delta^{\text{S3}}$ reflects the amortised embodied carbon of the
+fleet that exists to serve peak demand. A workload that contributes to peak draws
+more energy at the moment when $\xi_{s,r}$ is highest and is correspondingly
+penalised; \textsc{o-sci} is blind to this. (iv) \emph{Reconciliation}: the energy-share weights satisfy
+$\sum_i w_{i,s,r}=1$ within each slice, so the per-workload metric sums to the
+provider's top-down report as a structural identity, not an empirical check (see
+\emph{Reconciliation by construction} above).
 
 \paragraph{Real-time estimation.}
 The retrospective definition requires $\Delta$ and $E_{s,r}$ from the provider's
@@ -410,33 +444,192 @@ $\widehat{\text{rSCI}}$ degenerates to \textsc{o-sci} --- the framework degrades
 gracefully to the prior-art operational metric when reconciliation data is
 unavailable.
 
+\paragraph{Attribution refinements.}
+The energy-share weighting $w_{i,s,r}$ is the simplest legal allocation; the framework
+admits scope-specific weights $w^{k}_{i,s,r}$ for each residual sub-component as long
+as $\sum_i w^{k}_{i,s,r}=1$. Two concrete refinements sharpen the incentives:
+state-estimation (e.g.\ Kalman filtering across reconciled months and across pooled
+tenants) for the operational multiplier $\hat\mu$; and Shapley-value attribution
+(or tractable proxies such as leave-one-out marginals) for the embodied term, which
+allocates embodied burden by a workload's \emph{marginal} contribution to peak
+demand --- sharpening property~(iii) above beyond plain energy-share weighting. We
+treat both as future work in \S\ref{sec:future-work}.
+
 \paragraph{Precision scales with data fidelity.}
 rSCI is a \emph{class} of metrics, not a fixed equation. Its precision is bounded by
 three axes: bottom-up model quality (coverage and accuracy of $\varepsilon_p$),
 top-down reporting granularity (slice resolution + cadence), and the
 unit-of-work $R$. As each improves, $\Delta$ shrinks, but reconciliation holds at
-any level of data fidelity. The asks in \S\ref{sec:asks} target the second axis.
+any level of data fidelity. The next section confronts the theory with today's
+provider reports.
 
-\section{Making rSCI Computable}
+\section{rSCI in Practice: Why It Cannot Be Computed Today}
+\label{sec:practice}
+
+% TODO: revise after experiments. Working hypothesis: at monthly cadence + per-service
+% granularity, the actionable component of rSCI is dominated by residual noise. If
+% experiments say otherwise, the framing here must flex --- but §2/§3/§4 are independent.
+
+\S\ref{sec:rsci} showed that rSCI closes the four gaps from \S\ref{sec:background} in
+theory. The actionable question is whether today's provider reports supply
+$\Delta^{\text{S1,S2,S3}}$ at a cadence and granularity that lets a workload-level
+signal $\widehat{\text{rSCI}}_i$ be \emph{recovered}. Drawing on the SOTA in
+\S\ref{sec:sota}, the strong prior is no.
+
+\paragraph{Synthetic experiment (planned).}
+% TODO C3: implement and plot. Experimental design:
+% - Toy fleet: 1000 workloads, 3 SKUs, 2 regions, 12 months.
+% - Ground truth: \xi_{s,r}(t) drifts realistically — PUE seasonality, a hardware
+%   refresh that halves \rho over Q2, hourly grid-intensity variance from Electricity Maps.
+% - Degrade observability to monthly × per-service × per-region (what AWS/Azure/GCP
+%   actually expose) and run the §4 real-time estimator on the degraded reports.
+% - Plot estimation error of \hat{\mu}, \hat{\rho} as a function of (a) reporting
+%   cadence (monthly → weekly → daily → hourly), (b) slice granularity (service-level
+%   → resource-group → resource).
+% Expected finding: at the actual provider cadence/granularity, residual noise
+% dominates the actionable signal --- \widehat{rSCI}_i collapses toward o-sci even
+% with a perfect bottom-up energy model.
+
+A controlled experiment shows the gap between rSCI's theoretical reconciliability and
+its practical computability. We will simulate a toy fleet with realistic drifts in
+$\xi_{s,r}$ (PUE seasonality, hardware refresh, hourly grid intensity), then degrade
+observability to today's provider granularity (monthly $\times$ per-service $\times$
+per-region) and attempt to recover $\hat\mu,\hat\rho$ via the \S\ref{sec:rsci}
+estimator. Under the strong prior we expect estimation error large enough that
+$\widehat{\text{rSCI}}_i$ collapses toward \textsc{o-sci} --- the bottom-up signal is
+not improved by reconciliation against a report whose cadence is twelve times the
+churn rate of the underlying workload.
+
+\paragraph{Real-world vignettes.}
+% TODO: revise after experiments
+The same structural failure shows up in two of our case studies.
+On an AWS Frankfurt account over nine months, $\sim$70\,\% of reported emissions fall
+into the revenue-allocated ``Other'' bucket (cf.\ Table~\ref{tab:tier-a},
+footnote~$a$); only $\sim$30\,\% is allocated by physical proxies, capping any
+addressable share that bottom-up optimisation can move.
+On an Azure Frankfurt export the location-based Scope-2 line is effectively zero (cf.\
+Table~\ref{tab:tier-a}, footnote~$f$): spatial-shifting and grid-intensity
+optimisations are structurally invisible to the dashboard even when they reduce real
+physical emissions.
+
+\paragraph{Lever $\times$ provider: what moves the reported number.}
+% TODO: revise after experiments
+Aggregating the per-provider methodology details from \S\ref{sec:sota} along
+engineering levers gives the matrix in Table~\ref{tab:levers}. The pattern is
+asymmetric: compute-efficiency improvements (utilisation, perf tuning) are
+\emph{structurally invisible} across all three Big-3 providers because none of their
+customer surfaces reflects compute utilisation~\cite[\S15]{schneider-mattia-2024}.
+Right-sizing reduces vCPU-hours and therefore moves all three; spatial shifting works
+on AWS and GCP but breaks on Azure due to the LBM=0 export; temporal shifting only
+approximates on GCP via its hourly carbon-free-energy percentage and is structurally
+blocked elsewhere.
+
+\begin{table}[t]
+\centering
+\caption{Engineering lever versus reported-number impact on AWS, GCP, and Azure.
+\yes\ direct (reported number moves), \maybe\ approximate or partial,
+\no\ structural mismatch (no movement under current methodology).}
+\label{tab:levers}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}l c c c@{}}
+\toprule
+Lever & AWS & GCP & Azure \\
+\midrule
+Right-sizing (fewer vCPU-h) & \yes & \yes & \yes \\
+Spatial shifting (region choice) & \yes & \yes & \no \\
+Temporal shifting (time-of-day) & \no & \maybe & \no \\
+Compute efficiency (utilisation, perf) & \no & \no & \no \\
+Architecture / SKU choice & \maybe & \maybe & \maybe \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Closing the loop.}
+% TODO: revise after experiments
+rSCI is a sound bottom-up/top-down bridge in theory; it cannot be computed in
+practice on today's provider reports because the top-down side is too coarse, too
+delayed, and methodologically opaque. The next section identifies the specific
+provider, estimation, and standards changes needed to close the gap.
+
+\section{Closing the Gap: A Call to Action}
 \label{sec:asks}
 
-% TODO: see vision_paper_notes.md §5. Three asks: billing-frequency carbon, granular
-% reporting w/o revenue/cost fallbacks, methodological fidelity (Azure LBM export).
+% TODO: revise after experiments. Working hypothesis: the three buckets below
+% (providers / estimation / standards) are the right partition; specifics may shift
+% based on which axis the experiments show is most bottle-necked.
 
-\section{Upstream Effects: Lever × Provider Matrix}
-\label{sec:levers}
+If reconciliation-by-construction is structurally available but empirically
+unrealised, the question is what would change that. We see three complementary
+buckets.
 
-% TODO: see vision_paper_notes.md §6. The "no utilization signal" finding lives here,
-% not in §3. Lever rows × AWS/GCP/Azure columns; direct/approximate/structural-mismatch.
+\paragraph{Provider asks.}
+Customer carbon must be reported at \emph{billing frequency} (hourly, resource-level)
+to match the rate at which workloads change. Revenue and ``equivalent revenue''
+fallbacks (AWS non-foundational; cf.\ Table~\ref{tab:tier-a} footnote~$a$) should be
+replaced with physical-telemetry allocation. Customer-tool methodology must reconcile
+with corporate disclosure --- Microsoft's open admission that the two do not match
+(\S\ref{sec:sota}) is a contract violation against the customer's reporting need, not
+a feature. Excluded Scope-3 categories require published materiality assessments, as
+the GHG Protocol already mandates.
 
-\section{Discussion}
-\label{sec:discussion}
+\paragraph{Estimation techniques.}
+Even at current reporting cadence, three lines of estimation can compress the
+residual: (a) cross-tenant pooling of $\hat\mu_{s,r}, \hat\rho_{s,r}$, since these
+quantities are driven by provider methodology rather than individual customers;
+(b) Kalman-filter state-estimation over reconciled-month sequences to track drift in
+PUE and hardware refresh; (c) Shapley-value attribution (or tractable proxies) for
+the embodied term to sharpen the peak-shaving incentive beyond plain energy-share
+weighting. We do not require providers to expose proprietary telemetry --- only to
+report often enough that customer-side estimation can converge.
 
-% TODO: see vision_paper_notes.md §7.
+\paragraph{Standards and policy.}
+The GHG Protocol is under-specified for cloud~\cite[see][]{schneider-mattia-2024};
+allocation of shared infrastructure, equipment lifetimes, EAC temporal matching, and
+building embodied carbon are interpretive divergences arising from gaps in the
+standard, not violations~\cite[see ``Under-Specified GHG Protocol Areas'']{bashir2024}.
+A cloud-specific gold standard must close these and require independent assurance of
+\emph{tool implementation}, not just the methodology document.
 
-\section{Evaluation}
+\section{Future Work}
+\label{sec:future-work}
+
+% TODO: tighten after §5 lands. Current draft covers (i) signals beyond carbon,
+% (ii) attribution refinements, (iii) tSCI parallel, (iv) multi-tenant/serverless,
+% (v) energy-coefficient standardisation.
+
+The residual-decomposition framework is \emph{signal-agnostic}: replace
+$C^{\downarrow}_{s,r}$ with a top-down water-use report and the same machinery yields
+a ``water per unit of work'' metric reconcilable with the provider's water disclosure.
+Scaleway and OVHcloud already publish water; abiotic-resource and waste signals could
+follow. A unified attribution layer would let the community extend reconciliable
+metrics to any sustainability dimension a provider chooses to report.
+
+On the attribution side, the energy-share weighting in \S\ref{sec:rsci} is a
+deliberately simple default. Kalman filtering for $\hat\mu$ state-estimation and
+Shapley-value attribution (or tractable proxies) for embodied carbon are the two
+concrete refinements we see most leverage in --- the latter sharpens the
+peak-shaving / hardware-procurement incentive in a way energy-share weighting cannot.
+
+Bashir's \textsc{t-sci} and rSCI share the goal of allocating the whole datacenter
+footprint to individual jobs, but tackle it from opposite directions: \textsc{t-sci}
+aggregates bottom-up using datacenter telemetry only providers have; rSCI inverts
+the problem and absorbs the same overhead from the top-down report. Both are sound;
+rSCI is the version a customer can actually compute. A hybrid that uses \textsc{t-sci}
+on the provider side as the top-down anchor for rSCI on the customer side is an
+intriguing direction.
+
+Multi-tenant and serverless settings reshape the residual decomposition in ways we
+do not address here; how to allocate the residual across tenants sharing a single
+warm pool is open. Finally, standardising the bottom-up energy coefficients
+$\varepsilon_p$ so rSCI is comparable across organisations is the remaining
+sociotechnical step.
 
 \section{Conclusion}
+\label{sec:conclusion}
+
+% TODO: written last, after the experiments. One paragraph: theory closes the gap,
+% practice does not yet, here is what to do about it.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
