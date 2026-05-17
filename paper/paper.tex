@@ -1,6 +1,20 @@
 \documentclass[sigconf, review, anonymous, 9pt]{acmart}
 
 \usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{makecell}
+\usepackage{pifont}
+\usepackage{threeparttable}
+\usepackage[referable]{threeparttablex}
+\renewcommand\theadfont{\bfseries}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+% Coverage symbols: \yes (full), \maybe (partial / w/ caveat), \no (excluded), \na (not applicable)
+\newcommand{\yes}{\ding{51}}
+\newcommand{\no}{\ding{55}}
+\newcommand{\maybe}{\ensuremath{\circ}}
+\newcommand{\na}{\textendash}
 
 \AtBeginDocument{%
   \providecommand\BibTeX{{Bib\TeX}}}
@@ -29,7 +43,254 @@ Introduction goes here.
 
 \section{Related Work}
 
-\section{Methodology}
+\section{State of the Art in Cloud Carbon Accounting}
+\label{sec:sota}
+
+% NOTE for §2 (when drafted): end §2 with the bridge sentence:
+% "Bashir's critique exposes one weakness of SCI -- embodied-carbon mis-allocation. We argue
+% there is a second, structurally distinct weakness: SCI is constructed without reference
+% to the top-down provider report it must reconcile with. The next section grounds this
+% second critique in what providers actually publish today."
+
+\paragraph{Landscape.}
+A survey of 40+ cloud providers (May~2026) finds that only eleven ship a first-party,
+per-customer carbon dashboard.\footnote{We exclude marketplace third-party SaaS such as
+Huella Cloud on Huawei Cloud (vendor: SGS Solutions), since the per-provider allocation is
+not auditable against the provider's own emission factors. Exoscale's calculator is
+borderline (Exoscale-branded surface, CloudAssess engine by Resilio/Kleis) and is
+omitted from Table~\ref{tab:tier-a}.}
+Of the remaining $\sim$30, most publish corporate-level Scope~1/2/3 disclosures only
+(Tier~B) or marketing-grade renewable/PUE claims (Tier~C).
+The fastest-growing segment --- AI/GPU clouds (CoreWeave, Lambda, Crusoe, Nebius,
+RunPod, Together, Replicate, Hyperstack, DataCrunch) --- has \emph{zero} per-customer
+tools. Table~\ref{tab:tier-a} compares the eleven Tier-A tools on \emph{what} is
+included (service coverage; per-scope inclusion; embodied carbon), \emph{how} it is
+computed (allocation key), and \emph{whether} the result is independently verified.
+
+\begin{table*}[t]
+\centering
+\caption{First-party customer-facing cloud carbon accounting tools (May~2026), verified
+live 2026-05-17. \yes\ included, \maybe\ included with caveat (see lettered note), \no\ excluded,
+\na\ not surfaced.}
+\label{tab:tier-a}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{threeparttable}
+\begin{tabularx}{\textwidth}{@{}p{2.1cm} L c c c c c L L@{}}
+\toprule
+\thead[l]{Provider \\ (tool)} &
+\thead[l]{Service coverage} &
+\thead[c]{S1} &
+\thead[c]{S2 \\ LBM} &
+\thead[c]{S2 \\ MBM} &
+\thead[c]{S3} &
+\thead[c]{Embod.} &
+\thead[l]{Allocation key} &
+\thead[l]{Assurance} \\
+\midrule
+\textbf{AWS} \newline Sustainability Console &
+Most services; revenue fallback for non-foundational\tnote{a} &
+\yes & \yes & \yes & \yes & \yes &
+Instance-hours (foundational); equivalent revenue (non-foundational) &
+Apex (ISO~14064-3, \emph{ltd.}, methodology only) \\
+
+\textbf{GCP} \newline Carbon Footprint &
+100+ services; four explicitly excluded\tnote{b} &
+\yes & \yes & \yes & \yes\tnote{c} & \yes &
+vCPU-h $\times$ list-price-proportional SKU factor\tnote{d}; non-electricity S3 by electricity-share ratio &
+Fraunhofer IZM (LCA critical review only; no ISO~14064-3) \\
+
+\textbf{Azure} \newline EID + Carbon Optimization &
+Excludes Azure Government, all China regions, Germany Sovereign\tnote{e} &
+\yes & \yes & \maybe\tnote{f} &
+\maybe\tnote{g} &
+\maybe\tnote{h} &
+Per-region usage factor (parameters undisclosed; ``normalized cost'' per 2021 whitepaper, ``compute/storage/data-transfer time'' per 2025 docs) &
+WSP USA (S3 \emph{document} only; tool implementation not audited) \\
+
+\textbf{Oracle} (OCI) \newline Carbon Emissions Analysis &
+Power-based for a subset of Gen-2 services; spend-based for the rest\tnote{i} &
+\na & \yes & \yes\tnote{j} & \na & \no &
+Power-based: kWh $\times$ regional EF; Spend-based: pre-discount~\$ $\times$ regional EF &
+\na \\
+
+\textbf{IBM Cloud} \newline Carbon Calculator &
+Subset (launched with COS, IKS, Virtual Server VPC/Classic); ``more service coverage planned quarterly'' &
+\yes & \yes & \no & \no & \no\tnote{k} &
+Service electricity $\times$ location PUE $\times$ location CEF &
+\na (footnote: ``client is responsible for confirming accuracy'') \\
+
+\textbf{Alibaba Cloud} \newline Energy Expert (paid product) &
+Compute, storage, network, database, CDN &
+\yes & \yes & \yes & \maybe\tnote{l} & \na &
+Three-stage: IDC PUE $\times$ cloud-product $\times$ tenant usage &
+\textbf{Bureau Veritas} (ISO~14064-3, \emph{data} assurance)\tnote{m} \\
+
+\textbf{OVHcloud} \newline Environmental Impact Tracker &
+Bare Metal + Hosted Private Cloud + Public Cloud Compute; \textbf{storage and web hosting still pending} (v2.0, Apr~2025) &
+\yes & \yes & \yes & \yes\tnote{n} &
+\maybe\tnote{o} &
+Physical-config $\times$ PUE $\times$ EF; mutualized products via template-weight $\times$ billed hours &
+IJO + Cost House (methodology review, Bilan~Carbone\textsuperscript{\textregistered}) \\
+
+\textbf{Scaleway} \newline Environmental Footprint Calculator &
+7 products (Bare Metal, Instances, Block/Object Storage, LB, Kubernetes, Managed DB) &
+\yes & \yes & \yes & \yes\tnote{p} & \yes &
+Per-resource LCA (Boavizta models) + ADEME DC factors &
+\na (co-developed with IJO) \\
+
+\textbf{Akamai} \newline Carbon Calculator &
+\textbf{Delivery products only} (excludes Linode / Connected Cloud compute)\tnote{q} &
+\na & \na & \na & \maybe\tnote{r} & \na &
+Byte~\& machine utilization per DC &
+\na (corporate emissions audited separately) \\
+
+\textbf{Cloudflare} \newline Carbon Impact Report &
+All plans (free~+~paid); edge bytes across the global PoP network &
+\na & \na & \na & \maybe\tnote{s} & \no &
+Per-customer data-transfer bytes $\times$ per-request energy factor &
+\na (corporate under SBTi) \\
+
+\textbf{Fastly} \newline Sustainability Dashboard &
+Fastly Delivery + Compute; excludes third-party backends &
+\no\tnote{t} & \yes & \yes & \maybe\tnote{u} & \no\tnote{v} &
+CPU-time apportionment (Compute); transfer volume (Delivery); 25\,\% PDU-overhead correction &
+\na \\
+\bottomrule
+\end{tabularx}
+\begin{tablenotes}[para,flushleft]\scriptsize
+\item[\textit{a}] AWS's Model~3.0 methodology document defines a ``foundational vs.\ non-foundational'' service distinction but publishes neither the list of services in each tier nor the share of total emissions allocated by equivalent revenue.
+\item[\textit{b}] Apigee, AppSheet, Google Security Operations, Looker.
+\item[\textit{c}] GCP covers Cat~2 (incl.\ buildings), Cat~3 (FERA), Cat~6 (business travel) and Cat~7 (employee commuting). End-of-life and Cat~5 are excluded.
+\item[\textit{d}] Schneider \& Mattia (2024, §3.6) note that customers therefore receive a signal proportional to list price, not to the physical emissions of switching SKUs.
+\item[\textit{e}] Per the January~2026 Microsoft Learn methodology page, these regions are not in the customer dashboard --- coverage is not uniform across Microsoft's own footprint.
+\item[\textit{f}] Methodology documents both LBM and MBM, but the exported data carries only MBM; LBM is effectively zero in customer exports (confirmed empirically on our Frankfurt case study).
+\item[\textit{g}] Covers Cat~1, 2 (IT only), 4, 5, 9, 12 --- the broadest S3 count of any Big-3 provider, but excludes FERA (Cat~3) and building embodied carbon. Uniquely includes Cat~12 end-of-life.
+\item[\textit{h}] CHEM process-based LCA for IT hardware; building-shell embodied excluded.
+\item[\textit{i}] Oracle's docs warn: ``Carbon Emissions Analysis isn't intended to be used as a developer tool to reduce emissions.''
+\item[\textit{j}] All EU regions report MBM = 0 by design --- Oracle's PPA contracts produce zero market-based emissions in Europe.
+\item[\textit{k}] Raw-material extraction and equipment manufacturing are explicitly out of scope per methodology v3.
+\item[\textit{l}] Reports only the ``leased computer rooms'' slice of Scope~3 --- broader S3 categories not addressed in public docs.
+\item[\textit{m}] The only third-party \emph{data} assurance in this set; AWS/GCP/Azure assurers cover methodology documents only.
+\item[\textit{n}] Broad S3: freight, buildings, water, waste, devices, business travel, employee commute, backbone.
+\item[\textit{o}] Component LCA with published per-component emission factors (5\,yr amortization). The energy model assumes 100\,\%/24$\times$7 workload until smart-PDU deployment completes; customer numbers are therefore over-estimates relative to real utilization --- the opposite bias of the Big-3.
+\item[\textit{p}] Scaleway reports Scope~3 at $\sim$80\,\% of total service emissions.
+\item[\textit{q}] Despite the Linode acquisition in Feb~2022, Compute is still not in the Carbon Calculator as of May~2026.
+\item[\textit{r}] Reported only as customer-side Scope~3 Cat~8 (upstream leased assets); Akamai's own S1/S2 are not surfaced through this tool. Allocation uses byte~\& machine utilization per DC.
+\item[\textit{s}] Framed as ``savings vs.\ average network'' rather than absolute emissions; account-level only, no per-service breakdown.
+\item[\textit{t}] Fastly operates only in leased colocations; Scope~1 is explicitly excluded.
+\item[\textit{u}] Only Cat~3 (FERA) and Cat~8 (non-IT equipment in leased assets, e.g., cooling, building).
+\item[\textit{v}] Raw materials, manufacturing, transport, construction, end-of-life all explicitly out of scope.
+\end{tablenotes}
+\end{threeparttable}
+\end{table*}
+
+\paragraph{Three non-summable methodology families.}
+The Tier-A tools differ in what they take as the \emph{unit of allocation}, and the
+three resulting families are not directly comparable.
+\emph{Usage-time allocated} (AWS, GCP, Azure, Oracle, IBM, Alibaba) treats the
+\emph{rental-line} as the proxy: carbon is proportional to vCPU-hours or instance-hours
+of an SKU, possibly re-weighted by list price (GCP), revenue (AWS non-foundational),
+or a ``normalized cost'' metric (Azure). Embodied carbon is folded into the per-SKU
+factor and amortised flat.
+\emph{Traffic-allocated} (Akamai, Cloudflare, Fastly) takes the \emph{work-volume} as
+the proxy: bytes delivered or CPU-time consumed; embodied hardware is largely or
+entirely excluded.
+\emph{Component-LCA per resource} (OVHcloud, Scaleway) builds the number from a
+\emph{physical inventory}: every reserved component (rack, cores, GB~RAM, TB~SSD)
+contributes a published LCA factor, plus an operational energy term.
+The three families allocate different slices of provider emissions in different units;
+adding or directly benchmarking numbers across them is not meaningful without an
+explicit residual bridge --- precisely the gap \S\ref{sec:rsci} formalises.
+
+\paragraph{Scope-3 coverage is heterogeneous even within the Big-3.}
+Table~\ref{tab:bigthree-s3} breaks the Big-3 Scope-3 perimeter down per
+GHG-Protocol category. No two providers cover the same category set: AWS includes
+upstream fuel-and-energy activities (FERA) and full Cat~2 capital goods (incl.\
+buildings); GCP adds business travel and employee commuting but excludes end-of-life;
+Azure is the only Big-3 to include end-of-life (Cat~12) but excludes both FERA and
+building embodied carbon. The GHG Protocol allows category exclusions if justified by
+a materiality assessment, but none of the three providers publishes one. Headline
+emissions numbers from the three are
+therefore not comparable without rebasing.
+
+\begin{table}[H]
+\centering
+\caption{Scope-3 category coverage in the Big-3 customer tools, by GHG-Protocol
+category. Cat~2 is split into IT hardware vs.\ building embodied. Lifetime amortization
+differs: AWS 6\,yr IT~+~50\,yr buildings; GCP \textbf{4\,yr} IT (acknowledged shorter
+than actual); Azure 6\,yr IT, buildings excluded. All three zero out past amortization.}
+\label{tab:bigthree-s3}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}l c c c@{}}
+\toprule
+GHG-Protocol Scope-3 category & AWS & GCP & Azure \\
+\midrule
+Cat~1 --- Purchased goods \& services & \na & \na & \yes \\
+Cat~2 --- IT hardware (cradle-to-gate) & \yes & \yes & \yes \\
+Cat~2 --- Building embodied & \yes & \yes & \no \\
+Cat~3 --- FERA (upstream fuel + T\&D losses) & \yes & \yes & \no \\
+Cat~4 --- Upstream transport & \yes & \maybe & \yes \\
+Cat~5 --- Waste in operations & \no & \no & \yes \\
+Cat~6 --- Business travel & \no & \yes & \no \\
+Cat~7 --- Employee commuting & \no & \yes & \no \\
+Cat~9 --- Downstream transport & \no & \no & \yes \\
+Cat~12 --- End-of-life treatment & \no & \no & \yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Two structural failure modes in the Big-3.}
+Two findings from Tables~\ref{tab:tier-a} and~\ref{tab:bigthree-s3} land hardest for
+the reconcilability argument that follows in \S\ref{sec:rsci}. First, Azure's customer
+dashboard does not cover Azure~Government, any China region, or the German Sovereign
+regions --- coverage is not uniform across the provider's own footprint. Second, the
+January~2026 Azure emissions-methodology page states verbatim that
+``\emph{usage for emissions calculations might not match your Microsoft usage for
+billing purposes}'' --- a provider-acknowledged divergence between the billing surface
+and the emissions surface. Together, these are not isolated bugs but instances of a
+broader pattern: the customer-facing surface is a thinner, methodologically distinct
+subset of what the provider measures internally.
+
+\paragraph{The internal/external gap is structural --- and is the rSCI residual.}
+Concrete evidence from three of the Big-3:
+(i) Microsoft's 2021 Scope-3 Whitepaper (footnote~2) acknowledges that the customer-tool
+methodology and the corporate-disclosure methodology have not been
+reconciled~\cite{microsoft-s3-2021};
+(ii) GCP measures machine-level power via Borg telemetry hourly, but the customer
+surface is monthly and uses a \emph{list-price-proportional} SKU factor that does not
+reflect the underlying physical
+measurement~\cite{schneider-mattia-2024};
+(iii) AWS's Model~3.0 defines a foundational/non-foundational service split but
+publishes neither the service list nor the emissions share allocated by equivalent
+revenue~\cite{aws-ccft-model3}. What providers measure internally is methodologically
+richer than what they ship to customers; the size of that gap is precisely the
+residual that \S\ref{sec:rsci} makes explicit through the rSCI decomposition.
+
+\section{rSCI: Reconciling Bottom-Up and Top-Down}
+\label{sec:rsci}
+
+% TODO: see vision_paper_notes.md §4. Math-forward; the residual decomposition is the
+% theorem-level contribution.
+
+\section{Making rSCI Computable}
+\label{sec:asks}
+
+% TODO: see vision_paper_notes.md §5. Three asks: billing-frequency carbon, granular
+% reporting w/o revenue/cost fallbacks, methodological fidelity (Azure LBM export).
+
+\section{Upstream Effects: Lever × Provider Matrix}
+\label{sec:levers}
+
+% TODO: see vision_paper_notes.md §6. The "no utilization signal" finding lives here,
+% not in §3. Lever rows × AWS/GCP/Azure columns; direct/approximate/structural-mismatch.
+
+\section{Discussion}
+\label{sec:discussion}
+
+% TODO: see vision_paper_notes.md §7.
 
 \section{Evaluation}
 

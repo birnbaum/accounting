@@ -1,4 +1,4 @@
-# Reconcilable Software Carbon Intensity: Bridging Cloud Carbon Accounting and Actionable Metrics
+# Reconciling Bottom-Up Sustainability Metrics with Cloud Carbon Accounting
 
 Target venue: **SoCC vision track** (6 pages).
 
