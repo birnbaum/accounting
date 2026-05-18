@@ -11,10 +11,10 @@ Before writing or repeating **any claim about prior work, a provider methodology
 1. Open the relevant file in `references/`. Start with the README inside the appropriate subfolder. For taxonomy / metric claims: `references/SCI_SUNK_CARBON.md` and `references/SCI.md`. For provider claims: `references/carbon_accounting_methodologies/<provider>/`.
 2. Find the supporting §/page in the primary source (PDF or `references/` markdown).
 3. Cite the §/page in the paper (e.g., "Bashir 2024 §3", "Schneider & Mattia 2024 §3.6", "AWS Model 3.0 methodology §X").
-4. **If the source does not exist in `references/`, ask the user to add it. Do not paraphrase from memory, from `vision_paper_notes.md`, or from any `CLOUD_CARBON_ACCOUNTING_*.md` working doc.**
+4. **If the source does not exist in `references/`, ask the user to add it. Do not paraphrase from memory or from any `CLOUD_CARBON_ACCOUNTING_*.md` working doc.**
 5. **If a claim cannot be supported by an open primary source, do not write it.** Surface the conflict to the user.
 
-`vision_paper_notes.md` and the `CLOUD_CARBON_ACCOUNTING_*.md` files are **working notebooks and inventories**, not authoritative for claims. Treat them as scratchpads.
+The `CLOUD_CARBON_ACCOUNTING_*.md` files are **working notebooks and inventories**, not authoritative for claims. Treat them as scratchpads.
 
 This rule overrides convenience. Always open the source.
 
@@ -49,7 +49,7 @@ A useful habit: every time you verify a new fact for the paper, ask "should this
 
 ### Working notebooks (NOT authoritative for claims)
 - `README.md` — core framework definition (rSCI). Living research document.
-- `vision_paper_notes.md` — paper outline + working notes. May contain inaccuracies; verify against `references/` before using.
+- `paper/experiments_design.md` — §4 toy-cloud experiment design notes for the SoCC submission. Scratch; paraphrase into `paper.tex` once design is locked.
 
 ### Data
 - `gcp/` — GCP benchmark experiments.

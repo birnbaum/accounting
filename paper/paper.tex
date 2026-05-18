@@ -7,6 +7,10 @@
 \usepackage{pifont}
 \usepackage{threeparttable}
 \usepackage[referable]{threeparttablex}
+% Author notes — use \todo[inline]{...} to avoid two-column margin collisions.
+% Toggle off for camera-ready with \usepackage[disable]{todonotes}.
+\usepackage[textsize=footnotesize]{todonotes}
+\setlength{\marginparwidth}{2cm}
 \renewcommand\theadfont{\bfseries}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \newcolumntype{C}{>{\centering\arraybackslash}X}
@@ -45,12 +49,40 @@ Abstract goes here.
 \maketitle
 
 \section{Introduction}
-% TODO: full Introduction + Abstract framing is deferred until §5 (rSCI in Practice)
-% analysis + experiments land. The thesis sentence, contributions list, and abstract
-% will be tightened once we know what the empirical story actually supports.
-% §2 (Background) and §4 (rSCI theory) content is committed; §5/§6 framing is
-% provisional and follows the strong prior "rSCI cannot be computed today because
-% reporting is too coarse" --- if experiments say otherwise, the framing flexes.
+% TODO: full Introduction + Abstract prose deferred until §4/§5 experiments land.
+% Framing scaffolding committed below; tighten after the toy-cloud results arrive.
+
+% Framing scaffolding (bullet-point sketch; rewrite as prose for camera-ready):
+% - Sustainability-aware scheduling, placement, and architectural decisions need
+%   actionable, understandable, real-time carbon metrics.
+% - The ISO-adopted Software Carbon Intensity (SCI; GSF, ISO/IEC 21031) is the
+%   industry's answer for per-workload carbon.
+% - Known structural flaw: the sunk-carbon fallacy (Bashir et al. 2024) ---
+%   embodied accounting rewards running on aged, less-efficient hardware.
+% - More fundamental flaw: every SCI variant is disconnected from the cloud
+%   provider's customer-allocated GHG report. An engineering team that improves
+%   SCI cannot point to a matching change in the corporate sustainability
+%   disclosure. The GSF frames "measuring for reporting" and "measuring for
+%   action" as separate concerns; we treat that dichotomy as the failure mode.
+% - Thesis: per-workload carbon metrics must be \emph{reconcilable by design}.
+%   Reconcilability forces a residual term on any bottom-up metric.
+% - rSCI: first worked-out metric in this class. (a) Closes the reconciliation
+%   gap by construction. (b) Avoids the sunk-carbon fallacy (no per-server $M$
+%   term). (c) Preserves oSCI's real-time sensitivity through $\xi = \mu I_r + \rho$.
+%
+% Contributions (provisional, finalise after experiments):
+%   1. Argument that reconcilability is a first-class requirement, not separate
+%      from real-time action.
+%   2. Cross-provider survey of Tier-A customer carbon tools through a
+%      reconcilability lens (\S\ref{sec:sota}).
+%   3. rSCI: extends the SCI / oSCI / tSCI taxonomy; structural sunk-carbon
+%      avoidance; reconciliation by construction; degrades gracefully to oSCI
+%      when reconciliation data is unavailable (\S\ref{sec:rsci}).
+%   4. Lever $\times$ provider diagnostic matrix exposing which engineering
+%      actions move which provider's reported number today (\S\ref{sec:practice}).
+%   5. Concrete asks on providers, estimation, and standards
+%      (\S\ref{sec:asks}).
+
 Introduction goes here.
 
 \section{Background: SCI and the Sunk Carbon Fallacy}
@@ -260,6 +292,12 @@ contributes a published LCA factor, plus an operational energy term.
 The three families allocate different slices of provider emissions in different units;
 adding or directly benchmarking numbers across them is not meaningful without an
 explicit residual bridge --- precisely the gap \S\ref{sec:rsci} formalises.
+\todo[inline]{Decision 2026-05-17: keep the lever$\times$provider diagnostic
+(Table~\ref{tab:levers}) in \S\ref{sec:practice}, not \S\ref{sec:sota} ---
+the matrix only acquires diagnostic teeth once \S\ref{sec:rsci} exists.
+Add a one-sentence forward signpost here pointing to \S\ref{sec:practice},
+and elevate the matrix there to a named subsection so it reads as a second
+contribution rather than a sub-finding of the cadence argument.}
 
 \paragraph{Scope-3 coverage is heterogeneous even within the Big-3.}
 Table~\ref{tab:bigthree-s3} breaks the Big-3 Scope-3 perimeter down per
@@ -407,10 +445,15 @@ energy-share weighting of the residual bridges.
 The energy-share weighting of the residuals closes the four gaps from the section
 opening. (i) \emph{Sunk-carbon}: in \textsc{sci}, the embodied term $M$ is amortised
 per server and enters \emph{per unit of work}, so it shrinks as inefficient hardware
-ages. In rSCI, embodied carbon lives in $\Delta^{\text{S3}}$ and is allocated
-\emph{per unit of energy}: $w_{i,s,r}\Delta^{\text{S3}}_{s,r}\propto E_{i,s,r}$. A
+ages. rSCI has no per-server $M$ term at all; embodied carbon lives in $\Delta^{\text{S3}}$
+and is allocated \emph{per unit of energy}: $w_{i,s,r}\Delta^{\text{S3}}_{s,r}\propto E_{i,s,r}$. A
 workload on older, less-efficient hardware draws more energy, takes a larger residual
 share, and reports a \emph{higher} rSCI --- the opposite of the \textsc{sci} pathology.
+The argument does not depend on whether the provider's $\Delta^{\text{S3}}$ treats aged hardware
+as fully sunk (zero remaining amortisation) or not: even when a fully-amortised server contributes
+nothing to $\Delta^{\text{S3}}$, its higher per-request energy drives a higher rSCI through the
+operational $E_{i,s,r}\cdot I_r$ term, which carries the per-request gradient regardless of any
+embodied-amortisation choice.
 (ii) \emph{Embodied incentive}: because $\Delta^{\text{S3}}$ rides on the same
 energy-share weighting, workloads sized to fit the actual demand --- rather than
 over-reserved --- get a smaller embodied burden than under \textsc{o-sci}, which
@@ -444,16 +487,45 @@ $\widehat{\text{rSCI}}$ degenerates to \textsc{o-sci} --- the framework degrades
 gracefully to the prior-art operational metric when reconciliation data is
 unavailable.
 
-\paragraph{Attribution refinements.}
-The energy-share weighting $w_{i,s,r}$ is the simplest legal allocation; the framework
-admits scope-specific weights $w^{k}_{i,s,r}$ for each residual sub-component as long
-as $\sum_i w^{k}_{i,s,r}=1$. Two concrete refinements sharpen the incentives:
-state-estimation (e.g.\ Kalman filtering across reconciled months and across pooled
-tenants) for the operational multiplier $\hat\mu$; and Shapley-value attribution
-(or tractable proxies such as leave-one-out marginals) for the embodied term, which
-allocates embodied burden by a workload's \emph{marginal} contribution to peak
-demand --- sharpening property~(iii) above beyond plain energy-share weighting. We
-treat both as future work in \S\ref{sec:future-work}.
+\paragraph{Attribution refinements --- and why Scope~3 needs a different weight.}
+The energy-share weighting $w_{i,s,r}$ is the simplest legal allocation, but it is the
+right default only for $\Delta^{\text{S2}}$, whose physical driver \emph{is} energy
+consumed at intensity $I_r(t)$. Applied to $\Delta^{\text{S3}}$ it gives the wrong
+gradient. Embodied carbon is a function of \emph{what hardware exists}, which is in
+turn a function of \emph{peak provisioned capacity} --- not total energy across the
+period. Two pathologies follow. First, a workload that deliberately runs during a
+low-CI trough still picks up an energy-proportional embodied share, even though it
+consumed spare capacity that would have existed regardless of its presence; the
+metric \emph{penalises} clean-grid usage on an axis the workload did not move.
+Second, a workload that runs at the fleet peak draws roughly the same energy as the
+trough job and is allocated the same embodied share, even though it is the workload
+forcing the next server purchase. Energy-share is bookkeeping-fair, but it is not
+incentive-aligned for the lever (peak shaving) that actually moves embodied.
+
+The framework admits scope-specific weights $w^{k}_{i,s,r}$ for each residual
+sub-component as long as $\sum_i w^{k}_{i,s,r}=1$, so reconciliation-by-construction
+is preserved under any such reweighting. The principled choice for the embodied term
+is a \emph{Shapley value} over the peak-capacity game: $\varphi_i$ is workload $i$'s
+expected marginal contribution to fleet peak, averaged over coalition orderings.
+Trough-fillers receive $\varphi_i\!\approx\!0$; peak-drivers receive $\varphi_i$
+proportional to their contribution at the peak hour. Full Shapley is exponential in
+the workload count, but tractable proxies retain the qualitative gradient:
+(a)~\emph{peak-hour energy share} $w^{\text{S3}}_i = E_i(t^*)/E_{s,r}(t^*)$, where
+$t^*$ is the slice peak hour; (b)~\emph{leave-one-out marginals}
+$\text{peak}(\mathcal{N}) - \text{peak}(\mathcal{N}\setminus\{i\})$; (c)~sampled
+Shapley over a few hundred coalition orderings.\todo[inline]{The Shapley/peak-share
+analysis is the second-experiment subject in \S\ref{sec:practice}: synthetic toy
+fleet, three allocations (energy-share / peak-hour-share / sampled Shapley),
+counterfactual peak-vs-trough placement of one batch job. Expected finding: under
+energy-share the embodied component is invariant to temporal shifting; under
+Shapley/peak-share it drops in the trough scenario --- so the metric rewards the
+shift on \emph{both} axes (clean grid + no peak contribution). Persisted from chat
+2026-05-17 for a fresh-context implementation session.}
+A second refinement applies to $\hat\mu_{s,r}$: state-estimation (e.g.\ Kalman
+filtering across reconciled months and across pooled tenants) compresses the
+operational-multiplier residual without changing the allocation. Cross-tenant
+pooling exploits that $\hat\mu, \hat\rho$ are driven by provider methodology rather
+than individual customers.
 
 \paragraph{Precision scales with data fidelity.}
 rSCI is a \emph{class} of metrics, not a fixed equation. Its precision is bounded by
@@ -500,8 +572,38 @@ $\widehat{\text{rSCI}}_i$ collapses toward \textsc{o-sci} --- the bottom-up sign
 not improved by reconciliation against a report whose cadence is twelve times the
 churn rate of the underlying workload.
 
+\paragraph{A second experiment: attribution matters even when reconciliation holds.}
+\todo[inline]{Worked example for the Shapley/peak-share allocation introduced in
+\S\ref{sec:rsci}. Setup (chat 2026-05-17): one slice $(s,r)$, $\sim$50 workloads
+over 7 days hourly, mix of flat 24$\times$7 services + business-hours peak drivers
++ shiftable batch jobs; grid CI from a real DE/Electricity Maps trace; known slice
+$\Delta^{\text{S3}}$. Compare three allocations of $\Delta^{\text{S3}}$:
+energy-share / peak-hour-share / sampled Shapley over peak. Two counterfactuals on
+one batch job: (A) runs at 12:00 peak vs.\ (B) runs at 03:00 trough. Plot the
+job's rSCI as a 2$\times$3 bar chart \{A,B\}$\times$\{energy-share, peak-share,
+Shapley\}; second panel: total fleet rSCI vs.\ shift fraction across the three
+weightings. Expected message: under energy-share the embodied component is
+identical in A and B; under peak-share / Shapley it drops in B --- so the metric
+rewards trough-filling on both axes (clean grid + no peak contribution) and
+penalises peak-driving workloads. The Shapley value itself must be \emph{estimated}
+(LOO or sampled), which is a second source of non-reconcilability beyond reporting
+cadence: rSCI under estimated attribution holds in expectation but not pointwise.
+We frame this in \S\ref{sec:future-work} as a move from perfect reconciliation to
+\emph{strong, ideally theoretically bounded, correlation} between bottom-up signal
+and top-down report.}
+A second concern is orthogonal to cadence: even with hourly resource-level reports,
+the embodied attribution we proposed in \S\ref{sec:rsci} requires estimating a
+Shapley value (or a tractable peak-share proxy) over the fleet's peak-capacity game.
+The estimator introduces a residual of its own: rSCI under estimated attribution is
+reconciliable in expectation but not pointwise. We therefore frame the target not
+as perfect reconciliation but as a strong --- and ideally theoretically bounded ---
+correlation between the workload-level signal and the top-down report
+(\S\ref{sec:future-work}).
+
 \paragraph{Real-world vignettes.}
-% TODO: revise after experiments
+% TODO: revise after experiments. Empirical analysis on AWS, GCP, and Azure
+% customer exports to be redone in a single consistent pass before camera-ready
+% (current numbers from prior internal analyses; not yet re-derived here).
 The same structural failure shows up in two of our case studies.
 On an AWS Frankfurt account over nine months, $\sim$70\,\% of reported emissions fall
 into the revenue-allocated ``Other'' bucket (cf.\ Table~\ref{tab:tier-a},
@@ -512,7 +614,15 @@ Table~\ref{tab:tier-a}, footnote~$f$): spatial-shifting and grid-intensity
 optimisations are structurally invisible to the dashboard even when they reduce real
 physical emissions.
 
-\paragraph{Lever $\times$ provider: what moves the reported number.}
+\paragraph{rSCI as a diagnostic: which levers move which provider's number.}
+\todo[inline]{Decision 2026-05-17: promote this paragraph to a named
+\texttt{\textbackslash subsection} once \S\ref{sec:practice} stabilises, and call it
+out in the intro as the paper's second contribution (the first being the rSCI
+decomposition itself). The matrix is what turns the \S\ref{sec:sota} methodology
+catalogue from descriptive into accusatory --- rSCI says compute utilisation should
+flow through $\mu_{s,r}$, the providers expose nothing utilisation-shaped, therefore
+the residual swallows the signal. Reconsider promotion to its own section if
+experiments show this is the strongest finding.}
 % TODO: revise after experiments
 Aggregating the per-provider methodology details from \S\ref{sec:sota} along
 engineering levers gives the matrix in Table~\ref{tab:levers}. The pattern is
@@ -606,10 +716,21 @@ follow. A unified attribution layer would let the community extend reconciliable
 metrics to any sustainability dimension a provider chooses to report.
 
 On the attribution side, the energy-share weighting in \S\ref{sec:rsci} is a
-deliberately simple default. Kalman filtering for $\hat\mu$ state-estimation and
-Shapley-value attribution (or tractable proxies) for embodied carbon are the two
-concrete refinements we see most leverage in --- the latter sharpens the
-peak-shaving / hardware-procurement incentive in a way energy-share weighting cannot.
+deliberately simple default that is only incentive-aligned for $\Delta^{\text{S2}}$.
+Kalman filtering for $\hat\mu$ state-estimation and Shapley-value attribution
+(or tractable proxies --- peak-hour share, leave-one-out marginals) for $\Delta^{\text{S3}}$
+are the two concrete refinements we see most leverage in --- the latter sharpens the
+peak-shaving / hardware-procurement incentive in a way energy-share weighting cannot,
+and crucially avoids penalising clean-grid trough usage with an embodied burden it
+did not cause.
+\todo[inline]{Open theoretical question (chat 2026-05-17): once $\varphi_i$ is
+estimated rather than computed exactly, reconciliation holds only in expectation.
+Can we give a \emph{bounded-correlation} guarantee --- a worst-case bound on
+$|\sum_i \widehat{\text{rSCI}}_i R_i - C^{\downarrow}_{s,r}|$ as a function of
+sample budget and fleet heterogeneity? This would convert the framework's headline
+property from ``reconcilable by construction'' to ``provably $\varepsilon$-close
+under estimated attribution,'' which is a more honest claim under practical
+attribution and likely a paper-strengthener.}
 
 Bashir's \textsc{t-sci} and rSCI share the goal of allocating the whole datacenter
 footprint to individual jobs, but tackle it from opposite directions: \textsc{t-sci}
@@ -630,6 +751,13 @@ sociotechnical step.
 
 % TODO: written last, after the experiments. One paragraph: theory closes the gap,
 % practice does not yet, here is what to do about it.
+
+% TODO(refs): add citations for the critique of GHG-Protocol-style carbon accounting
+% (market-based instruments, RECs/PPAs, location- vs. market-based divergence,
+% ongoing Scope 2 revision, etc.).
+A caveat: current carbon accounting is imperfect and does not always incentivize the right downstream behavior, and the standards are under continuous revision.
+That is a separate problem.
+rSCI is defined against the \emph{structure} of GHG-Protocol-style accounting, not any particular vintage, so future revisions slot into the same framework.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
