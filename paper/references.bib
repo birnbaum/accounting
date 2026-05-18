@@ -170,3 +170,129 @@
   year = {2024},
   note = {Open-source tool; not a primary source.}
 }
+
+% ============================================================
+% Toy-cloud / §4 experiment sources
+% Entries below back the §4 experiments_design.md. Add the PDF/URL to
+% references/sources/ and replace `localfile = {MISSING}` once captured.
+% Do NOT cite an entry with `localfile = {MISSING}` from paper.tex without
+% verifying the primary source first (CLAUDE.md source-grounding rule).
+% ============================================================
+
+% ----- LLM-serving architecture & energy -----
+
+@inproceedings{patel-splitwise-2024,
+  title = {Splitwise: Efficient Generative {LLM} Inference Using Phase Splitting},
+  author = {Patel, Pratyush and Choukse, Esha and Zhang, Chaojie and Goiri, {\'I}{\~n}igo and Shah, Aashaka and Maleki, Saeed and Bianchini, Ricardo},
+  booktitle = {Proc.\ ISCA},
+  year = {2024},
+  note = {arXiv:2311.18677. Reports prefill/decode phase power-latency curves for OPT-30B and Bloom-176B on A100/H100. localfile = {MISSING}}
+}
+
+@inproceedings{stojkovic-dynamollm-2025,
+  title = {{DynamoLLM}: Designing {LLM} Inference Clusters for Performance and Energy Efficiency},
+  author = {Stojkovic, Jovan and Choukse, Esha and Zhang, Chaojie and Goiri, {\'I}{\~n}igo and Torrellas, Josep},
+  booktitle = {Proc.\ HPCA},
+  year = {2025},
+  note = {arXiv:2408.00741. Source of the Azure LLM Inference Dataset 2024 used in our trace replay. localfile = {MISSING}}
+}
+
+@inproceedings{zhong-distserve-2024,
+  title = {{DistServe}: Disaggregating Prefill and Decoding for Goodput-optimized Large Language Model Serving},
+  author = {Zhong, Yinmin and Liu, Shengyu and Chen, Junda and Hu, Jianbo and Zhu, Yibo and Liu, Xuanzhe and Jin, Xin and Zhang, Hao},
+  booktitle = {Proc.\ OSDI},
+  year = {2024},
+  note = {arXiv:2401.09670. localfile = {MISSING}}
+}
+
+@inproceedings{agrawal-sarathi-2024,
+  title = {Taming Throughput-Latency Tradeoff in {LLM} Inference with {Sarathi-Serve}},
+  author = {Agrawal, Amey and Kedia, Nitin and Panwar, Ashish and Mohan, Jayashree and Kwatra, Nipun and Gulavani, Bhargav S. and Tumanov, Alexey and Ramjee, Ramachandran},
+  booktitle = {Proc.\ OSDI},
+  year = {2024},
+  note = {arXiv:2403.02310. localfile = {MISSING}}
+}
+
+@misc{vllm-benchmarks,
+  title = {{vLLM} Benchmark Suite},
+  author = {{vLLM Project}},
+  howpublished = {\url{https://github.com/vllm-project/vllm/tree/main/benchmarks}},
+  year = {2024},
+  note = {Open-source benchmark scripts; reproducible per-token prefill/decode throughput on A100/H100 for Llama-class models. localfile = {MISSING}}
+}
+
+% ----- Hardware datasheets & embodied carbon -----
+
+@misc{nvidia-dgx-a100-datasheet,
+  title = {{NVIDIA DGX A100} System Datasheet},
+  author = {{NVIDIA}},
+  howpublished = {\url{https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/nvidia-dgx-a100-datasheet.pdf}},
+  year = {2020},
+  note = {Source for peak 6.5 kW system power, 8x A100 80GB. localfile = {MISSING}}
+}
+
+@misc{nvidia-dgx-h100-datasheet,
+  title = {{NVIDIA DGX H100} System Datasheet},
+  author = {{NVIDIA}},
+  howpublished = {\url{https://resources.nvidia.com/en-us-dgx-systems/ai-enterprise-dgx}},
+  year = {2023},
+  note = {Source for peak 10.2 kW system power, 8x H100 80GB. localfile = {MISSING}}
+}
+
+@misc{nvidia-hgx-h100-pcf,
+  title = {{NVIDIA HGX H100} Product Carbon Footprint Summary},
+  author = {{NVIDIA}},
+  year = {2023},
+  note = {Verbatim: ``the carbon footprint from cradle-to-gate for one HGX H100 GPU baseboard is 1,312 kg CO2''. localfile = {MISSING}}
+}
+
+@article{falk-2025-accelerator-lca,
+  title = {Cradle-to-Gate Life Cycle Assessment of {NVIDIA A100} Accelerator Modules},
+  author = {Falk, Jens and others},
+  journal = {arXiv preprint arXiv:2509.00093},
+  year = {2025},
+  note = {127.6 kgCO2e per A100 SXM 40 GB, ISO 14040/44 + EU PEF. localfile = {MISSING}}
+}
+
+@misc{nvidia-a100-launch,
+  title = {{NVIDIA A100 Tensor Core GPU} Announcement},
+  author = {{NVIDIA}},
+  howpublished = {\url{https://nvidianews.nvidia.com/news/nvidia-announces-nvidia-a100-80gb-gpu}},
+  year = {2020},
+  note = {Launch date 2020-05-14. Used as t=0 for SCI amortization in §4. localfile = {MISSING}}
+}
+
+@misc{nvidia-h100-vs-a100-inference,
+  title = {{NVIDIA H100} vs {A100} Inference Performance Comparison},
+  author = {{NVIDIA}},
+  howpublished = {\url{https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/}},
+  year = {2022},
+  note = {Source for the ~2.5x H100/A100 LLM inference throughput ratio used in §4 routing. localfile = {MISSING}}
+}
+
+@misc{boavizta-dc-lca,
+  title = {Datacenter Embodied Impact Methodology},
+  author = {{Boavizta}},
+  howpublished = {\url{https://boavizta.org/}},
+  year = {2024},
+  note = {Source for building/DC infrastructure embodied carbon per W IT capacity. localfile = {MISSING}}
+}
+
+@misc{waterman-2025-dc-embodied,
+  title = {Technical Information Paper: Embodied Carbon in Enterprise Data Centre {IT} Equipment},
+  author = {Waterman, Anthony},
+  howpublished = {\url{https://adwdevelopments.com/sustainability/technical-information-paper-embodied-carbon-in-enterprise-data-centre-it-equipment}},
+  year = {2025},
+  month = mar,
+  note = {Per-MW embodied carbon mid-ranges for IT and IT-support hardware (servers 400-700, networking 100-250, storage 50-150, racks 30-80, cooling 150-300 tCO2e/MW). Does not cover building shell. localfile = {MISSING}}
+}
+
+@techreport{sandalow-2025-icef-roadmap,
+  title = {Sustainable Data Centers Roadmap},
+  author = {Sandalow, David and McCormick, Colin and Friedmann, Julio and Abramson, Alexis and Masanet, Eric and Aines, Roger and Kucukelbir, Alp and Sivaram, Varun and Coskun, Ayse and Jain, Swasti and Yuan, Angela and Wu, Minjue},
+  institution = {{ICEF Innovation Roadmap Project}},
+  year = {2025},
+  month = oct,
+  howpublished = {\url{https://www.icef.go.jp/roadmap/}},
+  note = {Box 3.3-1A gives a 200 MW reference DC: 93{,}000 m\textsuperscript{2}, 300{,}000 m\textsuperscript{3} concrete, 50-75 Mkg steel, 15-yr lifecycle; IT equipment 750-1500 tCO2e/MW (corroborates ADW Waterman 2025). localfile = references/sources/sustainable_datacenters_roadmap.pdf}
+}

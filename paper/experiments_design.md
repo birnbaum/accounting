@@ -33,14 +33,28 @@ Vanilla energy-share allocation of $\Delta^{\text{S3}}$ does not disincentivize 
 Shapley/peak-share allocation (Attribution Refinements, §4) does.
 The toy demonstrates both.
 
+**Note (single-slice setup).**
+Under the continuous bare-metal reservation, there is only one slice, so "$\xi_{s,r}$ is workload-agnostic within a slice" is *trivially* true.
+The pedagogical content is not that fact in isolation but that *within the slice*, per-request $E_{i,s,r}$ varies by an order of magnitude across workloads and GPU types — that is where rSCI's correct gradient is visible.
+The multi-slice form of the Proposition (and the case where $\xi$ legitimately differs across $(s,r)$) is what the framework supports in general and what §5 stresses; the toy is a controlled instance, not a general proof.
+
 ## Reference setup
 
-A tiny inference provider with two GPU servers running two LLM services, over one real week of production traffic.
-Deliberately small so every number fits on one page; tiny enough that the analysis is auditable line-by-line.
+A tiny inference provider with a **continuous bare-metal reservation** of two DGX systems, serving production-replayed LLM inference traffic over one real week (extensible to a month by swapping the trace input).
+Deliberately small so the top-down report fits on one page; every aggregate line of that report ties to a sum over the bottom-up trace in a single reproducible script (the trace itself is ~44M requests, not line-auditable, but the *reconciliation* is — and that is what §4 is showing).
+
+### Slice structure
+
+The reservation defines a **single** rSCI slice $(s,r)$: $s$ = "the 2-DGX reservation", $r$ = us-central1.
+A continuous reservation is the cleanest possible slice — no shared tenancy, no time-varying allocation, no co-tenant attribution.
+Scope-1/2/3 land at the slice level as a single decomposed signal, and rSCI reconciles down to per-prefill-token within that slice.
+Both Azure services run inside the slice as *labels* on requests, not as separate slices: they share the same $\xi_{s,r}$.
+The A100 vs H100 contrast central to §4.1 lives entirely inside per-request $E_{i,s,r}$ (energy-per-request differs by GPU type), not across slices.
 
 ### Fleet — two DGX systems
 
-The reservation unit is a full **NVIDIA DGX** system, not an individual card. This matches the way real inference clusters are deployed (DGX SuperPOD, Azure ND-series, AWS P5 instances) and makes idle-power attribution clean — the system is reserved continuously, so the idle baseline is the same whether the workload is busy or quiet, and we apportion it across requests by time × concurrency.
+The reservation unit is a full **NVIDIA DGX** system, not an individual card \citep{nvidia-dgx-a100-datasheet,nvidia-dgx-h100-datasheet}.
+This matches the way real inference clusters are deployed (DGX SuperPOD, Azure ND-series, AWS P5 instances) and makes idle-power attribution clean — the system is reserved continuously, so the idle baseline is the same whether the workload is busy or quiet, and we apportion it across requests by time × concurrency.
 
 | System | n_gpus | Peak power | Idle power | Embodied (full system) | Age (yr) | SCI lifetime (yr) |
 |---|---|---|---|---|---|---|
@@ -52,28 +66,39 @@ The reservation unit is a full **NVIDIA DGX** system, not an individual card. Th
 > *Publicly audited cradle-to-gate embodied carbon data for complete DGX-class systems is not available. We therefore use a bounded estimate derived from disclosed GPU baseboard PCFs (NVIDIA HGX H100: 1,312 kgCO₂e for the 8-GPU baseboard) and prior literature on accelerator manufacturing impacts (Falk et al. 2025: 127.6 kgCO₂e per A100 SXM 40 GB, cradle-to-gate, ISO 14040/44 + EU PEF).*
 
 Anchors:
-- **NVIDIA HGX H100 PCF Summary** (verbatim): *"the carbon footprint from cradle-to-gate for one HGX H100 GPU baseboard is 1,312 kg CO2"*. The DGX H100 adds 2× CPU, ~2 TB RAM, 8× NVMe, NVLink switches, chassis + cooling + PSUs. Industry rule-of-thumb (chassis-and-board ≈ 2–4× bare-board embodied) → DGX H100 bounded at 3–5 tCO₂e. **We adopt 4 tCO₂e** (multiplier ≈ 3.05×).
-- **Falk et al. 2025** (arXiv:2509.00093): 127.6 kgCO₂e per A100 SXM 40 GB. 8 cards = 1,021 kgCO₂e GPU-only. Similar chassis profile → **DGX A100 estimate 3 tCO₂e** (multiplier ≈ 2.94×).
+- **NVIDIA HGX H100 PCF Summary** \citep{nvidia-hgx-h100-pcf} (verbatim): *"the carbon footprint from cradle-to-gate for one HGX H100 GPU baseboard is 1,312 kg CO2"*. The DGX H100 adds 2× CPU, ~2 TB RAM, 8× NVMe, NVLink switches, chassis + cooling + PSUs. Industry rule-of-thumb (chassis-and-board ≈ 2–4× bare-board embodied) → DGX H100 bounded at 3–5 tCO₂e. **We adopt 4 tCO₂e** (multiplier ≈ 3.05×).
+- **Falk et al. 2025** \citep{falk-2025-accelerator-lca} (arXiv:2509.00093): 127.6 kgCO₂e per A100 SXM 40 GB. 8 cards = 1,021 kgCO₂e GPU-only. Similar chassis profile → **DGX A100 estimate 3 tCO₂e** (multiplier ≈ 2.94×).
 
 Both systems sit at a **uniform ~3× chassis-and-board multiplier** — internally consistent, mid-range within the 2–4× industry rule-of-thumb, and avoids asymmetric assumptions between the two estimates.
 
 All numbers (including these) live in `experiments/constants.py` with citations. Edit there to retune; downstream scripts import from there.
 
 **Age structure (SCI sunk-carbon contrast — the strongest possible).**
-- `dgx-a100`: NVIDIA A100 launched 2020-05-14. Paper submission July 2026 → 6 yr 2 months past launch. On standard 6 yr SCI amortization (cf. AWS, Azure), the system is **fully past amortization** → SCI's $M$-term = 0 for every request. Maximum SCI pathology.
+- `dgx-a100`: NVIDIA A100 launched 2020-05-14 \citep{nvidia-a100-launch}. Paper submission July 2026 → 6 yr 2 months past launch. Under the **provider amortisation convention** used in customer carbon tools today (AWS Model 3.0.1: 6 yr \citep{aws-ccft-model3}; Azure CHEM: 6 yr \citep{azure-chem-2026}; GCP: 4 yr — all zero out past EL), the system is fully past amortisation, so SCI's $M$-term collapses to 0 per request.
 - `dgx-h100`: fresh install → full 6 yr ahead → SCI loads full embodied per request.
+
+**Note on the M=0 reading.** The SCI specification itself is silent on $\text{TiR} > \text{EL}$: the formula $\text{TS} = \text{TiR}/\text{EL}$ has no corner-case rule, and read literally TS keeps growing past 1 (so $M$ would *increase*, not vanish, past EL). The $M=0$ past-EL reading is therefore a **provider operationalisation**, not an SCI mandate. We adopt it because it is the only operationalised reading in production today, and because it gives Bashir's sunk-carbon fallacy its empirically strongest case. The fallacy itself is a property of *flat amortisation within EL* (the per-unit-work $M$ does not respond to declining efficiency), of which past-EL $M=0$ is the limit.
 
 Both systems host the **same open-weight model** (Llama-3-8B or similar) — isolates the hardware efficiency delta from model-mix confounds.
 
 ### Fleet sizing rationale
 
-Trace aggregate: ~86.7B context tokens / week ≈ **143,000 tokens/sec average**.
+Trace aggregate (both services combined, 5-day overlap rate-extrapolated to 7-day): ~86.7B context tokens / week ≈ **143,000 tokens/sec average** (verified from the CSVs — see `experiments/prepare_data.py`).
 
-Throughput on a 7-8B model (rough, from Splitwise / vLLM benches):
-- A100: ~8,000 tok/s/GPU × 8 GPUs = **64k tok/s per DGX A100**
-- H100: ~20,000 tok/s/GPU × 8 GPUs = **160k tok/s per DGX H100**
+Per-GPU prefill throughput on a 7-8B-class model — **ESTIMATE, bounded**. Direct per-GPU prefill measurements for Llama-3-8B-class models on A100/H100 are not published in the closest primary sources (Splitwise \citep{patel-splitwise-2024} reports prefill latency curves for OPT-30B and Bloom-176B; DynamoLLM \citep{stojkovic-dynamollm-2025} reports cluster-level throughput, not per-GPU prefill rate). The bounded values used here are drawn from open vLLM benchmark traces \citep{vllm-benchmarks} and are sanity-checked against the H100/A100 ~2.5× inference-throughput ratio reported in NVIDIA's published comparisons \citep{nvidia-h100-vs-a100-inference}:
 
-Combined fleet capacity: ~224k tok/s vs ~143k tok/s average load → **64% average utilisation**. Both DGXs can each individually carry above-average traffic at peak. Round-robin across the two DGXs means each receives ~72k tok/s avg: dgx-a100 runs near capacity (~110%), dgx-h100 sits at ~45% — uneven, but fine for attribution-only analysis and makes idle-share attribution actually visible on the H100.
+- A100 80 GB: ~8,000 tok/s/GPU × 8 GPUs = **~64k tok/s per DGX A100**
+- H100 80 GB: ~20,000 tok/s/GPU × 8 GPUs = **~160k tok/s per DGX H100**
+
+Combined fleet capacity: ~224k tok/s vs ~143k tok/s average load → **64% average utilisation**.
+
+**Routing: throughput-weighted, not round-robin.** Round-robin pinned the A100 above its capacity (110%) and left the H100 at 45% — not a defensible operating point for a real provider, and an artefact of the routing rule rather than the metric. Under throughput-weighted routing,
+
+$$\Pr[\text{H100}] = \frac{160}{64+160} = 71.4\%, \quad \Pr[\text{A100}] = \frac{64}{64+160} = 28.6\%,$$
+
+both DGXs run at the same 64% utilisation. Attribution-only analysis is now downstream of a physically sane fleet steady-state. The A100/H100 efficiency delta still shows up in Analysis 1 because per-request *energy* differs by GPU type, independent of routing share.
+
+**Sensitivity to throughput estimates.** The exact values of $T_{A100}$ and $T_{H100}$ enter §4 only through (i) the routing weights, (ii) per-request $\gamma_g$, and (iii) idle-share denominator. The ratio $T_{H100}/T_{A100}$ matters more than the absolute values; the ratio is the well-established part. We treat the absolute values as estimates to refine when published per-GPU prefill numbers for 7-8B-class models are added to `references/sources/`.
 
 **One DGX of each type. Two systems total.** Clean.
 
@@ -97,36 +122,39 @@ At GPU-class compute density in a moderate-CI grid like us-central1, operational
 
 This is a real characteristic of GPU inference clouds, not a bug of the toy. **Implication for the paper:** SCI's wrong gradient on the embodied piece has *bounded* practical impact in operational-dominated regimes, but the *direction* is wrong, which is what disqualifies it as a metric. rSCI is *especially* clean for inference because the dominant operational signal already drives correct decisions, and the small embodied correction at least *aligns* with rather than fighting it. Worth one paragraph in §4.
 
+**Note on the building-embodied line.** The SCI spec/Guidance is silent on the IT-hardware-vs-DC-building split (the $M$ page discusses only "hardware components"). Including building embodied in $\Delta^{\text{S3}}$ is therefore *additional* to what SCI literally requires, consistent with the GHG-Protocol Cat 2 perimeter that AWS and GCP report (Azure excludes it — see paper Table 2).
+
 We can re-evaluate later in a cleaner-grid region (europe-west1, low-CI hours of CAISO, or a fully-renewable PPA region) where the operational/embodied ratio inverts and the sunk-carbon pathology bites harder.
 
-### Two services from the real Azure 2024 traces
+### Two workloads from the real Azure 2024 traces
 
-We use the **Azure LLM Inference Dataset 2024** (Stojkovic et al., "DynamoLLM: Designing LLM Inference Clusters for Performance and Energy Efficiency", HPCA 2025, arXiv:2408.00741).
+We use the **Azure LLM Inference Dataset 2024** \citep{stojkovic-dynamollm-2025} (HPCA 2025, arXiv:2408.00741).
 Collected May 10–19, 2024 from "multiple LLM inference services in Azure" (model and hardware unspecified by the authors).
 Schema: `TIMESTAMP, ContextTokens, GeneratedTokens`.
-**Add bib entry to `paper/references.bib`; document in `references/` follow-up.**
 
 Files in `./data/`:
-- `AzureLLMInferenceTrace_code_1week.csv` (~16.8M requests, May 10–16) — coding-assistant service `code-svc`
-- `AzureLLMInferenceTrace_conv_1week.csv` (~27.3M requests, May 12–18) — conversational service `conv-svc`
+- `AzureLLMInferenceTrace_code_1week.csv` (~16.8M requests, May 10–16) — coding-assistant workload `code-svc`
+- `AzureLLMInferenceTrace_conv_1week.csv` (~27.3M requests, May 12–18) — conversational workload `conv-svc`
 
-We use them as **two distinct services**, each its own rSCI slice $(s, r)$:
-- different prompt/generation size distributions (code = long prompts, short generations; conv = shorter prompts, longer generations)
-- different $\xi_{s,r}$ per slice → exercises rSCI's per-slice attribution
+Both run **inside the single slice** (the continuous 2-DGX reservation) — they are *labels* on requests, not distinct slices, and share one $\xi_{s,r}$. They differ in:
+- prompt/generation size distributions (code = long prompts, short generations; conv = shorter prompts, longer generations) — widens per-request scatter in Analysis 1
+- arrival-rate diurnal patterns — gives Analysis 3 a richer peak/trough structure than a single workload would
+- §5 gains an extra collapse knob (per-workload labels degrade to a bucket alongside the time/resource degradations)
 
 **No synthesis required.** The 1-week real trace already provides realistic diurnal and weekday/weekend variation. Earlier plan to envelope-synthesize from 1-hour traces is obsolete.
 
-Alignment window for joint analysis: 5 days where both traces overlap (May 12–16, 2024).
+Alignment window for joint analysis: 5 days where both traces overlap (May 12–16, 2024). Full 7-day per-workload windows used where the analysis doesn't need joint alignment. **Month-extension path**: replace the 1-week CSVs with a tiled or re-collected 4-week trace; nothing in the slice math depends on window length.
 
 ### Routing
 
 Routing rule fixed (not optimised) — we are analyzing attribution, not scheduling.
-Default: **round-robin across the two DGX systems**, both services share the fleet.
-Both DGXs run continuously (continuous reservation) — idle power is amortized across requests by time × concurrency. A1's per-request scatter naturally separates by GPU type since round-robin assigns roughly half of each service to each DGX.
+Default: **throughput-weighted random assignment** — Pr[H100]=71.4%, Pr[A100]=28.6%, derived in "Fleet sizing rationale" above so both DGXs share the same utilisation.
+Both DGXs run continuously (continuous bare-metal reservation) — idle power is amortized across requests by time × concurrency, against the slice idle baseline.
+Analysis 1's per-request scatter still separates cleanly by GPU type: per-request energy differs by $\gamma_g$ regardless of how requests are split.
 
 ### Unit of work and per-request energy: prefill-only
 
-**Architectural framing.** We model the cluster as a **prefill-only** inference service. Following Splitwise (Patel et al., ISCA 2024) and subsequent disaggregated-serving work (DistServe, Sarathi-Serve, vLLM's disaggregated mode), prefill and decode are routed to separate hardware pools. The toy is the prefill pool — the compute-bound, context-token-processing tier. This sidesteps having to model decode autoregression, KV-cache eviction, and generated-length-dependent latency — none of which we have ground truth for.
+**Architectural framing.** We model the cluster as a **prefill-only** inference service. Following Splitwise \citep{patel-splitwise-2024} and subsequent disaggregated-serving work (DistServe \citep{zhong-distserve-2024}, Sarathi-Serve \citep{agrawal-sarathi-2024}), prefill and decode are routed to separate hardware pools. The toy is the prefill pool — the compute-bound, context-token-processing tier. This sidesteps having to model decode autoregression, KV-cache eviction, and generated-length-dependent latency — none of which we have ground truth for.
 
 **Unit of work $R_i$ = ContextTokens$_i$** (prefill tokens processed per request).
 Aggregates to "total tokens prefilled" per slice — well-defined LLM-serving denominator.
@@ -140,19 +168,20 @@ Prefill is compute-bound (dense matmul), so per-token energy is GPU-throughput-d
 
 **Why prefill (not decode) for the toy.** ContextTokens in the Azure trace spans roughly three orders of magnitude (~10 to ~10k+). That wide variance produces a per-request scatter that visually separates the SCI / oSCI / rSCI lines cleanly across the energy axis — pedagogically valuable for Analysis 1. Decode-only would compress the variance and weaken the figure.
 
-**Calibration source for $\gamma_g$.** Pick one:
-- Patel et al., Splitwise (ISCA 2024) — explicitly reports prefill per-token energy on A100 and H100. Best fit since we already cite them for the architecture.
-- DynamoLLM (HPCA 2025, our trace citation) — also reports prefill energy on Azure infra.
-- vLLM benchmark suite — per-token prefill measurements.
+**Calibration source for $\gamma_g$.** Currently bounded estimates derived from datasheet GPU TDP / per-GPU throughput: $\gamma_{A100} \approx 400\text{W} / 8000\text{tok/s} = 50$ mJ/token, $\gamma_{H100} \approx 700\text{W} / 20000\text{tok/s} = 35$ mJ/token (see `experiments/constants.py`). To refine, in order of preference:
+- Splitwise \citep{patel-splitwise-2024} reports prefill phase power and latency curves — derivable per-token energy for the model classes they measure (OPT-30B, Bloom-176B). Closest fit to our architecture.
+- DynamoLLM \citep{stojkovic-dynamollm-2025} reports cluster-level energy — useful as an aggregate sanity check rather than per-GPU calibration.
+- vLLM benchmark suite \citep{vllm-benchmarks} — per-token prefill measurements on a range of model sizes (open source, reproducible).
+None of these directly publish $\gamma$ for a 7-8B model on A100/H100; we'll either (a) re-derive from Splitwise's reported power × latency for the closest model class and adjust by parameter-count scaling, or (b) measure on vLLM ourselves and cite. **PDFs needed in `references/sources/`**: Patel-Splitwise-ISCA-2024, Stojkovic-DynamoLLM-HPCA-2025.
 
 ### Constructed top-down carbon report
 
 We publish, at hourly slice resolution per service, decomposed into the categories below.
 This is the "ideal" provider report that §4 attributes against, and that §5 will show is unobtainable in practice.
 
-**Scope-1.** Diesel testing + refrigerant leakage for a small DC fraction. **~10–30 kgCO₂e/week** (fixed; allocated per slice by energy share). Cite GHG Protocol S1 guidance.
+**Scope-1.** Diesel testing + refrigerant leakage for a small DC fraction. **~5–10 kgCO₂e/week** (fixed; whole slice — no allocation needed in the single-slice setup). Cite GHG Protocol Corporate Standard \citep{ghg-protocol-corp}.
 
-**Scope-2.** $\sum_t \text{IT}_t \cdot \text{PUE} \cdot I_r(t)$. Both LBM (location-based, residual grid factor) and MBM (market-based with PPA) variants — gives us the §3 "Frankfurt LBM=0" critique a foothold in §5.
+**Scope-2.** $\sum_t \text{IT}_t \cdot \text{PUE} \cdot I_r(t)$. Both LBM (location-based, residual grid factor) and MBM (market-based with PPA) variants \citep{ghg-protocol-scope2} — gives us the §3 "Frankfurt LBM=0" critique a foothold in §5.
 
 **Scope-3 (categories — needed for §4.2 to demonstrate what SCI/oSCI miss):**
 
@@ -160,7 +189,7 @@ This is the "ideal" provider report that §4 attributes against, and that §5 wi
 |---|---|---|
 | Cat 2 — IT hardware embodied | GPU + (CPU + RAM + SSD + chassis if we go full-server) | Per-card kgCO₂e × cards × (1/lifetime) × (week/year) |
 | Cat 2 — Building embodied | DC shell, racks, cooling infrastructure | Allocate small slice of a published DC LCA (Boavizta / Scaleway / OVHcloud factors — already in `references/`) |
-| Cat 3 — FERA (upstream fuel + T&D losses) | Grid losses upstream of S2 | ~8–15% of S2 (standard; cite GHG Protocol scope3-standard.pdf) |
+| Cat 3 — FERA (upstream fuel + T&D losses) | Grid losses upstream of S2 | ~8–15% of S2 (standard; \citep{ghg-protocol-scope3}) |
 | Cat 4 — Upstream transport | Shipping GPUs/chassis from manufacturer | Small fixed (cite shipping LCA factors) |
 | Cat 12 — End-of-life treatment | Disposal/recycling of hardware | Small fixed; Azure includes this, AWS/GCP don't (cf. Table 2 in paper) |
 
@@ -187,7 +216,9 @@ $R_i$ = ContextTokens (prefill-only model).
 (b) Boxplot: distribution of attributed-footprint-per-token, faceted by metric × GPU type.
 
 **Expected result.**
-- SCI on dgx-a100 (fully past 6 yr amortization): $M = 0$ for every request — the *purest* form of the fallacy.
+- SCI on dgx-a100: under the provider convention ($M=0$ past EL), every request gets $M=0$ — the strongest empirical realisation of Bashir's sunk-carbon fallacy.
+Under a literal SCI reading with $\text{TiR}/\text{EL} > 1$, $M$ would grow rather than vanish; we flag this asymmetry in the figure caption so the A100 case is not read as a literal SCI claim.
+The fallacy's *structural* form (flat amortisation within EL → $M$/unit-work insensitive to declining efficiency) is also visible on the H100 within its lifetime.
 - SCI on dgx-h100 (fresh): full $M$ amortized over short cumulative tokens served → high per-token values.
 - oSCI: monotone in energy, indifferent to system embodied profile.
 - rSCI: monotone in energy AND higher on the A100 (more energy per token → larger $w_i$ → larger $\Delta^{\text{S3}}$ share). Correct gradient.
@@ -263,7 +294,7 @@ All numbers (verified and estimated) live in `experiments/constants.py` with cit
 5. **Building / DC infrastructure embodied** — currently 1.0 kgCO₂e/W IT capacity/year (Boavizta mid-range). Pull a more specific number from Boavizta / Scaleway / OVHcloud (all in `references/carbon_accounting_methodologies/`).
 6. **Grid CI trace** — currently `data/carbonintensity_2026-03-23.csv` (24 h, us-central1, tiled). User will replace with a longer / different-region series later.
 7. **Shapley sample budget** for Analysis 3 — 100 / 500 / 1000 orderings? With only 2 systems the system-coalition game is trivial; the interesting Shapley game is over *requests* (or request-cohorts) in the peak-capacity game. Decide based on convergence plot.
-8. **Analysis window** — full 7-day week per service; for §4.2's combined report use the 5-day overlap (May 12–16, 2024).
+8. **Analysis window** — full 7-day week per workload; for §4.2's combined report use the 5-day overlap (May 12–16, 2024). Month extension is a trace-input swap, deferred.
 9. **Region sweep** — defer to §6 (Future Work). One reference region for §4; mention region-CI sensitivity in the operational-dominance paragraph.
 
 ## What lives where

@@ -100,11 +100,17 @@ applicable from a single function to a datacenter, and intended to drive enginee
 optimisation.
 
 Bashir et al.~\cite{bashir2024} show that \textsc{sci} contains a structural bug they
-call the \emph{sunk-carbon fallacy}: because $M$ is amortised flat over the server's
-financial lifetime, the per-unit-work number \emph{drops} as the hardware ages and gets
-less efficient. A carbon-aware scheduler optimising \textsc{sci} is therefore biased
-toward older, less efficient servers --- the opposite of what total-footprint
-minimisation requires. To fix this, they introduce two refinements:
+call the \emph{sunk-carbon fallacy}: because $M$ is amortised at a flat rate over the
+device's expected lifespan, the per-unit-work $M$ does not respond to declining
+efficiency, so as hardware ages, $E$ grows but $M$/$R$ does not, and a carbon-aware
+scheduler optimising \textsc{sci} is biased toward older, less efficient
+servers --- the opposite of what total-footprint minimisation requires. Provider
+amortisation conventions (AWS/Azure 6\,yr, GCP 4\,yr; all zero out past EL ---
+Table~\ref{tab:bigthree-s3}) sharpen this into the limit case where past-EL hardware
+contributes $M=0$ per request; we note that the SCI specification itself is silent on
+$\text{TiR}>\text{EL}$, so the $M=0$ reading is a provider operationalisation rather
+than an SCI mandate, but it is the reading customers see today. To fix the underlying
+fallacy, Bashir et al.\ introduce two refinements:
 \[
 \textsc{o-sci} = \frac{E \cdot I}{R}, \qquad
 \textsc{t-sci} = \frac{tO + tM}{R},
