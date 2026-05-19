@@ -17,12 +17,14 @@ references/
 ├── SCI.md                              GSF SCI Specification v1.1 (markdown)
 ├── SCI_AI.md                           GSF SCI for AI extension (markdown)
 ├── SCI_SUNK_CARBON.md                  authoritative short summary of Bashir et al. 2024
+├── SHARMA_2024_SHAPLEY.md              authoritative short summary of Sharma & Fuerst 2024 (Shapley attribution for FaaS)
 │
 ├── sources/                            academic priors + standards
 │   ├── bashir-2024-sunk-carbon/        TeX source folder
 │   │   ├── bashir-2024-sunk-carbon.tex   the paper source (grep-able; verify quotes here)
 │   │   └── figures/
 │   ├── greensku-isca-2024.pdf
+│   ├── accountable-carbon-footprints-serverless.pdf
 │   ├── ghg-protocol-corporate-standard.pdf
 │   ├── ghg-protocol-scope3-standard.pdf
 │   └── ghg-protocol-scope2-guidance.pdf
@@ -49,6 +51,7 @@ references/
 ### Prior work
 - `sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex` — **Bashir et al. 2024** *"The Sunk Carbon Fallacy"* (arXiv:2410.15087). The central prior we extend. Defines oSCI / SCI / tSCI. **Both oSCI and tSCI avoid the sunk-carbon fallacy; only GSF-standard SCI exhibits it** (confirmed 2026-05-17 by reading §3 and §6 of the TeX source; tSCI formula is on line 374: `tSCI = (tO + tM) per R`). See `SCI_SUNK_CARBON.md` for the corrected taxonomy summary; cite §/line numbers from the TeX source for paper claims.
 - `sources/greensku-isca-2024.pdf` — **GreenSKU (ISCA 2024)**. Microsoft research on hardware sustainability / SKU design for carbon reduction.
+- `sources/accountable-carbon-footprints-serverless.pdf` — **Sharma & Fuerst 2024** *"Accountable Carbon Footprints and Energy Profiling For Serverless Functions"* (SoCC '24). Approximated-Shapley fair attribution for FaaS: three allocation rules (usage-proportional, frequency-proportional, even-share-among-active) for three classes of shared cost, with explicit "embodied as static sunk cost" framing that contrasts with SCI. The directly citable prior for rSCI's per-component residual-allocation schema (§4 surgery). See `SHARMA_2024_SHAPLEY.md` for the summary; cite §/eq from the PDF for paper claims. Bib key: `sharma2024accountable_footprint_serverless`.
 
 ### Standards
 - `sources/ghg-protocol-corporate-standard.pdf` — **GHG Protocol Corporate Standard** (revised).
