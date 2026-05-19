@@ -14,7 +14,7 @@ Three stacked panels:
 
 Writes paper/figures/timeseries.pdf.
 
-Run: `uv run python -m experiments.timeseries`
+Run: `uv run python -m experiments_old.timeseries`
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ COLOR = {
 def main() -> None:
     if not TRACE.exists():
         raise SystemExit(
-            f"{TRACE} not found. Run `uv run python -m experiments.run_simulation` first."
+            f"{TRACE} not found. Run `uv run python -m experiments_old.run_simulation` first."
         )
     df = pd.read_parquet(TRACE)
     # Aggregate over GPU to per-minute totals

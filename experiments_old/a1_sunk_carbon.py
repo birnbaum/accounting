@@ -15,7 +15,7 @@ scatter.
 
 Writes paper/figures/a1_sunk_carbon.pdf.
 
-Run: `uv run python -m experiments.a1_sunk_carbon`
+Run: `uv run python -m experiments_old.a1_sunk_carbon`
 """
 
 from __future__ import annotations
@@ -26,8 +26,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from experiments.constants import DGX_A100, DGX_H100
-from experiments.picocloud import SYSTEMS
+from experiments_old.constants import DGX_A100, DGX_H100
+from experiments_old.picocloud import SYSTEMS
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRACE = ROOT / "data/processed/simulation_trace.parquet"
@@ -44,7 +44,7 @@ GPU_COLOR = {
 def main() -> None:
     if not TRACE.exists():
         raise SystemExit(
-            f"{TRACE} not found. Run `uv run python -m experiments.run_simulation` first."
+            f"{TRACE} not found. Run `uv run python -m experiments_old.run_simulation` first."
         )
 
     trace = pd.read_parquet(TRACE)

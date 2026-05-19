@@ -15,7 +15,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from experiments.constants import (
+from experiments_old.constants import (
     DC_INFRA_KGCO2E_PER_W_TOTAL,
     DC_INFRA_LIFETIME_YEARS,
     DGX_A100,

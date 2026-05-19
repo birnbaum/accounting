@@ -11,7 +11,7 @@ and renders a stacked-bar comparison of:
 
 Writes paper/figures/a2_reconciliation.pdf.
 
-Run: `uv run python -m experiments.a2_reconciliation`
+Run: `uv run python -m experiments_old.a2_reconciliation`
 """
 
 from __future__ import annotations
@@ -21,8 +21,8 @@ import pathlib
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from experiments.constants import DGX_A100, DGX_H100, PUE
-from experiments.picocloud import (
+from experiments_old.constants import DGX_A100, DGX_H100, PUE
+from experiments_old.picocloud import (
     HOURS_PER_WEEK,
     SYSTEMS,
     TopDown,
@@ -123,7 +123,7 @@ def stacked_bar(ax, x, components: dict[str, float]) -> float:
 def main() -> None:
     if not TRACE.exists():
         raise SystemExit(
-            f"{TRACE} not found. Run `uv run python -m experiments.run_simulation` first."
+            f"{TRACE} not found. Run `uv run python -m experiments_old.run_simulation` first."
         )
 
     df = pd.read_parquet(TRACE)

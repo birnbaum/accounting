@@ -58,19 +58,19 @@ All commands from the repo root.
 
 ```sh
 # One-time: process raw CSVs (only when input CSVs change).
-uv run python -m experiments.prepare_data
+uv run python -m experiments_old.prepare_data
 
 # Run the simulation — produces simulation_trace.parquet.
-uv run python -m experiments.run_simulation
+uv run python -m experiments_old.run_simulation
 
 # Sanity check — stdout, no plotting.
-uv run python -m experiments.a0_sanity
+uv run python -m experiments_old.a0_sanity
 
 # Figures — each writes a PDF to paper/figures/.
-uv run python -m experiments.a1_sunk_carbon     # per-token attribution by metric × GPU
-uv run python -m experiments.a2_reconciliation  # top-down ↔ Σ metric_i·R_i
-uv run python -m experiments.timeseries         # how signals vary over the week
-# uv run python -m experiments.a3_peak_shaving  # TODO
+uv run python -m experiments_old.a1_sunk_carbon     # per-token attribution by metric × GPU
+uv run python -m experiments_old.a2_reconciliation  # top-down ↔ Σ metric_i·R_i
+uv run python -m experiments_old.timeseries         # how signals vary over the week
+# uv run python -m experiments_old.a3_peak_shaving  # TODO
 ```
 
 The simulation is **fully in-process Python**, single machine. No GPU is

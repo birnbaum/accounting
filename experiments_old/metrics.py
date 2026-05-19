@@ -27,8 +27,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from experiments.constants import DGX_A100, DGX_H100, PUE, ROUTING_SHARE
-from experiments.picocloud import (
+from experiments_old.constants import DGX_A100, DGX_H100, PUE, ROUTING_SHARE
+from experiments_old.picocloud import (
     GAMMA,
     HOURS_PER_WEEK,
     J_PER_KWH,
@@ -54,7 +54,7 @@ def m_per_token_g(name: str, avg_utilization: float = 0.638) -> float:
     sys = SYSTEMS[name]
     if sys.age_years >= sys.lifetime_years:
         return 0.0
-    throughput_tok_s = sys.n_gpus * sys.prefill_tokens_per_sec_per_gpu
+    throughput_tok_s = sys.prefill_tokens_per_sec
     seconds_in_lifetime = sys.lifetime_years * 365.25 * 24 * 3600
     r_lifetime_tokens = throughput_tok_s * avg_utilization * seconds_in_lifetime
     return sys.embodied_kgco2e * 1000.0 / r_lifetime_tokens  # kg -> g

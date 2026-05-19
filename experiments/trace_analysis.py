@@ -9,42 +9,53 @@ def _():
     import marimo as mo
     import pandas as pd
     from pathlib import Path
+    import matplotlib.pyplot as plt
 
-    return Path, mo, pd
-
-
-@app.cell
-def _(Path, mo, pd):
-    mo.md(rf"# Simulation Trace Analysis")
-
-    trace_path = Path("../data/processed/per_minute.parquet")
-
-    if not trace_path.exists():
-        # Try relative to project root if run from there
-        trace_path = Path("data/processed/per_minute.parquet")
-
-    mo.stop(not trace_path.exists(), f"Trace file not found at {trace_path}")
-
-    df = pd.read_parquet(trace_path)    return (df,)
+    return pd, plt
 
 
 @app.cell
-def _(df, mo):
-    mo.md(f"""
-    Loaded trace with {len(df):,} rows.
-    """)
+def _(pd):
+    df = pd.read_csv("data/AzureLLMInferenceTrace_conv_1week_minutely.csv")
+    df.head(2)
+    return (df,)
+
+
+@app.cell
+def _(df, plt):
+    print(df.describe())
+
+    fig, axes = plt.subplots(2, 1, figsize=(10, 4), sharex=True)
+
+    axes[0].plot(df["n_requests"])
+    axes[0].set_ylabel("n_requests")
+
+    axes[1].plot(df["context_tokens"])
+    axes[1].set_ylabel("context_tokens")
+
+    fig.tight_layout()
+    fig
     return
 
 
 @app.cell
-def _(df):
-    df.head()
+def _(pd, plt):
+    df_ci = pd.read_csv("data/carbonintensity_2026-03-23.csv")
+
+    fig_ci, ax_ci = plt.subplots(figsize=(10, 4))
+    df_ci.plot(ax=ax_ci)
+    fig_ci.tight_layout()
+
+    fig_ci
     return
 
 
 @app.cell
-def _(df):
-    df["grid_ci_gco2_per_kwh"].plot()
+def _(df, plt):
+    _fig, _ax = plt.subplots(figsize=(10,2))
+    (df["context_tokens"] / 60 / 9100 / 15).plot(ax=_ax)
+    _ax.set(ylim=(0,1))
+    _fig
     return
 
 

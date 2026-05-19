@@ -2,10 +2,10 @@
 Phase-1 sanity driver. No plotting.
 
 Reads the master simulation trace and prints aggregate numbers + per-GPU
-per-token intensities. Run `experiments.run_simulation` first to (re)generate
+per-token intensities. Run `experiments_old.run_simulation` first to (re)generate
 the trace.
 
-Run: `uv run python -m experiments.a0_sanity`
+Run: `uv run python -m experiments_old.a0_sanity`
 """
 
 from __future__ import annotations
@@ -14,9 +14,9 @@ import pathlib
 
 import pandas as pd
 
-from experiments.constants import DGX_A100, DGX_H100, ROUTING_SHARE
-from experiments.metrics import m_per_token_g
-from experiments.picocloud import (
+from experiments_old.constants import DGX_A100, DGX_H100, ROUTING_SHARE
+from experiments_old.metrics import m_per_token_g
+from experiments_old.picocloud import (
     HOURS_PER_WEEK,
     SYSTEMS,
     avg_grid_intensity_gco2_per_kwh,
@@ -38,7 +38,7 @@ def total_context_tokens() -> float:
 def main() -> None:
     if not TRACE.exists():
         raise SystemExit(
-            f"{TRACE} not found. Run `uv run python -m experiments.run_simulation` first."
+            f"{TRACE} not found. Run `uv run python -m experiments_old.run_simulation` first."
         )
 
     df = pd.read_parquet(TRACE)

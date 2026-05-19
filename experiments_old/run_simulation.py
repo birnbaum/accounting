@@ -29,7 +29,7 @@ Output (`data/processed/simulation_trace.parquet`):
     per_token_rsci_g       float    — gamma * (I_r(t) + rho) = gamma*xi(t)
     kg_sci, kg_osci, kg_rsci  float — per-row mass (per_token * context_tokens / 1000)
 
-Run: `uv run python -m experiments.run_simulation`
+Run: `uv run python -m experiments_old.run_simulation`
 """
 
 from __future__ import annotations
@@ -39,9 +39,9 @@ import pathlib
 import numpy as np
 import pandas as pd
 
-from experiments.constants import DGX_A100, DGX_H100, PUE, ROUTING_SHARE
-from experiments.metrics import m_per_token_g, xi_gco2_per_kwh
-from experiments.picocloud import (
+from experiments_old.constants import DGX_A100, DGX_H100, PUE, ROUTING_SHARE
+from experiments_old.metrics import m_per_token_g, xi_gco2_per_kwh
+from experiments_old.picocloud import (
     GAMMA,
     HOURS_PER_WEEK,
     J_PER_KWH,

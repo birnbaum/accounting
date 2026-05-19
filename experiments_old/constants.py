@@ -37,7 +37,7 @@ from dataclasses import dataclass
 class System:
     name: str
     n_gpus: int
-    prefill_tokens_per_sec_per_gpu: float  # 7-8B model, rough
+    prefill_tokens_per_sec: float          # 70B model
     peak_power_w: float                    # full-system, all GPUs busy
     idle_power_w: float                    # system idle (CPU + RAM + fans + GPU idle)
     embodied_kgco2e: float                 # full-system cradle-to-gate (ESTIMATE)
@@ -48,11 +48,8 @@ class System:
 DGX_A100 = System(
     name="DGX A100",
     n_gpus=8,
-    # A100 80GB prefill on a 7-8B model: ~8,000 tok/s/GPU. ESTIMATE — bounded from
-    # open vLLM benchmark traces \cite{vllm-benchmarks}; closest primary measurement
-    # \cite{patel-splitwise-2024} reports OPT-30B / Bloom-176B, not 7-8B directly.
-    # Sanity-checked against the published H100/A100 ~2.5x ratio \cite{nvidia-h100-vs-a100-inference}.
-    prefill_tokens_per_sec_per_gpu=8_000.0,
+    # 8×A100 bf16 TP=8: ~3000 tok/s prefill per node TODO Source
+    prefill_tokens_per_sec=3000,
     # NVIDIA DGX A100 datasheet, max 6.5 kW \cite{nvidia-dgx-a100-datasheet}.
     peak_power_w=6_500.0,
     # Estimate: idle ≈ 25% of peak for the system (GPU idle + CPU + RAM + fans + PSU loss)
@@ -71,10 +68,8 @@ DGX_A100 = System(
 DGX_H100 = System(
     name="DGX H100",
     n_gpus=8,
-    # H100 80GB prefill on a 7-8B model: ~20,000 tok/s/GPU. ESTIMATE — bounded from
-    # open vLLM benchmark traces \cite{vllm-benchmarks}; sanity-checked against the
-    # H100/A100 ~2.5x inference-throughput ratio \cite{nvidia-h100-vs-a100-inference}.
-    prefill_tokens_per_sec_per_gpu=20_000.0,
+    # 8×H100 bf16 TP=8: ~6100 tok/s prefill per node TODO Source
+    prefill_tokens_per_sec=6100,
     # NVIDIA DGX H100 datasheet, max 10.2 kW \cite{nvidia-dgx-h100-datasheet}.
     peak_power_w=10_200.0,
     # Estimate: idle ≈ 25% of peak.
@@ -95,6 +90,11 @@ DGX_H100 = System(
 )
 
 
+_cap_a100 = DGX_A100.prefill_tokens_per_sec
+_cap_h100 = DGX_H100.prefill_tokens_per_sec
+_total = _cap_a100 + _cap_h100
+ROUTING_SHARE = {DGX_A100.name: _cap_a100 / _total, DGX_H100.name: _cap_h100 / _total}
+
 # ---------------------------------------------------------------------------
 # Per-card embodied (for sensitivity / per-card sub-analysis if useful)
 # ---------------------------------------------------------------------------
@@ -103,19 +103,10 @@ HGX_H100_BASEBOARD_KGCO2E = 1_312.0  # \cite{nvidia-hgx-h100-pcf}, 8-GPU baseboa
 
 
 # ---------------------------------------------------------------------------
-# Region / grid
-# ---------------------------------------------------------------------------
-# data/carbonintensity_2026-03-23.csv — 24 hourly samples in gCO2/kWh.
-# Trace dates (May 10-18, 2024) do not align with this CSV's date (2026-03-23),
-# so we anchor trace t=0 to the CSV's first hour and tile the 24h pattern over
-# the 7-day trace until the user provides a longer real series.
-REGION = "us-central1"
-GRID_CSV = "data/carbonintensity_2026-03-23.csv"
-
-
-# ---------------------------------------------------------------------------
 # DC infrastructure
 # ---------------------------------------------------------------------------
+GRID_CSV = "data/carbonintensity_2026-03-23.csv"
+REGION = "us-central1"
 PUE = 1.15  # Industry-typical hyperscaler; cite GCP/AWS public reporting if needed.
 
 
@@ -180,22 +171,6 @@ TRANSPORT_KGCO2E_PER_SYSTEM = 50.0  # one-time, amortized over lifetime
 # Diesel generator testing + refrigerant leakage for a 2-DGX-sized DC slice.
 # ESTIMATE.
 S1_KGCO2E_PER_WEEK = 5.0
-
-
-# ---------------------------------------------------------------------------
-# Routing: throughput-weighted random assignment.
-# Computed from per-system prefill capacity above; both DGXs land at the same
-# utilization fraction under the trace's average load. See §"Routing" in
-# paper/experiments_design.md.
-# ---------------------------------------------------------------------------
-def _routing_share() -> dict[str, float]:
-    cap_a100 = DGX_A100.n_gpus * DGX_A100.prefill_tokens_per_sec_per_gpu
-    cap_h100 = DGX_H100.n_gpus * DGX_H100.prefill_tokens_per_sec_per_gpu
-    total = cap_a100 + cap_h100
-    return {DGX_A100.name: cap_a100 / total, DGX_H100.name: cap_h100 / total}
-
-
-ROUTING_SHARE = _routing_share()  # {'DGX A100': 0.2857, 'DGX H100': 0.7143}
 
 
 # ---------------------------------------------------------------------------
