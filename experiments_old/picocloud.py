@@ -21,8 +21,6 @@ from experiments_old.constants import (
     DGX_A100,
     DGX_H100,
     FERA_FRACTION_OF_S2,
-    GAMMA_A100_J_PER_TOKEN,
-    GAMMA_H100_J_PER_TOKEN,
     GRID_CSV,
     PUE,
     REGION,
@@ -34,7 +32,7 @@ from experiments_old.constants import (
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 SYSTEMS = {DGX_A100.name: DGX_A100, DGX_H100.name: DGX_H100}
-GAMMA = {DGX_A100.name: GAMMA_A100_J_PER_TOKEN, DGX_H100.name: GAMMA_H100_J_PER_TOKEN}
+GAMMA = {name: sys.gamma_j_per_token for name, sys in SYSTEMS.items()}
 
 J_PER_KWH = 3_600_000.0
 HOURS_PER_WEEK = 168.0
@@ -66,8 +64,8 @@ def per_request_active_energy_j(
     """gamma_g * ContextTokens_i — marginal active energy above idle."""
     return np.where(
         gpu == DGX_A100.name,
-        GAMMA_A100_J_PER_TOKEN * context_tokens,
-        GAMMA_H100_J_PER_TOKEN * context_tokens,
+        DGX_A100.gamma_j_per_token * context_tokens,
+        DGX_H100.gamma_j_per_token * context_tokens,
     )
 
 

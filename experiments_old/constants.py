@@ -44,6 +44,11 @@ class System:
     age_years: float                       # since first install
     lifetime_years: float = 6.0            # SCI amortization window
 
+    @property
+    def gamma_j_per_token(self) -> float:
+        """Active IT energy per prefill token (incremental energy above idle)."""
+        return (self.peak_power_w - self.idle_power_w) / self.prefill_tokens_per_sec
+
 
 DGX_A100 = System(
     name="DGX A100",
@@ -171,19 +176,3 @@ TRANSPORT_KGCO2E_PER_SYSTEM = 50.0  # one-time, amortized over lifetime
 # Diesel generator testing + refrigerant leakage for a 2-DGX-sized DC slice.
 # ESTIMATE.
 S1_KGCO2E_PER_WEEK = 5.0
-
-
-# ---------------------------------------------------------------------------
-# Energy model per request (prefill-only)
-# ---------------------------------------------------------------------------
-# E_i = gamma_g * ContextTokens_i + idle_share
-# gamma values are the *active* per-prefill-token energy on each GPU type.
-# ESTIMATE — bounded; calibrate from Splitwise \cite{patel-splitwise-2024}
-# (power-latency curves) or vLLM \cite{vllm-benchmarks} per-token measurements
-# once PDFs / scripts land in references/.
-
-# At ~8000 tok/s and ~400W per A100 card busy: 400W / 8000 tok/s = 50 mJ/token.
-GAMMA_A100_J_PER_TOKEN = 0.050
-
-# At ~20000 tok/s and ~700W per H100 card busy ≈ 35 mJ/token.
-GAMMA_H100_J_PER_TOKEN = 0.035
