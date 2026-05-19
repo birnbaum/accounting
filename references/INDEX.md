@@ -18,6 +18,8 @@ references/
 ├── SCI_AI.md                           GSF SCI for AI extension (markdown)
 ├── SCI_SUNK_CARBON.md                  authoritative short summary of Bashir et al. 2024
 ├── SHARMA_2024_SHAPLEY.md              authoritative short summary of Sharma & Fuerst 2024 (Shapley attribution for FaaS)
+├── BOAVIZTAPI_2024.md                  authoritative short summary of Simon et al. 2024 (BoaviztAPI bottom-up LCA)
+├── CINERGY_2025.md                     authoritative short summary of Jacquet et al. 2025 (Cinergy deterministic VM power)
 │
 ├── sources/                            academic priors + standards
 │   ├── bashir-2024-sunk-carbon/        TeX source folder
@@ -25,6 +27,8 @@ references/
 │   │   └── figures/
 │   ├── greensku-isca-2024.pdf
 │   ├── accountable-carbon-footprints-serverless.pdf
+│   ├── boaviztapi-hotcarbon-2024.pdf
+│   ├── cinergy-tcc-2025.pdf
 │   ├── ghg-protocol-corporate-standard.pdf
 │   ├── ghg-protocol-scope3-standard.pdf
 │   └── ghg-protocol-scope2-guidance.pdf
@@ -52,6 +56,8 @@ references/
 - `sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex` — **Bashir et al. 2024** *"The Sunk Carbon Fallacy"* (arXiv:2410.15087). The central prior we extend. Defines oSCI / SCI / tSCI. **Both oSCI and tSCI avoid the sunk-carbon fallacy; only GSF-standard SCI exhibits it** (confirmed 2026-05-17 by reading §3 and §6 of the TeX source; tSCI formula is on line 374: `tSCI = (tO + tM) per R`). See `SCI_SUNK_CARBON.md` for the corrected taxonomy summary; cite §/line numbers from the TeX source for paper claims.
 - `sources/greensku-isca-2024.pdf` — **GreenSKU (ISCA 2024)**. Microsoft research on hardware sustainability / SKU design for carbon reduction.
 - `sources/accountable-carbon-footprints-serverless.pdf` — **Sharma & Fuerst 2024** *"Accountable Carbon Footprints and Energy Profiling For Serverless Functions"* (SoCC '24). Approximated-Shapley fair attribution for FaaS: three allocation rules (usage-proportional, frequency-proportional, even-share-among-active) for three classes of shared cost, with explicit "embodied as static sunk cost" framing that contrasts with SCI. The directly citable prior for rSCI's per-component residual-allocation schema (§4 surgery). See `SHARMA_2024_SHAPLEY.md` for the summary; cite §/eq from the PDF for paper claims. Bib key: `sharma2024accountable_footprint_serverless`.
+- `sources/boaviztapi-hotcarbon-2024.pdf` — **Simon et al. 2024** *"BoaviztAPI: A Bottom-Up Model to Assess the Environmental Impacts of Cloud Services"* (HotCarbon '24). Open-source provider-agnostic bottom-up LCA toolkit; component-level embodied + usage modelling; multi-criteria (GWP, ADP, PE); their Table 1 independently corroborates our §3 provider-methodology critique. Falls under our §2 critique of bottom-up-only metrics — not reconcilable to top-down — but is the natural choice of bottom-up engine that feeds rSCI's $\varepsilon_p$. See `BOAVIZTAPI_2024.md` for the summary. Bib key: **TODO** (only a generic `boavizta-dc-lca` misc entry currently exists).
+- `sources/cinergy-tcc-2025.pdf` — **Jacquet et al. 2025** *"Cinergy: Deterministic Power Monitoring for Carbon Accounting in the Cloud"* (IEEE TCC, extended from CCGrid 2025). Per-VM deterministic power model combining WCPC top-down with bottom-up RAPL profiling, validated with OVHcloud across 6 architectures (MAPE 6.6\%). **Headline finding: current carbon-accounting tools can underestimate operational CO2 by up to 3× for high-utilisation VMs (§V.C)** — a strong empirical hook for our §2 critique. The "Cinergy ratio" (per-cluster consolidation-gain correction) is conceptually adjacent to our $\mu_{s,r}$ Scope-2 multiplier. See `CINERGY_2025.md` for the summary. Bib key: **TODO** (not yet in bib).
 
 ### Standards
 - `sources/ghg-protocol-corporate-standard.pdf` — **GHG Protocol Corporate Standard** (revised).

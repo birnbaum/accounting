@@ -60,13 +60,9 @@ def m_per_token_g(name: str, avg_utilization: float = 0.638) -> float:
     return sys.embodied_kgco2e * 1000.0 / r_lifetime_tokens  # kg -> g
 
 
-# ---------------------------------------------------------------------------
-# Per-request metrics (gCO2e per ContextToken)
-# ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class PerTokenIntensity:
     """Intensities a request sees (gCO2e per ContextToken). Per GPU type."""
-
     sci: float
     osci: float
     rsci: float
