@@ -1,0 +1,1080 @@
+The carbon
+benefits of
+cloud computing
+A study on the Microsoft Cloud
+in partnership with WSP
+Updated 2020
+
+
+
+
+© 2017
+© 2020 Microsoft.
+       Microsoft.All
+                  Allrights
+                       rightsreserved.
+                               reserved.
+    This white paper is an update to “Cloud Computing and Sustainability: The Environmental Benefits
+    of Moving to the Cloud,” published in 2010. In this paper, we have expanded the older study to
+    show how the Microsoft Cloud can accelerate energy savings and reduce carbon emissions.
+
+
+
+
+Contents
+Foreword ............................................................................................................................................................................................ 3
+Executive summary ........................................................................................................................................................................ 4
+Introduction: Cloud computing and increasing energy consumption ...................................................................... 5
+Research approach: Life cycle evaluation of on-premises and cloud IT services .................................................. 7
+     Cloud services ......................................................................................................................................................................... 7
+     On-premises deployment scenarios............................................................................................................................... 7
+     Functional units ...................................................................................................................................................................... 8
+     Life cycle phases..................................................................................................................................................................... 8
+     Data sources and key parameters ................................................................................................................................... 9
+Findings: Smaller footprint with the Microsoft Cloud ................................................................................................... 10
+     Energy and emissions results by service and deployment scenario ............................................................... 10
+     On-premises deployment scenarios............................................................................................................................ 10
+     Functional units ................................................................................................................................................................... 11
+     Life cycle phases.................................................................................................................................................................. 11
+     Four energy- and carbon-reducing features of the Microsoft Cloud ........................................................... 12
+Case study A: A global engineering consulting firm .................................................................................................... 16
+Case study B: A global apparel company.......................................................................................................................... 17
+Looking ahead: Becoming carbon negative by 2030 .................................................................................................... 18
+Appendix I: Key parameters..................................................................................................................................................... 21
+Appendix II: Model assumptions ........................................................................................................................................... 23
+     Embedded emissions ........................................................................................................................................................ 23
+     Transportation...................................................................................................................................................................... 23
+     Use phase energy ............................................................................................................................................................... 23
+     End-of-life disposal ............................................................................................................................................................ 24
+     Model exclusions ................................................................................................................................................................ 24
+Appendix III: Energy and carbon benefits of Microsoft Cloud services ................................................................. 25
+     Azure Compute.................................................................................................................................................................... 26
+     Azure Storage....................................................................................................................................................................... 27
+     Exchange Online ................................................................................................................................................................. 28
+     SharePoint Online ............................................................................................................................................................... 29
+
+
+
+
+2              The carbon benefits of cloud computing
+Foreword
+Today, a technology revolution is transforming virtually every aspect of life as we know it. The scale of
+its impact is on par with the discovery of electricity, such that some are calling this era the Fourth
+Industrial Revolution. Powering this revolution are cloud computing and the technological
+advancements that underpin it. With cloud computing, businesses, governments, institutions, and
+individuals are able to access nearly unlimited computing power at the push of a button, enabling them
+to gain insights and make discoveries previously not dreamed of in fields such as healthcare, agriculture,
+and retail. And yet, even as the cloud unlocks humanity’s vast potential, the exponential expansion of IT
+infrastructure raises questions about the environmental impacts from this growth.
+
+At Microsoft, we believe the science on climate change is clear, and that the world must reach “net zero”
+emissions, removing as much carbon as it emits each year. In support of this, in 2020 we reaffirmed our
+commitment to thread sustainability into everything we do, and announced an ambitious goal and new
+plan to reduce and ultimately remove Microsoft’s carbon footprint. As part of that plan, we will shift to a
+100 percent supply of renewable energy by 2025, and take action to remove more carbon than we emit
+by 2030—the same year by which we will reduce our carbon emissions more than 50 percent and
+electrify our fleet of global campus vehicles. By 2050, we will remove our historic carbon footprint. We
+are also deploying $1 billion from our climate innovation fund to accelerate the global development of
+carbon reduction, capture, and removal technologies, which will be required to enable us to achieve our
+goals.
+
+We are equally committed to extending the benefits of the cloud beyond our operations to our
+customers, by working to deliver IT services with a smaller environmental footprint. Increasing demand
+for computing services is inevitable, and we aim to support this growth as responsibly as possible. We
+engaged external experts to conduct this study, comparing the Microsoft Cloud with traditional
+enterprise datacenter deployments. The results show that the Microsoft Cloud delivers impressive
+sustainability benefits, and point to the opportunity for business and society to reduce the carbon
+footprint associated with computing in support of a more sustainable future.
+
+We invite you to read about the environmental advantages of deploying your applications in the
+Microsoft Cloud.
+
+Noelle Walsh
+Corporate Vice President, Cloud Operations + Innovation (CO+I)
+Microsoft Corporation
+
+
+
+
+                                                                                A study on the Microsoft Cloud   3
+Executive summary
+Cloud computing makes it possible to collect, analyze, and store huge quantities of data, reduce the
+total cost of ownership of IT, and increase business agility. Today, datacenters supporting the cloud
+consume a significant, and growing, amount of energy.
+
+Societally, moving from many on-premises servers to fewer large datacenters presents the opportunity
+to reduce overall IT consumption of energy and related carbon emissions. With this in mind, Microsoft
+commissioned a study to compare the energy consumption and carbon emissions1 of four applications
+in the Microsoft Cloud with their on-premises equivalents:
+•      Microsoft Azure Compute                                            •    Microsoft Exchange Online
+•      Microsoft Azure Storage                                            •    Microsoft SharePoint Online
+We selected these cloud applications as they together account for about half of the energy consumed in
+Microsoft datacenters. To gain as full and accurate a picture as possible, the study considered the full
+life cycle for the computing scenarios (from manufacturing to end-of-life).
+
+The results show that the Microsoft Cloud is between 22 and 93 percent more energy efficient than
+traditional enterprise datacenters, depending on the specific comparison being made. When taking into
+account our renewable energy purchases, the Microsoft Cloud is between 72 and 98 percent more
+carbon efficient. These savings are attributable to four key features of the Microsoft Cloud (Figure 1): IT
+operational efficiency, IT equipment efficiency, datacenter infrastructure efficiency, and renewable
+electricity.
+
+
+
+
+                        Figure 1*: The four features of the Microsoft Cloud that reduce environmental impact.
+                        *kgCO2e = kilograms of carbon dioxide equivalent
+
+
+At Microsoft, our commitment is to create a cloud that is trustworthy, responsible, and inclusive. This
+study provides a current measurement of the potential energy efficiency and carbon savings that
+businesses can realize with the Microsoft Cloud. The impact of using our cloud services will improve
+even more as we continue to refine how we manage capacity, boost energy efficiency, reduce waste,
+and add new sources of renewable energy.
+
+
+
+
+1
+    Throughout this paper, “emissions” and “carbon” refer to all greenhouse gas (GHG) emissions.
+
+4            The carbon benefits of cloud computing
+Introduction:
+Cloud computing and increasing energy consumption
+The world is now entering the Fourth Industrial Revolution, which, as described by the World Economic
+Forum, will feature major technological advances in artificial intelligence, robotics, genomics, materials
+sciences, 3D printing, and more. Businesses, governments, and civic institutions can now collect, store,
+and analyze data at an unprecedented scale, speed, and depth. Big data and deep analytics unlock the
+potential to make a positive impact throughout the world, from conserving the world’s freshwater
+supply to optimizing energy use in buildings. These improvements add up to financial savings and
+carbon reductions at a global scale.
+
+Cloud computing—large-scale, shared IT infrastructure available over the internet—is the engine
+enabling these technology advancements. And these advancements, in turn, are driving cloud uptake.
+At the same time, the cloud can help businesses reduce their total cost of ownership2 and realize
+greater business agility by delivering significant economies of scale and enabling access to data and
+applications anywhere.
+
+But as the world’s use of cloud computing accelerates, so too does the energy consumed in the cloud.
+In the United States alone, datacenters consume about 70 billion kilowatt-hours (kWh) of electricity
+each year, roughly 1.8 percent of the total electricity consumed in the country. This number is expected
+to grow to 73 billion kWh by 2020, about the same amount of energy that 6 million homes consume in
+one year.3 This number would be higher if not for the efficiencies realized in many commercial cloud
+datacenters.
+
+Following the Paris Agreement, as climate change gains public attention and as governments establish
+regulations to curtail carbon emissions, the environmental impact of computing is increasingly under
+scrutiny. At Microsoft, we embrace our responsibility to operate sustainably to reduce the climate
+impact of our business: we are committed to carbon neutral operations and purchasing renewable
+electricity. We are also committed to helping our customers understand and reduce the environmental
+impact of their computing.
+
+As part of this commitment, we conducted a study to assess the environmental implications of cloud
+computing. Specifically, our objectives were to:
+
+1. Assess the energy use and carbon emissions associated with key applications within the Microsoft
+   Cloud in comparison with their on-premises equivalents.
+
+
+
+
+2
+  Total cost of ownership is the total cost of an IT solution or product over time. The metric considers direct and indirect costs, capital
+expenses (such as IT equipment), and operating expenses (such as equipment upkeep and software).
+3
+  Arman Shehabi, Sarah Josephine Smith, Dale A. Sartor, Richard E. Brown, Magnus Herrlin, Jonathan G. Koomey, Eric R. Masanet,
+Nathaniel Horner, Inês Lima Azevedo, and William Lintner. United States Data Center Energy Usage Report. Berkeley, CA: Lawrence
+Berkeley National Laboratory. LBNL-1005775. 2016.
+
+
+
+                                                                                                           A study on the Microsoft Cloud     5
+2. Improve our understanding of the energy and carbon benefits of computing using Microsoft and
+   other commercial cloud services in general compared with on-premises implementations.
+
+The study builds on the 2010 Microsoft report Cloud Computing and Sustainability: The Environmental
+Benefits of Moving to the Cloud. 4 To conduct this updated study, Microsoft engaged WSP, a global
+consultancy with expertise in environmental and sustainability issues, to model the environmental
+impact of using Microsoft Cloud services instead of on-premises deployments. Stanford University
+IT sustainability and compute energy expert Dr. Jonathan Koomey served as an in-depth technical
+reviewer.
+
+This paper presents the research approach and findings of the study, demonstrating that Microsoft
+Cloud computing offers significant advantages in energy consumption and carbon emissions over on-
+premises deployments, findings that are consistent with both the original study and other industry
+research5.
+
+
+
+
+4
+    Cloud computing and sustainability: The environmental benefits of moving to the cloud. Accenture, WSP. 2010.
+5
+    P. Thomond. The enabling technologies of a low-carbon economy: A focus on cloud computing. Microsoft and GeSI. 2013.
+
+6            The carbon benefits of cloud computing
+Research approach:
+Life cycle evaluation of on-premises and cloud IT services
+This analysis uses a quantitative model to calculate and
+compare the energy consumption and carbon footprint
+of IT applications and compute and storage resources in
+the Microsoft Cloud with equivalent on-premises
+deployments (Figure 2). The model draws on greenhouse
+gas accounting principles from the World Resources
+Institute (WRI) and World Business Council for
+Sustainable Development (WBCSD) Corporate Standard
+and Product Life Cycle Standard.
+
+
+                                                                                      Figure 2: Study design: a quantitative evaluation of
+Cloud services                                                                        Microsoft Cloud services in comparison with on-
+                                                                                      premises deployment equivalents.
+
+The study looks at four cloud services that account for nearly
+half of the energy consumed in Microsoft datacenters:
+
+•    Azure Compute
+•    Azure Storage
+•    Exchange Online
+•    SharePoint Online
+Both Exchange Online and SharePoint Online were included in the original 2010 study.6 However, in this
+study, the scope was expanded to include Azure services, which provide infrastructure as a service (IaaS),
+above and beyond software as a service (SaaS). Our aim was to generate a broader and more inclusive
+spectrum of data points to enable a more accurate assessment of the energy and carbon implications of
+different types of services used today.
+
+
+
+On-premises deployment scenarios
+The study considered a range of on-premises deployment scenarios relative to the four Microsoft Cloud
+services listed previously:
+
+          •    Azure Compute comparisons:
+                  o Physical servers
+                  o Virtualized servers
+
+
+
+
+6
+  Cloud computing and sustainability: The environmental benefits of moving to the cloud. Accenture, WSP. 2010. Note: The original 2010
+report focused on three business applications: Exchange Online, SharePoint Online, and Microsoft Dynamics CRM Online.
+
+
+
+                                                                                                      A study on the Microsoft Cloud     7
+            •    Azure Storage comparisons:
+                     o Direct attached storage
+                     o Dedicated storage
+            •    Exchange Online and SharePoint Online comparisons:
+                     o Small deployments: 1,000 users
+                     o Medium deployments: 10,000 users
+                     o Large deployments: 100,000 users
+
+
+
+Functional units
+We analyzed the cloud services and on-premises deployments based on the functional unit for each
+cloud service—that is, the “useful output” offered by a deployment. We defined these functional units
+based on the level of service offered by the Microsoft Cloud. This allowed for an apples-to-apples
+comparison between the Microsoft Cloud and on-premises alternatives. The functional unit for each
+service is listed in the following table:
+
+                      Service                       Unit                      Quality and performance criteria7
+                Azure Compute                Core-hour                     Net computational output
+                Azure Storage                Terabyte-year                 Number of data replications
+                Exchange Online              Mailbox-year                  Mailbox size and replications
+                SharePoint Online            User-year                     Provisioned storage and replications
+
+
+
+Life cycle phases
+A life cycle assessment provides a full picture of the environmental impact of a product or service, from
+the raw material extraction for equipment manufacturing through the end-of-life treatment of
+equipment. Assessing the full life cycle helps to ensure inclusion of all major emission sources. In this
+study, we assessed each of the four cloud services and their on-premises equivalents for energy
+consumption and carbon emissions impacts across four life cycle phases, as illustrated in Figure 3 and
+described following.
+
+
+
+
+                       Figure 3: The life cycle phases used to define the boundary of energy consumption and carbon
+                       emissions considered in the analysis.
+
+
+
+
+7
+    The quality and performance criteria are proprietary to Microsoft and therefore specific numbers are not shared.
+
+8            The carbon benefits of cloud computing
+1. Raw material extraction and assembly—includes the energy consumption and emissions
+   associated with the use of the raw materials and the assembly of servers, networking equipment,
+   and hard drives.
+2. Transportation—represents the energy consumption and emissions associated with transporting
+   the servers and other IT equipment from the manufacturer to Microsoft datacenters or on-premises
+   datacenters.
+3. Use—encompasses the energy consumption and emissions from electricity used to run the servers,
+   networking equipment, hard drives, and datacenter infrastructure, such as lighting, cooling, and
+   power conditioning. Where relevant, includes energy from data flows over the internet.
+4. End-of-life disposal—includes end-of-life energy consumption and carbon emissions associated
+   with landfilling and recycling, based on conservative assumptions about recycling rates.
+
+
+
+Data sources and key parameters
+Primary data from Microsoft datacenters and equipment were used wherever possible, and secondary
+data such as industry averages were used as necessary.
+
+Key parameters considered in the analysis included:
+
+•   Equipment counts and specifications.
+•   Device utilization.
+•   Power draw of servers, storage devices, and networking equipment used within the datacenters.
+•   Power usage effectiveness (PUE) of datacenters hosting the services.
+•   Data flows over the internet.
+•   Carbon intensity of electricity supply.
+Equipment counts, equipment specifications, and power draw for Exchange on-premises deployments
+were determined using the Exchange Server Role Requirements Calculator for Exchange 2016. On-
+premises Exchange, SharePoint, compute, and storage equipment counts and specifications were
+supplied by industry experts whose primary role is to deploy these solutions for enterprises. The
+Microsoft Cloud analysis was based on actual data collected from current Microsoft datacenter
+operations.
+
+For a detailed description of each of these key parameters and model assumptions, please see Appendix
+I and Appendix II.
+
+
+
+
+                                                                            A study on the Microsoft Cloud   9
+Findings:
+Smaller footprint with the Microsoft Cloud
+The results of this study reveal significant energy efficiency improvements—from 22 to 93 percent—
+when switching from traditional enterprise datacenters to the Microsoft Cloud for any of the four
+services. The specific savings achieved vary by service and deployment scenario. The greatest relative
+savings are realized when smaller enterprise deployments transition to the cloud. The features driving
+these reductions for the Microsoft Cloud include more efficient operational practices, IT equipment, and
+datacenter infrastructure. These efficiencies translate into both energy and carbon savings. When also
+accounting for our purchases of zero-carbon electricity, emissions savings with the Microsoft Cloud can
+be as great as 98 percent.
+
+
+
+Energy and emissions results by service and deployment scenario
+Microsoft Cloud services achieve energy and emissions reductions in comparison with every on-
+premises deployment scenario assessed. The primary driver for energy and emissions reductions in each
+comparison is decreased electricity consumption per useful output during the use phase in the
+datacenters that run the Microsoft Cloud. Figure 4 below, shows the range of savings by service based
+on deployment scenario as described in the
+
+
+
+On-premises deployment scenarios
+The study considered a range of on-premises deployment scenarios relative to the four Microsoft Cloud
+services listed previously:
+
+       •    Azure Compute comparisons:
+               o Physical servers
+               o Virtualized servers
+
+
+
+       •    Azure Storage comparisons:
+                o Direct attached storage
+                o Dedicated storage
+       •    Exchange Online and SharePoint Online comparisons:
+                o Small deployments: 1,000 users
+                o Medium deployments: 10,000 users
+                o Large deployments: 100,000 users
+
+
+
+
+10      The carbon benefits of cloud computing
+Functional units
+We analyzed the cloud services and on-premises deployments based on the functional unit for each
+cloud service—that is, the “useful output” offered by a deployment. We defined these functional units
+based on the level of service offered by the Microsoft Cloud. This allowed for an apples-to-apples
+comparison between the Microsoft Cloud and on-premises alternatives. The functional unit for each
+service is listed in the following table:
+
+                Service                        Unit                     Quality and performance criteria
+          Azure Compute                 Core-hour                   Net computational output
+          Azure Storage                 Terabyte-year               Number of data replications
+          Exchange Online               Mailbox-year                Mailbox size and replications
+          SharePoint Online             User-year                   Provisioned storage and replications
+
+
+
+Life cycle phases
+A life cycle assessment provides a full picture of the environmental impact of a product or service, from
+the raw material extraction for equipment manufacturing through the end-of-life treatment of
+equipment. Assessing the full life cycle helps to ensure inclusion of all major emission sources. In this
+study, we assessed each of the four cloud services and their on-premises equivalents for energy
+consumption and carbon emissions impacts across four life cycle phases, as illustrated in Figure 3 and
+described following.
+
+
+
+
+                   Figure 3: The life cycle phases used to define the boundary of energy consumption and carbon
+                   emissions considered in the analysis.
+
+
+section earlier.
+
+
+
+
+                                                                                               A study on the Microsoft Cloud   11
+        Figure 4: The range of energy and emissions savings by cloud service. “Energy savings” shows the energy
+        savings of the datacenter electricity used in Microsoft Cloud services over the on-premises equivalents.
+        “Emissions savings (with renewables)” shows the emissions savings of the Microsoft Cloud services over the
+        on-premises equivalents, taking into account the purchase of zero-emission renewable electricity to power the
+        Microsoft Cloud.
+
+
+        For detailed data sheets by service, see Appendix III.
+
+
+
+Four energy- and carbon-reducing features of the
+Microsoft Cloud
+Four main drivers contribute to the smaller energy and carbon footprint of the Microsoft Cloud (as
+illustrated in Figure 5). The first three—IT operational efficiency, IT equipment efficiency, and datacenter
+infrastructure efficiency—reduce the energy required to deliver the services. The fourth is the purchase
+of renewable electricity, which will power 100 percent of electricity consumed in Microsoft datacenters,
+buildings, and campuses by 2025. The remaining carbon emissions associated with the Microsoft Cloud
+are primarily from aspects of the life cycle outside Microsoft datacenters (that is, embedded carbon in
+the raw materials, equipment assembly, transportation, data flows, and end-of-life disposal).
+
+
+
+
+12      The carbon benefits of cloud computing
+                        Figure 5*: The four features of the Microsoft Cloud that reduce environmental impact.
+                        *kgCO2e = kilograms of carbon dioxide equivalent
+
+
+The first three drivers of the reduced footprint (IT operational efficiency, IT equipment efficiency, and
+datacenter infrastructure efficiency) typically apply across all commercial cloud service providers, and
+even some on-premises scenarios, but will vary depending on factors such as the physical infrastructure
+and operational standards. Only cloud providers and private datacenters that purchase or use large
+volumes of renewable electricity will be able to achieve a carbon footprint comparable with the
+Microsoft Cloud.
+
+1. IT operational efficiency
+The large economies of scale seen in cloud computing mean that commercial cloud services in general
+can operate with much greater IT operational efficiency than smaller, on-premises deployments.
+
+       •   Dynamic provisioning—Emphasis on application availability can lead to overprovisioning
+           of computing resources to avoid theoretical unmet demand. Improved matching of server
+           capacity with actual demand minimizes waste. Microsoft manages capacity efficiently to
+           avoid expensive overprovisioning, through monitoring and demand prediction that allow for
+           continual capacity adjustment.
+       •   Multitenancy—Microsoft uses multitenancy, occupying servers with multiple user types and
+           a large user base with different demand patterns. Just as the electric grid interconnects
+           thousands of users whose fluctuating power demands can balance one another, cloud
+           infrastructure hosts thousands of companies and millions of users whose different use
+           patterns can balance one another. This load diversity decreases overall fluctuations and
+           makes loads more predictable. Generally, as the number of users increases, the ratio of the
+           peak demand to the average demand for the user set decreases. Therefore, rather than
+           sizing equipment to meet a single customer’s peak load (for example, workers arriving at an
+           office in the morning and immediately checking email), Microsoft sizes equipment to meet
+           the time-coincident demand of the whole user set.
+                 Server utilization—Higher equipment utilization rates mean the same amount of work can
+                 be done with fewer servers, which in turn leads to less electricity consumed per useful
+                 output. While servers running at higher utilization rates consume more electricity, the overall
+                 performance gains more than offset the relative per-unit increase. As illustrated in
+
+
+
+
+                                                                                              A study on the Microsoft Cloud   13
+         •    Figure 6, increasing the utilization rate from 10 percent to 40 percent will allow a server to
+              process four times the previous load, while the power draw by the server may only increase
+              1.7 times.8 Moreover, newer processors are continually driving towards a more attractive
+              load curve where power draw is significantly reduced at idle or low utilization rates. The
+              typically faster equipment replacement rates for commercial cloud service providers position
+              them to take advantage of these improvements sooner than in on-premises deployments.
+
+
+
+
+8
+ Based on representative sampling of volume servers manufactured in the last two years, as measured using SPECpower_ssj2008
+protocol from the Standard Performance Evaluation Corporation (SPEC).
+
+14        The carbon benefits of cloud computing
+                Figure 6: As utilization increases, power per computational output decreases.
+
+
+
+
+2. IT equipment efficiency
+Because Microsoft spends a significant portion of operating expenses on electricity to run IT equipment,
+more so than the typical corporate IT department, we have a strong financial incentive to optimize IT
+efficiency. We take an active role in tailoring hardware components to the specific needs of the services
+we run, meaning the equipment runs leaner with a higher ratio of input energy going towards providing
+useful output than in traditional enterprise deployments. By collaborating with suppliers on the
+specification and design of servers and other equipment for maximum efficiency, Microsoft can realize
+benefits from scale that most corporate IT departments are unable to address. The results of this study
+suggest that more specialized, efficient IT equipment can reduce electricity consumption by 10 percent
+or more.
+
+3. Datacenter infrastructure efficiency
+Advanced infrastructure technologies in hyperscale datacenters reduce electricity requirements for
+overhead tasks such as lighting, cooling, and power conditioning. Power usage effectiveness (PUE)—the
+ratio of overall electricity consumption at the datacenter facility to the electricity delivered to the IT
+hardware—is a common measurement of how efficiently a datacenter uses electricity. The hyperscale
+datacenters that power the cloud are able to achieve better PUEs than typical enterprise datacenters. At
+Microsoft, we are committed to measuring PUE at each datacenter, and we are implementing better
+monitoring techniques and innovative design to continuously improve our PUE.
+
+4. Renewable electricity
+Consolidating distributed electricity demand from on-premises datacenters into the cloud unlocks the
+potential for large-scale purchases of green power that bring substantial renewable energy projects
+onto the grid that were not otherwise viable. We are committed to relying on a larger percentage of
+wind, solar, and hydropower electricity over time at our datacenters. By 2025, we will shift to 100
+percent supply of renewable energy, meaning that we will have power purchase agreements for green
+energy contracted for 100 percent of carbon emitting electricity consumed by all our data centers,
+buildings, and campuses. When we’re not able to eliminate energy use or directly power our operations
+with green energy, we obtain zero carbon electricity through the purchase of renewable energy
+certificates. Counting these certificates, we purchase renewable electricity for more than 95 percent of
+our consumption, including electricity associated with services hosted in the Microsoft Cloud. For further
+discussion of how this is included in the calculations, see Appendix III.
+
+
+
+
+                                                                                                A study on the Microsoft Cloud   15
+Case study A:
+A global engineering consulting firm
+
+
+
+To assess the sustainability of the Microsoft Cloud in a real-world setting, this case study compared the
+energy and carbon footprint of a global engineering consulting firm that hosts roughly 10,000 users in
+Europe on Exchange 2016 on-premises with the equivalent footprint in the Microsoft Cloud.
+
+The firm’s implementation of Exchange
+was not as robust as the services offered
+by Exchange Online because the firm’s
+deployment only had three copies of
+each database spread over two
+datacenters and a 5-gigabyte (GB) size
+limit for each mailbox. In contrast, even
+the most basic Exchange Online plan
+offers 50 GB of mailbox storage and, for
+most customers, four database copies
+spread across four geographically distinct                     Figure 7: Contrasting the on-premises deployment of Exchange for
+datacenters to allow high levels of data                       a sample global engineering consulting firm (10,000 users) with the
+                                                               corresponding deployment in the Microsoft Cloud, which offers
+redundancy and availability (as shown in
+                                                               higher redundancy and availability.
+Figure 7).
+
+Even while supporting a more robust Exchange environment than the on-premises deployment (with the additional infrastructure and
+energy demands that this entails), the Microsoft Cloud is estimated to reduce emissions by 93 percent compared with the on-
+premises environment (
+
+
+Figure 8). These emissions reductions are a result of 6,000 kWh in energy savings and Microsoft
+renewable electricity purchases.
+
+
+
+                                                   Figure 8*: Life cycle emissions results for an Exchange deployment for a sample
+                                                   global engineering consulting firm (10,000 users), showing emissions savings with
+                                                   the Microsoft Cloud versus on-premises.
+
+                                                   *kgCO2e = kilograms of carbon dioxide equivalent.
+
+
+
+
+16        The carbon benefits of cloud computing
+Case study B:
+A global apparel company
+
+
+
+To assess the sustainability of the Microsoft Cloud in a real-world setting, this case study compared the
+energy and carbon footprint of a global apparel company’s use of Azure virtual machines in 2016 with
+its on-premises alternative.
+
+For solutions included in this study, the company chose to use Azure instead of deploying on-premises.
+Therefore, the footprint of the company’s virtual machines in Azure was compared against the footprint
+had the same machines been deployed in the company’s typical on-premises environment. The on-
+premises scenario was modeled on the deployments currently used by the company at a combination of
+both large and small owned datacenters in addition to co-located datacenters. Calculations considered
+the physical machine processing power, virtualization ratios, utilization, server power consumption,
+datacenter PUE, and carbon intensity of the electric grid.
+
+The study found that the virtual machines deployed in Azure had a carbon footprint 70 percent smaller
+than the modeled on-premises equivalent (
+
+Figure 9).
+
+Azure provides both business and sustainability benefits by offering on-demand, global scalability in
+efficient, hyperscale, renewably powered datacenters.
+
+
+
+                                             Figure 9*: Life cycle emissions results for an Azure compute deployment for
+                                             a sample global apparel company, showing emissions savings with the
+                                             Microsoft Cloud versus on-premises.
+
+                                             *kgCO2e = kilograms of carbon dioxide equivalent.
+
+
+
+
+                                                                                      A study on the Microsoft Cloud   17
+Looking ahead:
+Becoming carbon negative by 2030
+While the world will need to reach net zero, those of us who can afford to move faster and go further
+should do so. That’s why we’ve committed to becoming carbon negative by 2030 and to ultimately
+remove Microsoft’s carbon footprint from by the environment by 2050. We’ve concluded that seven
+principles will be vital as we continually innovate and take additional steps on an ongoing basis.
+
+Grounding in science and math
+
+It’s vital that our work as a company to address carbon issues stay grounded in ongoing scientific
+advances and an accurate reliance on the basic but fundamental mathematical concepts involved. One
+aspect of this is relatively simple but quite important. Scientists account for carbon emissions by
+classifying them into three categories, or “scopes”:
+
+     •   Scope 1 emissions are the direct emissions that your activities create
+     •   Scope 2 emissions are indirect emissions that come from the production of the electricity or
+         heat you use
+     •   Scope 3 emissions are the indirect emissions that come from all the other activities in which
+         you’re engaged. For a business, these emission sources can be extensive, and must be
+         accounted for across its entire supply chain, the materials in its buildings, the business travel of
+         its employees, and the full life cycle of its products, including the electricity customers may
+         consume when using the product. Given this broad range, a company’s scope 3 emissions are
+         often far larger than its scope 1 and 2 emissions put together
+
+Historically we’ve focused on reducing our scope 1 and 2 emissions, but we haven’t calculated as
+thoroughly our scope 3 emissions. By 2030, we will be carbon negative for all three scopes.
+
+Taking responsibility for our carbon footprint
+We will drive down our scope 1 and 2 emissions to near zero by the middle of this decade with three
+steps.
+
+     •   We will shift to 100 percent supply of renewable energy by 2025, electrify our global campus
+         fleet by 2030, and pursue International Living Future Institute Zero Carbon certification and LEED
+         Platinum certification for our Silicon Valley Campus and Puget Sound Campus modernization
+         projects.
+     •   In July 2020, we will start phasing in our internal carbon tax to cover scope 3 emissions.
+     •   By 2030, we will remove more carbon than we emit, setting us on a path to remove by 2050 all
+         the carbon we have ever emitted into the atmosphere since our founding in 1975.
+
+
+
+
+18       The carbon benefits of cloud computing
+Investing for new carbon reduction and removal technology
+
+Our new Climate Innovation Fund will commit to invest $1 billion over the next four years into new
+technologies and expand access to capital around the world to people working to solve this problem. In
+addition to this new fund, we will continue to invest in carbon monitoring and modeling projects
+through our AI for Earth program, which has grown over the past two years to support more than 450
+grantees across more than 70 countries.
+
+
+Empowering customers around the world
+
+We believe that Microsoft’s most important contribution to carbon reduction will come not from our
+own work alone but by helping our customers around the world reduce their carbon footprints. We are
+also launching a new 24/7 matching solution with Vattenfall – a first-of-its-kind approach that gives
+customers the ability to choose the green energy they want and ensure their consumption matches that
+goal using Azure IoT.
+
+Ensuring effective transparency
+
+As we’re doing today, Microsoft will continue to disclose the carbon footprint of our services and
+solutions. We will support strong industry-wide standards for transparency and reporting on carbon
+emissions and removal, and we will apply these ourselves. We have also signed the United Nations’ 1.5-
+degree Business Ambition Pledge, and we hope many other companies will also join. We will publicly
+track our progress in our annual Environmental Sustainability Report.
+
+
+Using our voice on carbon-related public policy issues
+
+We will also use our voice to speak out on four public policy issues that we think can advance all of the
+world’s carbon efforts:
+   • The need to expand global basic and applied research efforts on carbon, funded by
+        governments, and reorient them towards targeted outcomes and enhanced cross-border
+        collaboration to develop the breakthrough technologies needed to achieve net zero global
+        emissions.
+   • The removal of regulatory barriers to help catalyze markets to enable carbon-reduction
+        technologies to scale more quickly.
+   • The use of market and pricing mechanisms so people and businesses can make more informed
+        carbon decisions.
+   • The empowerment of consumers through transparency based on universal standards to inform
+        purchasers about the carbon content of goods and services
+
+
+
+
+                                                                               A study on the Microsoft Cloud   19
+Enlisting our employees
+
+Finally, we’ll capitalize on the energy and intellect of our employees by inviting and encouraging them
+to participate in our carbon reduction and removal efforts. We will create more opportunities for our
+employees to become actively involved, both in company-wide activities and in the work of their
+individual teams. Each year this work will culminate during our annual weeklong hackathon event that
+will include a specific focus and call for proposals on carbon reduction and removal.
+
+
+
+
+20      The carbon benefits of cloud computing
+Appendix I:
+Key parameters
+The analysis considered the following key parameters:
+
+•    Equipment counts: the number of devices (servers, networking equipment, and storage devices)
+     required to provision a given deployment. This includes excess capacity in both the cloud and on-
+     premises scenarios to account for equipment required to meet peak loads or planned future growth.
+•    Equipment specifications: the specifications of servers, storage equipment, and networking
+     devices used for the analysis. This includes number of cores, processor power, storage capacity, and
+     power draw at different utilizations. Actual equipment specifications were used to model the
+     Microsoft Cloud scenarios. Specifications for representative equipment, as determined by industry
+     experts, were used to model on-premises deployment scenarios.
+•    Device utilization: the load that a device (server, networking switch, or storage device) handles
+     relative to the peak load the device can handle. This number is expressed as a percentage.
+•    Device power consumption: the power consumed by a device, either measured directly, or
+     extrapolated based on manufacturer specifications and device utilization.
+•    Networking equipment power consumption: the power consumed by networking equipment in
+     the datacenter that is not directly measured or included explicitly in the deployment (for example,
+     aggregation and core switches).
+•    Datacenter PUE: an efficiency metric that is the ratio of the total amount of electricity consumed by
+     a datacenter to the amount of electricity delivered to the IT equipment. By definition, PUE is equal to
+     1 or greater, and the closer PUE is to 1, the more efficient the datacenter. PUE accounts for
+     electricity used in the datacenter for lighting, cooling, power conditioning, and other support
+     services.
+•    Electricity from data flows over the internet: the additional electricity use incurred in cloud
+     computing and large on-premises deployments from sending data over the internet that would not
+     occur in smaller deployments where IT resources are co-located with the users. This electricity use
+     was considered for the Microsoft Cloud and for large-scale deployments based on assumed typical
+     usage patterns of each service.
+•    Electricity carbon intensity: the average emission rate for the regionally specific mix of primary
+     energy (such as hydro, natural gas, coal, and wind) used to generate electricity provided to the
+     electric grid. In order to convert electricity into carbon emissions, the electricity consumption data is
+     multiplied by the carbon intensity of the electric grid where the electricity is consumed.9 As
+     discussed in the Renewable electricity section earlier, we purchase renewable electricity for more
+     than 95 percent of our consumption.
+
+
+
+
+9
+  Electricity carbon intensities are obtained from the US Environmental Protection Agency (EPA)’s eGRID for the United States and the
+International Energy Agency (IEA) or national environmental agencies for all other countries.
+
+                                                                                                     A study on the Microsoft Cloud     21
+To demonstrate the carbon and energy savings possible with the Microsoft Cloud, we performed two
+separate analyses in this study:
+            1. One that did not take into account Microsoft’s renewable electricity purchases. For this
+               analysis, the emissions related to electricity consumption during the use phase were
+               calculated using the carbon intensity from the local electric grid where Microsoft
+               datacenters operate.
+
+            2. One that did take into account the zero emissions associated with our renewable
+               electricity purchases.
+
+The cloud service-specific results of these analyses are presented in Appendix III. Note that for the
+purposes of discussion in this paper, the study assumes on-premises deployments are located in the
+United States, whereas the Microsoft Cloud emissions are based on the average carbon intensity of the
+electric grid in the locations where Microsoft datacenters host a given service.
+
+
+
+
+22      The carbon benefits of cloud computing
+Appendix II:
+Model assumptions
+
+Embedded emissions
+•    Embedded emissions include the emissions associated with the raw material extraction and
+     processing of the IT equipment required for the service. These factors are sourced from the article
+     "Characteristics of Low-Carbon Data Centers” by Masanet et al.10
+•    Embedded emissions are amortized over the expected lifetime of each device.
+
+
+
+Transportation
+•    The model considers the emissions from transporting IT equipment from tier 1 suppliers to the
+     datacenter. Shipment is assumed to be via truck and marine freight. Transportation for the
+     equipment used in Microsoft datacenters is based on the actual location of the datacenters and
+     Microsoft tier 1 suppliers. Emission factors for trucks and cargo ships are from the GaBi databases.11
+•    Transportation emissions are amortized over the expected lifetime of each device.
+
+
+
+Use phase energy
+•    Device utilization is either measured directly or based on expected values provided by industry
+     experts.
+•    The expected power consumption for equipment at different utilization rates is based on equipment
+     specifications provided by Microsoft engineers or manufacturer-specified values. Where possible,
+     manufacturer-specified values were validated against published test results performed using the
+     SPECpower_ssj 2008 methodology.
+•    PUE is based on measured values for Microsoft datacenters and industry values, by datacenter type,
+     for on-premises deployments.12 The datacenter type for on-premises implementations was matched
+     to the deployment size and architecture (that is, larger deployments are housed in larger, more
+     efficient datacenters).
+•    Energy use and emissions from data flows over the internet were estimated based on assumed
+     typical data flow rates by application type. A kWh/gigabyte (GB) factor was used to estimate
+
+
+
+
+10
+   Eric Masanet, Arman Shehabi, and Jonathan Koomey. "Characteristics of Low-Carbon Data Centers." Nature Climate Change 3 (2013):
+627-630.
+11
+   thinkstep. GaBi Software-System and Database for Life Cycle Engineering, 1992-2017. thinkstep AG. Accessed February 24, 2017.
+12
+   Arman Shehabi, Sarah Josephine Smith, Dale A. Sartor, Richard E. Brown, Magnus Herrlin, Jonathan G. Koomey, Eric R. Masanet,
+Nathaniel Horner, Inês Lima Azevedo, and William Lintner. United States Data Center Energy Usage Report. Berkeley, CA: Lawrence
+Berkeley National Laboratory. LBNL-1005775. 2016.
+
+                                                                                                  A study on the Microsoft Cloud   23
+     electricity consumption,13 and emissions were calculated based on the carbon intensity of the
+     electric grid where the datacenter is located.
+
+
+
+End-of-life disposal
+•    End-of-life disposal includes emissions associated with landfill and recycling for servers, hard disk
+     drives, and network switches.14
+•    The model assumes a conservative recycling rate of 20 percent. Even with a low assumed recycling
+     rate, these emissions are negative due to the credit based on avoided use of virgin material from
+     recycling.
+•    End-of-life emissions are amortized over the assumed lifetime of the device.
+
+
+
+Model exclusions
+Unless otherwise noted, the following are excluded given their negligible impact:
+
+•    Embedded carbon in the building, including cooling and air conditioning equipment.
+•    Microsoft corporate overhead, including administration and software development.
+•    Upstream emissions from extracting the fuel used to power the electric grid.
+•    Embedded emissions for certain IT equipment not exclusively used by the modeled service, such as
+     datacenter switches not located in the server racks.
+
+
+
+
+         13
+            Joshua Aslan, Kieren Mayers, Jonathan G. Koomey, and Chris France. “Electricity intensity of Internet data transmission:
+         Untangling the estimates.” Journal of Industrial Ecology. doi:10.1111/jiec.12630. August 1, 2017.
+         14
+            E. Masanet, et al. Optimization of product life cycles to reduce greenhouse gas emissions in California. California Energy
+         Commission, PIER Energy-Related Environmental Research. CEC-500-2005-110-F. August 5, 2005.
+
+24       The carbon benefits of cloud computing
+Appendix III:
+Energy and carbon benefits of Microsoft Cloud services
+
+The following pages provide standalone datasheets that summarize the energy and carbon benefits of
+using each of the Microsoft Cloud services covered in this paper: Azure Compute, Azure Storage,
+Exchange Online, and SharePoint Online.
+
+
+
+
+                                                                          A study on the Microsoft Cloud   25
+Azure Compute
+We conducted a study with industry experts to determine the energy use and carbon emissions
+associated with Azure Compute compared with compute equivalents deployed in traditional enterprise
+datacenters. Our methodology considered the impact of the IT equipment and operations, datacenter
+infrastructure, and information flows over the internet required to provide a cloud service and its
+traditional on-premises equivalent.
+
+The results show that Azure Compute is 52–79 percent
+more energy efficient than compute equivalents deployed
+in traditional enterprise datacenters (right), depending on the
+type of enterprise deployment.
+
+In addition to providing greater energy efficiency through the
+Microsoft Cloud, we purchase renewable electricity for more
+than 95 percent of our consumption, which includes the
+datacenters that power Azure Compute. When renewable
+energy is taken into account, carbon emissions from
+Azure Compute are 92–98 percent lower than traditional
+enterprise datacenter deployments of compute equivalents
+(below).
+
+The graph below shows the emissions savings of transitioning
+compute functions from traditional enterprise datacenters to the Microsoft Cloud, using two
+approaches: (1) reflecting emissions associated with standard grid power for the Microsoft Cloud
+datacenters; and (2) taking into account zero carbon emissions associated with renewable electricity
+purchased for the Microsoft Cloud datacenters.
+
+
+
+                                                                  kgCO2e = kilograms of carbon dioxide
+                                                                  equivalent.
+                                                                  Microsoft Cloud: grid power includes
+                                                                  emissions associated with datacenter
+                                                                  electricity consumption before taking
+                                                                  into account the purchase of renewable
+                                                                  electricity.
+                                                                  Microsoft Cloud: renewables reflects
+                                                                  zero emissions for renewable electricity
+                                                                  purchased for datacenters. The residual
+                                                                  emissions are primarily from life cycle
+                                                                  emissions not associated with datacenter
+                                                                  operations.
+
+
+
+
+26      The carbon benefits of cloud computing
+Azure Storage
+We conducted a study with industry experts to determine the energy use and carbon emissions
+associated with Azure Storage compared with storage equivalents deployed in traditional enterprise
+datacenters. Our methodology considered the impact of the IT equipment and operations, datacenter
+infrastructure, and information flows over the internet required to provide a cloud service and its
+traditional on-premises equivalent.
+
+The results show that Azure Storage is 71–79 percent more
+energy efficient than storage equivalents deployed in
+traditional enterprise datacenters (right), depending on the
+type of enterprise deployment.
+
+In addition to providing greater energy efficiency through the
+Microsoft Cloud, we purchase renewable electricity for more
+than 95 percent of our consumption, which includes the
+datacenters that power Azure Storage. When renewable
+energy is taken into account, carbon emissions from
+Azure Storage are 79–83 percent lower than traditional
+enterprise datacenter deployments of storage equivalents
+(below).
+
+The graph below shows the emissions savings of transitioning storage from traditional enterprise
+datacenters to the Microsoft Cloud using two approaches: (1) reflecting emissions associated with
+standard grid power for the Microsoft Cloud datacenters; and (2) taking into account zero carbon
+emissions associated with renewable electricity purchased for the Microsoft Cloud datacenters.
+
+
+                                                                 kgCO2e = kilograms of carbon dioxide
+                                                                 equivalent.
+                                                                 Microsoft Cloud: grid power includes
+                                                                 emissions associated with datacenter
+                                                                 electricity consumption before taking
+                                                                 into account the purchase of renewable
+                                                                 electricity.
+                                                                 Microsoft Cloud: renewables reflects
+                                                                 zero emissions for renewable electricity
+                                                                 purchased for datacenters. The residual
+                                                                 emissions are primarily from life cycle
+                                                                 emissions not associated with
+                                                                 datacenter operations.
+
+
+
+
+                                                                                A study on the Microsoft Cloud   27
+Exchange Online
+We conducted a study with industry experts to determine the energy use and carbon emissions
+associated with Exchange Online compared with Microsoft Exchange deployed in traditional enterprise
+datacenters. Our methodology considers the impact of the IT equipment and operations, datacenter
+infrastructure, and information flows over the internet required to provide a cloud service and its
+traditional on-premises equivalent.
+
+The results show that Exchange Online is 77–85 percent
+more energy efficient than Microsoft Exchange deployed in
+traditional enterprise datacenters (right), depending on the
+size of the enterprise deployment.
+
+In addition to providing greater energy efficiency through the
+Microsoft Cloud, we purchase renewable electricity for more
+than 95 percent of our consumption, which includes the
+datacenters that power Exchange Online. When renewable
+energy is taken into account, carbon emissions from
+Exchange Online are 97-98 percent lower than traditional
+enterprise datacenter deployments of Exchange (below).
+
+The graph below shows the emissions savings of transitioning
+Exchange from traditional enterprise datacenters to the Microsoft Cloud using two approaches: (1)
+reflecting emissions associated with standard grid power for the Microsoft Cloud datacenters; and (2)
+taking into account zero carbon emissions associated with renewable electricity purchased for the
+Microsoft Cloud datacenters.
+
+
+                                                                 kgCO2e = kilograms of carbon dioxide
+                                                                 equivalent.
+                                                                 Microsoft Cloud: grid power includes
+                                                                 emissions associated with datacenter
+                                                                 electricity consumption before taking into
+                                                                 account the purchase of renewable
+                                                                 electricity.
+                                                                 Microsoft Cloud: renewables reflects zero
+                                                                 emissions for renewable electricity
+                                                                 purchased for datacenters. The residual
+                                                                 emissions are primarily from life cycle
+                                                                 emissions not associated with datacenter
+                                                                 operations.
+
+
+
+
+28      The carbon benefits of cloud computing
+SharePoint Online
+We conducted a study with industry experts to determine the energy use and carbon emissions
+associated with SharePoint Online compared with SharePoint deployed in traditional enterprise
+datacenters. Our methodology considers the impact of the IT equipment and operations, datacenter
+infrastructure, and information flows over the internet required to provide a cloud service and its
+traditional on-premises equivalent.
+
+The results show that SharePoint Online is 22–93 percent
+more energy efficient than SharePoint deployed in
+traditional enterprise datacenters (right), depending on the
+size of the deployment in the enterprise datacenter (small,
+medium, or large).
+
+In addition to providing greater energy efficiency through the
+Microsoft Cloud, we purchase renewable electricity for more
+than 95 percent of our consumption, which includes the
+datacenters that power SharePoint Online. When renewable
+energy is taken into account, carbon emissions from
+SharePoint Online are 72–97 percent lower than traditional
+enterprise datacenter deployments of SharePoint (below).
+
+The graph below shows the emissions savings of transitioning SharePoint from traditional enterprise
+datacenters to the Microsoft Cloud using two approaches: (1) taking into account emissions associated
+with standard grid power for the Microsoft Cloud datacenters; and (2) taking into account zero carbon
+emissions associated with renewable electricity purchased for the Microsoft Cloud datacenters.
+
+
+                                                                 kgCO2e = kilograms of carbon dioxide
+                                                                 equivalent.
+                                                                 Microsoft Cloud: grid power includes
+                                                                 emissions associated with datacenter
+                                                                 electricity consumption before taking
+                                                                 into account the purchase of renewable
+                                                                 electricity.
+                                                                 Microsoft Cloud: renewables reflects
+                                                                 zero emissions for renewable electricity
+                                                                 purchased for datacenters. The residual
+                                                                 emissions are primarily from life cycle
+                                                                 emissions not associated with datacenter
+                                                                 operations.
+
+
+
+
+                                                                                A study on the Microsoft Cloud   29
+ © 2020 Microsoft Corporation. All rights reserved. This document is provided "as-is." Information and views expressed in this document,
+    including URL and other Internet Web site references, may change without notice. You bear the risk of using it. This document does not
+© 2017 Microsoft. All rights reserved.
+    provide you with any legal rights to any intellectual property in any Microsoft product. You may copy and use this document for your internal,
+    reference purposes.
+

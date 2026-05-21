@@ -1,0 +1,949 @@
+Cloud
+environmental
+footprint
+OVHcloud Environmental Impact Tracker Methodology
+                                                                  Table of contents
+Revision history ......................................................................................................................... 2
+1      Comprehensive approach to accounting for GHG emissions ................................................ 2
+    1.1        Commitment in providing transparent, comprehensive and reliable information ..................... 2
+    1.2        Selection of products addressed ............................................................................................. 3
+    1.3        General approach for calculating environmental footprint ...................................................... 4
+2 Approach used for calculation of the environmental footprint by server according to the life
+cycle stage ................................................................................................................................ 5
+    2.1        Manufacturing phase ............................................................................................................. 5
+       2.1.1      Calculating a server’s environmental footprint ........................................................................................... 5
+       2.1.2      Focus on the environmental footprint of GPUs ........................................................................................... 6
+       2.1.3      Component refurbishment focus ................................................................................................................. 7
+    2.2        Usage phase .......................................................................................................................... 8
+    2.3        Operations: miscellaneous issue aggregate ........................................................................... 11
+       2.3.1      Emissions from the Carbon Balance........................................................................................................... 11
+       2.3.2      OVHcloud internal IT usage emissions ....................................................................................................... 12
+
+3      Method for allocating environmental footprint ................................................................ 12
+    3.1        Allocation method for dedicated products ............................................................................ 13
+    3.2        Allocation method for mutualized products .......................................................................... 13
+       3.2.1      Specific methodological choices for allocating the footprint of mutualized products.............................. 13
+       3.2.2      Perimeter Public Cloud Computing ............................................................................................................ 15
+       3.2.3      Public Cloud Storage Scope ........................................................................................................................ 16
+    3.3        Allocation to customers and report ...................................................................................... 17
+       3.3.1      Proportional distribution for Public Cloud products .................................................................................. 17
+       3.3.2      Edit report .................................................................................................................................................. 17
+
+Glossary .................................................................................................................................. 20
+Table of Figures ....................................................................................................................... 21
+Table of Tables ........................................................................................................................ 21
+Table of Equations ................................................................................................................... 21
+Digital technology is playing an increasingly important role at the heart of our professional and
+personal lives. The democratization of cloud services accompanying this explosion in usage is
+contributing more and more to the digitization of all economic sectors, creating a cycle of
+continuous improvement and change.
+
+For over 20 years, OVHcloud has been innovating to make the cloud more sustainable by reducing
+the impact of its datacentres and servers and using resources sparingly.
+
+Maintaining this innovation momentum, OVHcloud is now offering an Environmental Impact
+Tracker to provide an estimate of greenhouse gas (GHG) emissions. It stands out as the first to
+offer a transparent and comprehensive approach. Allowing OVHcloud customers to understand
+their carbon footprint, the results linked to their cloud usage are broken down into three emission
+categories:
+
+   •   the manufacturing phase: upstream greenhouse gas emissions linked to the purchase
+       and assembly of components of the servers;
+   •   the usage phase: emissions linked to the power consumption of the server(s) and its
+       appendices;
+   •   other emissions: other emissions such as freight, buildings or the impact induced by
+       employees, known as ‘operations’.
+
+IJO, a consultancy specializing in Green IT, and Cost House, a consultancy specializing in
+economic performance, have been commissioned in 2024 to carry out a methodological review
+of the OVHcloud’s Environmental Impact Tracker which met the standards of the Bilan Carbone®
+method and the GHG Protocol. You will find here the certification letter for the Environmental
+Impact Tracker, certified as compliant with the Bilan Carbone® method, meeting the
+requirements of the GHG Protocol and, moreover, adapted to OVHcloud's activities, presenting a
+high level of accuracy.
+
+Before displaying the automation of environmental footprint calculations, and in order to carry
+out this project successfully, a strict methodology has been established. We present here a short
+version of it.
+
+
+
+
+                                                                                                 1
+1   Comprehensive approach to accounting for GHG emissions
+
+    1.1 Commitment in providing                            transparent, comprehensive                       and reliable
+        information
+OVHcloud’s commitment in communicating greenhouse gas (GHG) emissions information to its customers
+begins with the calculation of the GHG emissions associated with all the delivered services. OVHcloud
+develops an approach that embraces all products of its catalog in order to provide a complete
+environmental footprint to each customer. Every service delivered has its own features and adresses
+specific customer needs. Therefore, developing a calculation methodology that is specific to each service
+is a process that OVHcloud handles thoroughly in a methodical and structured way, embraced in overall
+sustainability roadmap.
+
+First of all, as recommended by the highest standards in GHG accounting, OVHcloud also includes in this
+tool, emissions related to OVHcloud operations. The aim here is to provide trustworthy results and
+highlight commitment to reducing all of OVHcloud emissions. Details about actions on OVHcloud’s
+environmental commitments are available on our corporate website.
+
+The choice made by OVHcloud is to communicate to the customers all of the emissions from the three
+scopes of carbon reporting (scope 1: direct emissions, scope 2 and 3: indirect emissions). Transparency
+towards customers is key, and therefore it is OVHcloud responsibility to provide a complete carbon
+footprint by categories to give to the clients all the elements to monitor and reduce the impacts of the
+products they use.
+
+OVHcloud activities’ main sources of GHG emissions (location-based) are the production of servers (27 %
+in 2024) and the supply of electricity (49 % in 2024). The rest of the scopes of emissions account in total
+for 24 %. To enable customers to reduce their impacts, and in accordance with OVHcloud’s transparency
+values, the Environmental Impact Tracker shows an environmental footprint allocated over three pillars
+(Figure 1):
+
+    •    Manufacturing,
+    •    Usage,
+    •    Operations.
+
+
+        Three pillars have been chosen to show environmental impacts. These three pillars point out life cycle milestones:
+                                   Manufacturing, Usage (through electricity) and Operations
+
+
+
+
+                                                                                                                             2
+                         Figure 1 - Perimeters for assessing the GHG emissions of cloud services (Source: OVHcloud)
+
+
+   1.2 Selection of products addressed
+OVHcloud offers a large range of services, from computing to data storage to web hosting. This extensive
+catalog is a challenge when addressing the allocation of GHG emissions.
+
+Consequently, and with the aim of designing a coherent and reliable approach, we decided to address five
+major products:
+
+    •    Bare metal dedicated servers (first available version: May 2023)
+    •    Hosted Private Cloud servers (first available version for hosts: August 2023)
+    •    Public Cloud - Compute (first available version: January 2025)
+    •    Public Cloud - Block Storage and Object Storage (coming soon)
+    •    Web hosting (coming soon)
+
+As published in the Fiscal Year 20241 Annual Results, the revenues of these products account for about
+63 % of the global revenues for Private Cloud products (which include Baremetal and Hosted Private
+Cloud), 18 % for Public Cloud products and 19 % for Webcloud and other products.
+
+The Environmental Impact Tracker includes the precise calculation of the emissions related to these
+products all the locations (excluding the USA).
+
+
+The OVHcloud Environmental Impact Tracker includes the major products across Bare Metal, Hosted Private Cloud, Public Cloud
+                                 and web hosting. It also includes most of its locations.
+
+
+
+
+1 The annual results for 2024 are available on the OVHcloud website.
+
+                                                                                                                      3
+  1.3 General approach for calculating environmental footprint
+Developing a model to assess the environmental impacts of products and manage their allocation to each
+customer requires being able to evaluate the environmental footprint of each server installed in
+OVHcloud’s data centers that is used for the operation of customer services. In the calculation model
+developed by OVHcloud and presented in this paper, the estimation of the servers-related carbon
+emissions is a key enabler for the rest of the process, including spreading the emissions over the different
+services used by the customers, in accordance with the configuration and the location of the servers.
+
+ GHG emission calculation is made at the server level and includes all the materials, teams and activities
+required for operating the building and managing the servers. Furthermore, as it is explained in the
+sections Error! Reference source not found., the methodology differentiates two different types of
+products: dedicated services and mutualized ones (more precisions are given in the sections “Method for
+allocating environmental footprint”). The global approach explained and specified in this paper is
+summarized in Figure 2.
+
+
+
+
+              Figure 2 - Diagram of the global approach chosen for environmental footprint assessment (source: OVHcloud
+
+The three pillars (Manufacturing, Usage and Operations) of OVHcloud Environmental Impact Tracker
+model also reflect three different approaches to calculate carbon footprints. One is due to on-site
+activities of manufacturing which require various materials; the second is directly linked to the location of
+OVHcloud’s buildings, the available energy sources and OVHcloud’s efforts towards the use of low-carbon
+energy; and the last one gathers a large range of emission sources to allocate to each customer. This
+section aims at providing key elements on the three approaches developed by OVHcloud to assess
+customer related environmental footprint.
+
+
+    To assess customers’ environmental footprint, OVHcloud calculates the infrastructure footprint across the three pillars
+        (Manufacturing, Usage and Operations) and allocates it according to product type (dedicated or mutualized)
+
+
+
+
+                                                                                                                          4
+2    Approach used for calculation of the environmental footprint by server according
+     to the life cycle stage
+
+    2.1 Manufacturing phase
+As it represents 27 % (in 2024) of the global carbon assessment of the company, the manufacturing of the
+servers (including upstream emissions of the hardware manufacturing) used in OVHcloud data centers is
+central in the calculation of the environmental impact for the services provided to customers. OVHcloud
+assembles all of the servers we use and their cooling system, with various configurations. The wide range
+of configurations, designed for the different use cases of the customers, requires a strong methodology to
+be able to evaluate the environmental footprint of every server used in each data center.
+
+For several years, OVHcloud has indeed implemented high standards to assemble and disassemble
+servers. Therefore, components have different use phases, limiting the purchase of new components. This
+integrated model enables OVHcloud to provide price competitive services with a high level of reliability
+while minimizing the associated environmental impacts.
+
+        2.1.1 Calculating a server’s environmental footprint
+
+The carbon impact of producing a server predominantly comes from the manufacturing of a few main
+types of components such as CPU, GPU, RAM, HDD/SDD, motherboard and power supply (- Explaining
+picture of the composition of the OVHcloud serverFigure 3). Therefore, it was important to develop a
+model that reflect the real impacts and therefore that is based on the physical configuration of the
+machine. As OVHcloud assemble every server, the model has to be fed by reliable and regularly updated
+
+
+
+
+                             Figure 3 - Explaining picture of the composition of the OVHcloud server
+
+data.
+
+
+
+
+                                                                                                       5
+A calculation model based on the configuration of a server has been developed to assess the
+environmental footprint of every physical host (Equation 1).
+
+                      Equation 1 - Calculation of the environmental footprint of server manufacturing (excluding refurbishment)
+
+
+             𝐹𝑜𝑜𝑝𝑟𝑖𝑛𝑡𝑚𝑎𝑛𝑢𝑓𝑎𝑐𝑡𝑢𝑟𝑖𝑛𝑔 =               ∑       𝑐𝑜𝑚𝑝𝑜𝑛𝑒𝑛𝑡𝑠𝑚𝑎𝑛𝑢𝑓𝑎𝑐𝑡𝑢𝑟𝑖𝑛𝑔
+                                              𝑐𝑜𝑚𝑝𝑜𝑛𝑒𝑛𝑡𝑠
+                                    = 𝑅𝑎𝑐𝑘 𝑈 × 𝑅𝑎𝑐𝑘 𝐸𝐹 + 𝐶𝑃𝑈 𝑝ℎ𝑦𝑠𝑖𝑐𝑎𝑙 𝑐𝑜𝑟𝑒𝑠 × 𝐶𝑃𝑈𝐸𝐹 + 𝐺𝑃𝑈 𝑠𝑎𝑙𝑒 𝑟𝑒𝑓𝑒𝑟𝑒𝑛𝑐𝑒 × 𝐺𝑃𝑈𝐸𝐹
+                                    + 𝑅𝐴𝑀 𝐺𝑖𝑔𝑎𝑏𝑦𝑡𝑒 × 𝑅𝐴𝑀𝐸𝐹 + 𝑆𝑆𝐷 Terabyte × 𝑆𝑆𝐷𝐸𝐹 + 𝐻𝐷𝐷 Terabyte × 𝐻𝐷𝐷𝐸𝐹
+
+       With: EF: emission factor
+
+
+By combining recent data from the scientific literature with information from component and
+semiconductor manufacturers, the model succeeds to spread OVHcloud’s impact of manufacturing over
+all the servers, including primary manufacturing (
+
+
+). Hence, a single but evolving model enables providing precise personalized environmental footprint for
+every                Components                  Units            Emission factors             physical
+machine.
+
+                                        Table 1 - Carbon footprint of major components (Source: IJO, 2022)
+
+
+                                   Components                         Units                  Emission factors
+                                   Rack                                                  1U: 200 kgCO2eq
+                             (Motherboard and                 Number of U                2U: 250 kgCO2eq
+                               appendices)                                               4U: 350 kgCO2eq
+                                       CPU                    Number of cores            1.5 kgCO2eq/core
+                                       GPU                    Sales reference
+                                      RAM                     Gigabyte                   2 kgCO2eq/GB
+                                    SSD disk                  Terabyte                   60 kgCO2eq/TB
+                                    HDD disk                  Terabyte                   25 kgCO2eq/TB
+
+
+           2.1.2 Focus on the environmental footprint of GPUs
+
+The environmental footprint of GPUs was estimated from the Green Cloud Computing study (2021)2. The
+approach involves breaking the GPU into 5 elements and extracting the information required for
+calculation. Thus, the publication cited above allows to approximate the environmental footprint of a GPU
+through the sum of the footprint of:
+
+       •    the graphics processor,
+       •    memory,
+       •    printed circuits of the board (PCB),
+       •    the computer bus,
+       •    of heat dissipation.
+
+
+
+
+2
+    Green Cloud Computing - Lebenszyklusbasierte Datenerhebung zu Umweltwirkungen des Cloud Computing (2021) - link
+
+                                                                                                                                  6
+     2.1.3 Component refurbishment focus
+
+The calculation model (This integrated model enables OVHcloud to provide price competitive services
+with a high level of reliability while minimizing the associated environmental impacts.
+
+Calculating a server’s environmental footprint), developed to assess server manufacturing impacts
+distributes these emissions over the whole lifecycle of the servers and components. Thus, the concept of
+
+
+
+
+                                  Figure 4 - OVHcloud components lifecycle (Source: OVHcloud)
+
+depreciation period should be inserted. OVHcloud has chosen to match the 5-year depreciation. However,
+the same component can have 1, 2 or several phases of use over its lifetime (including changing
+components over the lifetime of the server)(Figure 4).
+
+For added reliability, this calculation model also takes into account the fact that some range of products
+used older components, thereby contributing to extend lifetimes of machines and components as part of
+OVHcloud Sustainability strategy.
+
+In the case of servers with refurbished components, over its lifetime, we accurately consider
+manufacturing emissions, depending on the server configuration and the share of refurbished
+components in the product range used. This is taken into account by the ratios (or reduction rates) that
+include the impacts of refurbishment (Equation 2). These ratios are updated each fiscal year and are
+calculated based on internal data that is monitored for each range and component type.
+
+               Equation 2 - Calculation of the environmental footprint of server manufacturing (with refurbishment)
+
+     𝐹𝑜𝑜𝑡𝑝𝑟𝑖𝑛𝑡ù𝑚𝑎𝑛𝑢𝑓𝑎𝑐𝑡𝑢𝑟𝑖𝑛𝑔
+                     =        ∑        [(𝑐𝑜𝑚𝑝𝑜𝑛𝑒𝑛𝑡𝑚𝑎𝑛𝑢𝑓𝑎𝑐𝑡𝑢𝑟𝑖𝑛𝑔 × 𝑟𝑎𝑡𝑖𝑜𝑟𝑎𝑛𝑔𝑒 × 𝑟𝑎𝑡𝑖𝑜 𝑐𝑜𝑚𝑝𝑜𝑛𝑒𝑛𝑡 ) + (1
+                         𝑐𝑜𝑚𝑝𝑜𝑛𝑒𝑛𝑡𝑠
+                     − 𝑟𝑎𝑡𝑖𝑜𝑟𝑎𝑛𝑔𝑒 ) × 𝑐𝑜𝑚𝑝𝑜𝑛𝑒𝑛𝑡𝑚𝑎𝑛𝑢𝑓𝑎𝑐𝑡𝑢𝑟𝑖𝑛𝑔 ]
+
+
+                                                                                                                      7
+     The model developed to assess the GHG emissions associated to the production of every server relies on three key points:
+- the configuration of the machines, especially CPUs, GPUs, RAM, and hard disks, whether HDD or SSD,
+-the expected lifetime considering the different use phases,
+-the share of refurbishment components used in process of assembling the servers depends on the product range.
+
+
+   2.2 Usage phase
+Operating a physical server requires the mobilization of many other hardware and IT infrastructure, which
+must be taken into account in assessing environmental impacts. A diagram summarizing the main power
+sources used to estimate a server’s direct and indirect power consumption is provided in Figure 5.
+
+
+
+
+                         Figure 5 - Main power consumptions sources for operating a server (source: OVHcloud)
+
+OVHcloud achieves to maintain low carbon emissions thanks to the location of many data centers in
+countries where the GHG intensity of the electricity mix is relatively low such as France or Canada. This
+leads to globally low CUE (Carbon Usage Effectiveness), at 0.16 kgCO2e/kWh IT in 2024. Also, OVHcloud
+achieves good results in PUE (Power Usage Effectiveness) and WUE (Water Usage Effectiveness) with the
+implementation of its own cooling technologies (
+
+
+
+
+                                                                                                                     8
+). When we are not able to measure the PUE, we use PUE of 1.6 (in 2024).
+
+                                                                              Electrical
+                               Source of electrical emission                  emission
+  Datacentre                                                                                  PUE      WUE
+                                          factors                              factors       Measured Measured
+                                          Location-based3                    Market-based
+                                                                              kg CO2eq/kWh             l/kWh
+    Beauharnois      BHS Electricity Maps (2025) Québec-2024-Yearly.            0.0261         1.25     1.33
+                            Carbon Intensity Data (April 3, 2025).
+
+        Erith        ERI    Electricity Maps (2025) United Kingdom-2024-        0.0130         1.26     0.21
+                            Yearly. Carbon Intensity Data (April 3, 2025).
+
+     Gravelines      GRA Electricity Maps (2025) France-2024-Yearly.            0.0349         1.22     0.20
+                            Carbon Intensity Data (April 3, 2025).
+
+     Hillsboro       HIL    Electricity Maps (2025) Oregon-2024-Yearly.         0.0127         1.35     0.53
+                            Carbon Intensity Data (April 3, 2025).
+
+      Limburg        LIM    Electricity Maps (2025) Germany-2024-Yearly.        0.0216         1.24     0.35
+                            Carbon Intensity Data (April 3, 2025).
+
+      Roubaix        RBX    Electricity Maps (2025) France-2024-Yearly.         0.0349         1.29     0.39
+                            Carbon Intensity Data (April 3, 2025).
+
+    Strasbourg       SBG Electricity Maps (2025) France-2024-Yearly.            0.0349         1.21     0.50
+                            Carbon Intensity Data (April 3, 2025).
+
+      Vint Hill     WINE Electricity Maps (2025) Virginia-2024-Yearly.          0.4211         1.39     0.10
+                            Carbon Intensity Data (April 3, 2025).
+
+      Warsaw        WAW Electricity Maps (2025) Poland-2024-Yearly.             0.0128         1.25     0.60
+                            Carbon Intensity Data (April 3, 2025).
+
+The power consumption is not equal between each OVHcloud server. It depends on its configuration and
+on its usage. OVHcloud is currently deploying Smart PDUs to precisely monitor the electricity consumption
+of each server.
+
+As all servers do not benefit from this monitoring, a simplified approach has been used in the calculation
+model. For each server, OVHcloud has evaluated the associated power consumption with an internal
+project aiming at providing for every potential configuration – capacity of the CPU, size of the RAM, etc. –
+and customer profile the typical power consumption expected. The evaluated typical power
+consumptions are then compared to real measured power consumptions to validate the models. The
+energy consumption thus provided represents a workload of 100% 24/7. A simplified approach allows our
+customers who know their workload to translate the results provided by our tool to their infrastructure
+(Figure 6).
+
+
+
+
+                                                                                                        9
+ 100%                                              100%
+
+  90%
+
+  80%                                                       72.4%
+                                           72.4%                                                72.4%
+  70%
+
+  60%
+                                 51.2%                                 51.2%                                         51.2%
+                                             50%          50%                          50% 50% 50% 50%
+  50%
+              39.4%                                                                                                                  39.4%
+  40%
+
+  30%
+                                  20% 20%                       20% 20% 20% 20% 20%                            20% 20% 20% 20%
+  20%
+
+  10%
+        0% 0% 0% 0% 0% 0%                                                                                                            0%
+   0%
+
+
+
+                              Determined CPU load                 CPU load            Usage emission factor
+
+
+                                   Figure 6 – Elements for workload-based power conversion
+
+Nevertheless, as explained above assessing the net power consumption of the server has to be completed
+by the rest of the electricity consumption of the datacenter. To provide the best quality and most useful
+information to customers, we consider the proper PUE of each datacenter. This is done considering the
+overall power consumption of the data center and distributing extra power consumptions – those that are
+not from direct server consumptions – over all server connected in the building. The method allows for a
+more precise estimation of the power consumption to be allocated to each OVHcloud server.
+
+OVHcloud leads an ambitious green energy policy. Once the power consumption has been estimated, the
+GHG emissions are calculated on a location-based approach, meaning that the local energy mix is
+considered for each datacenter (Error! Reference source not found.). Since November 2023, we have
+been taking into account the GHG emissions corresponding to our low carbon energy contracts as
+indicated by the "market-based" emission factors. At this stage, the carbon footprint of the usage phase
+of each server completed by other IT materials and infrastructure is assessed and included in the global
+results(Equation 3).
+
+                      Equation 3 - Calculation of the environmental footprint of the usage phase of a server
+
+    𝐹𝑜𝑜𝑡𝑝𝑟𝑖𝑛𝑡𝑢𝑠𝑎𝑔𝑒 = 𝐸𝑙𝑒𝑐𝑡𝑟𝑖𝑐𝑖𝑡𝑦𝑠𝑒𝑟𝑣𝑒𝑢𝑟 × 𝑃𝑈𝐸𝑑𝑎𝑡𝑎𝑐𝑒𝑛𝑡𝑒𝑟 × Electricty mix emission factor𝑐𝑜𝑢𝑛𝑡𝑟𝑦
+
+
+
+
+                                                                                         Electrical
+                                 Source of electrical emission                           emission
+        Datacentre                                                                                              PUE      WUE
+                                            factors                                       factors              Measured Measured
+                                              Location-based3                          Market-based
+                                                                                         kg CO2eq/kWh                        l/kWh
+
+
+                                                                                                                         10
+                                Table 2 - GHG intensity of electricity mix where OVHcloud operate
+       Beauharnois          BHS Electricity Maps  (2025)   Québec-2024-Yearly.                0.0261        1.25          1.33
+                                    Carbon Intensity Data (April 3, 2025).
+
+            Erith           ERI     Electricity Maps (2025) United Kingdom-2024-             0.0130         1.26          0.21
+                                    Yearly. Carbon Intensity Data (April 3, 2025).
+
+        Gravelines          GRA Electricity Maps (2025) France-2024-Yearly.                  0.0349         1.22          0.20
+                                    Carbon Intensity Data (April 3, 2025).
+
+         Hillsboro          HIL     Electricity Maps (2025) Oregon-2024-Yearly.              0.0127         1.35          0.53
+                                    Carbon Intensity Data (April 3, 2025).
+
+          Limburg           LIM     Electricity Maps (2025) Germany-2024-Yearly.             0.0216         1.24          0.35
+                                    Carbon Intensity Data (April 3, 2025).
+
+          Roubaix           RBX     Electricity Maps (2025) France-2024-Yearly.              0.0349         1.29          0.39
+                                    Carbon Intensity Data (April 3, 2025).
+
+        Strasbourg          SBG Electricity Maps (2025) France-2024-Yearly.                  0.0349         1.21          0.50
+                                    Carbon Intensity Data (April 3, 2025).
+
+          Vint Hill        WINE Electricity Maps (2025) Virginia-2024-Yearly.                0.4211         1.39          0.10
+                                    Carbon Intensity Data (April 3, 2025).
+
+          Warsaw           WAW Electricity Maps (2025) Poland-2024-Yearly.                   0.0128         1.25          0.60
+                                    Carbon Intensity Data (April 3, 2025).
+
+
+
+
+                                                                                        Electrical
+                                      Source of electrical emission                     emission
+          Co-location                                                                                              PUE
+                                                 factors                                 factors
+          datacentre                               Rental-based 3
+                                                                                                             News release
+                                                                                      Market-based
+                                                                                        kg CO2eq/kWh
+
+                                  Electricity Maps (2025) Western-India-2024-
+        Mumbai            MUM Yearly. Carbon Intensity Data (April 3, 2025).                                       1.58
+
+                                  Electricity Maps (2025) Singapore-2024-Yearly.
+       Singapore          SGP Carbon Intensity Data (April 3, 2025).                      Same as                  1.72
+                                                                                       location-based
+                                                                                       power emission
+                                  Electricity Maps (2025) Australia-2024-Yearly.
+         Sydney           SYD                                                              factor                  1.30
+                                  Carbon Intensity Data (April 3, 2025).
+
+                                  Electricity Maps (2025) Ontario-2024-Yearly.
+        Toronto           YYZ     Carbon Intensity Data (April 3, 2025).
+                                                                                                                   N.C.
+
+
+
+
+3
+    Available here under the Open Database License (ODbL): https://opendatacommons.org/licenses/odbl/1-0/
+
+
+
+                                                                                                                      11
+                                   Source of electrical emission                       Electrical emission factors
+        Local-Zone                            factors                                         Market-based
+                                              Location-based3                                   kg CO2eq/kWh
+
+   Amsterdam                   Electricity Maps (2025) Netherlands-2024-Yearly.
+                       AMS
+                               Carbon Intensity Data (April 3, 2025).
+
+    Bengaluru                  Electricity Maps (2025) Belgium-2024-Yearly.
+                       BLR     Carbon Intensity Data (April 3, 2025).
+        Madrid                 Electricity Maps (2025) Spain-2024-Yearly.
+                      MAD Carbon Intensity Data (April 3, 2025).
+        Milan                  Electricity Maps (2025) Italy-2024-Yearly. Carbon   Same as location-based power emission
+                       MIL     Intensity Data (April 3, 2025).                                     factor
+     Marseille                 Electricity Maps (2025) France-2024-Yearly.
+                       SRM Carbon Intensity Data (April 3, 2025).
+        Prague                 Electricity Maps (2025) Czechia-2024-Yearly.
+                      GWP Carbon Intensity Data (April 3, 2025).
+        Zurich                 Electricity Maps (2025) Switzerland-2024-Yearly.
+                       ZRH
+                               Carbon Intensity Data (April 3, 2025).
+
+
+
+
+    The model developed to assess the greenhouse gas emissions associated with each server’s use phase is based on three key
+                                                              points:
+- the energy consumption of the servers is considered to be 100% 24/7,
+- the PUE is used to take into account the energy consumption of the auxiliary required for a server to work properly,
+- Energy mixes are considered to be location-based and market-based.
+
+
+   2.3 Operations: miscellaneous issue aggregate
+        2.3.1 Emissions from the Carbon Balance
+
+As explained above, this nature of emissions gathers every OVHcloud greenhouse gas emissions that is not
+accounted as either the manufacturing or the use phase. The environmental footprint of the operations is
+the sum of the impacts from the company’s annual carbon footpring using the GHG Protocol method,
+including:
+
+    •    Scope 1: Direct emissions
+             o   Combustion from back-up power generators
+             o   Operation of internal vehicle fleet with internal combustion engine
+             o   Air conditioning leaks
+    •    Scope 3: Indirect upstream and downstream emissions
+             o   Indirect emissions from domestic fuel consumption
+             o   Indirect emissions from fuel consumption
+             o   Emissions from power consumption of production and offices
+             o   Water consumption emissions
+             o   Emissions related to waste management
+             o   Fixed assets of buildings
+             o   Infrastructure deployment
+             o   Network Equipment purchases
+             o   Emissions due to the backbone
+
+
+                                                                                                                  12
+               o   Purchase of IT licenses not hosted at OVHcloud
+               o   Consumables/meals/supplies/services purchases
+               o   Purchase of work equipment from OVHcloud employees
+               o   Incoming and outgoing freight emissions
+               o   Business travel programs
+               o   Employee commuting
+               o   Equipment purchase (Xdsl and VoIP)
+               o   Use of equipment delivered to customers (xDsl/VoIP)
+
+The method chosen is a simplified approach using an equal distribution of the Operations impacts over
+the entirety of the servers dedicated to customer use.
+
+         2.3.2 OVHcloud internal IT usage emissions
+
+This raises the question of the allocation of the impacts generating by OVHcloud’s internal IT. It has been
+decided that there would be one single methodology for distributing the related greenhouse gas
+emissions, and that this method would be the same as for the Operations. Indeed, when dealing with
+corporate IT equipment the impacts must be equally allocated over all OVHcloud servers.
+
+
+    The environmental impact of a dedicated server for internal use is distributed the same as the rest of Operations, i.e. equally
+                                          across physical servers for customers to use.
+
+
+As for the Operations, alternative allocation methods that more realistically reflect the server resource
+consumption can be imagined. However, for the time being, as the Operation part represents a minor part
+of the total footprint, the equal distribution will give satisfactory results. As an example, repartition of the
+data centers buildings according to the number of servers installed inside seems relevant, while allocation
+of the support team’s footprint can be challenged: products can have dedicated teams, according to level
+of support for instance.
+
+3     Method for allocating environmental footprint
+The whole methodology developed by OVHcloud and presented here aims at distributing the entirety of
+the company’s greenhouse gas emissions in a single document. It is assumed that the whole company
+activity is dedicated to delivering the best services to its customers, and therefore all of its impacts must
+be considering in this reporting process. OVHcloud offers two different types of products:
+
+     •    products that imply dedicated equipment to a customer, i.e. a server. The whole physical machine
+          capacity and therefore all virtual machines hosted are dedicated,
+     •    products hosted on servers which are mutualized between different customers.
+
+OVHcloud offers are categorized in the Table 3.
+
+                         Table 3 - Table of OVHcloud offers with the dedicated or mutualized services categorization
+
+              OVHcloud Dedicated products                                     OVHcloud mutualized products
+         Baremetal                                                      Public Cloud - Compute
+         Hosted Private Cloud                                           Public Cloud - Storage (Block)
+                                                                        Public Cloud - Storage (Object)
+                                                                        Web Hosting
+
+These two kinds of offers must be considered separately in the modeling process. The rules for allocating
+the carbon footprint will vary and require different assumptions. Both approaches are presented below.
+
+                                                                                                                        13
+  3.1 Allocation method for dedicated products
+Once the impacts of all the servers have been estimated, it results in a list of machines with associated
+amount of GHG emissions divided into three natures of emissions - Manufacturing, Usage and Operations.
+In order to be able to communicate to each customer the emissions related to their use of OVHcloud
+products, the next step is to distribute these emissions to OVHcloud customers taking into account the
+services they have subscribed to and the infrastructure on which they are based.
+
+Regarding the dedicated services, the customers have at their disposal a range of physical machines which
+can be operated whenever they want and to the capacity they want. It is then evident that for such services
+the whole carbon footprint associated with the dedicated servers must be allocated to the client who
+holds them. Once the list of dedicated servers for a customer has been identified, the emissions from each
+server related to the three categories (Manufacturing, Usage, Operations) are summed using the methods
+presented in the Equation 4. Finally, customers can be presented with a carbon footprint encompassing
+the entire product lifecycle, broken down by datacentre and services.
+
+                        Equation 4 - Computing a customer's environmental footprint with dedicated servers
+
+         𝐹𝑜𝑜𝑡𝑝𝑟𝑖𝑛𝑡𝑐𝑢𝑠𝑡𝑜𝑚𝑒𝑟 = ∑𝑠𝑒𝑟𝑣𝑒𝑟 (𝑆𝑒𝑟𝑣𝑒𝑟𝑀𝑎𝑛𝑢𝑓𝑎𝑐𝑡𝑢𝑟𝑖𝑛𝑔 + 𝑆𝑒𝑟𝑣𝑒𝑟𝑈𝑠𝑎𝑔𝑒 + 𝑆𝑒𝑟𝑣𝑒𝑟𝑂𝑝é𝑟𝑎𝑡𝑖𝑜𝑛𝑠 )
+
+
+
+
+  For dedicated products (e.g. Baremetal, Hosted Private Cloud), all emissions associated with the dedicated equipment are
+                                                 allocated to the customer.
+
+
+  3.2 Allocation method for mutualized products
+By mutualizing resources in a public cloud, you can distribute workloads across a shared infrastructure,
+via virtualized environments, thus optimizing resource usage.
+
+The environmental footprint of mutualized cloud services involves transferring the footprint of the
+physical environment to the shared environment. This way, the physical infrastructure footprint will be
+distributed among customers in proportion to their consumption of virtualized resources.
+
+     3.2.1 Specific methodological choices for allocating the footprint of mutualized products
+        3.2.1.1 Approach to customer consumption
+
+To determine each customer’s usage for mutualized services, OVHcloud has chosen to use the billed
+services. This approach allows you to finely estimate the reserved consumption corresponding to the
+scaling of the resources provided by OVHcloud. This methodological choice guarantees accessibility to
+reliable and consolidated data, allowing the use of a robust calculation method that can be replicated to
+every OVHcloud customer.
+
+Thus, the consumption metric is based on number and reference template (see Setting a reference
+template for instances) virtual machines (VMs) consumed for "Compute" services, and the volume of data
+stored for "Storage" services.
+
+        3.2.1.2 Global Infrastructure Approach
+
+Shared services, divided into different ranges, are based on a physical infrastructure similar to BareMetal
+services. The method used to determine the footprint of each physical server (Approach used for
+
+
+                                                                                                                14
+calculation of the environmental footprint by server according to the life cycle stage) is replicated to
+estimate the footprint of the servers hosting the mutualized services.
+
+However, due to the mutualized nature of the services, the fact that a specific resource is not allocated to
+a customer, and due to the possible heterogeneous configuration of the servers hosting each range,
+OVHcloud has chosen to consolidate the environmental footprint into a total footprint, on the scale of the
+global infrastructure of the servers making up the range (Figure 7). This averaging ensures a consistent
+footprint estimate for the customer, who will only see small variations in the footprint for the same service
+due to the dynamic operation of mutualized infrastructure.
+
+
+
+
+                        Figure 7 - Heterogeneous configuration of servers hosting a Public Cloud range
+
+         3.2.1.3 Architecture of mutualized products
+
+The architecture of the Public Cloud is schematically divided into two main components:
+
+   •    The first part that runs client workloads. It groups together the physical servers on which virtual
+        instances are deployed, and the storage systems. This part uses hardware resources and electricity
+        to run the virtual machines, and is subject to an Operations footprint.
+   •    A second part includes the infrastructure for management and orchestration. This includes, but is
+        not limited to, dedicated servers for resource management and allocation, internal databases, and
+        API services that allow users to create, modify, or delete their instances. It does not run business
+        applications directly, but it also consumes energy and represents an environmental footprint
+        (server manufacture and operation, network maintenance, monitoring, etc.).
+
+Accounting for each of the two parts independently therefore provides a clearer picture of the service’s
+total environmental footprint and a better distribution of emissions between the different customers.
+
+       3.2.2 Perimeter Public Cloud Computing
+         3.2.2.1 Setting a reference template for instances
+
+To harmonize the comparison between different sizes of instances, even within a range, a reference
+template has been defined. For each of the ranges, this instance template corresponds to the smallest
+configuration (Table 4 - Reference template of b3 rangeTable 4Error! Reference source not found.). The
+other configurations are then expressed as a multiple of each reference template. This approach facilitates
+
+
+
+                                                                                                         15
+the subsequent allocation of the environmental footprint. The parameters generally taken into account
+to characterize an instance are:
+
+   •   The number of vCPUs,
+   •   The amount of RAM,
+   •   Storage capacity,
+   •   The possible presence of GPUs.
+
+                                             Table 4 - Reference template of b3 range
+
+
+
+
+         3.2.2.2 Calculate total server hosting capacity
+
+For each range, to assess how the environmental footprint is distributed at the instance level, you need to
+know the total capacity of the servers in the range, using the equivalent reference template.
+
+Specifically, for each type of host server:
+
+   •   The number of instances of the reference template that can be accommodated next to the CPU
+       and RAM is determined. The lower value of these two criteria is used, so that a single resource is
+       not saturated.
+   •   These capacities are added up for all of the physical servers that make up the services hosted for
+       customers.
+
+         3.2.2.3 Reduce the unit environmental footprint to a reference instance
+
+Once the overall environmental footprint of servers in a range is known, as well as the total capacity in
+instance as a reference template equivalent, it becomes possible to calculate the average carbon footprint
+of a reference instance (Equation 5). This calculation makes it possible to determine the average footprint
+of a VM, based on an hour of use, in each range.
+
+                  Equation 5 - Calculation of the environmental footprint of an instance of the reference template
+
+       𝐹𝑜𝑜𝑡𝑝𝑟𝑖𝑛𝑡𝑟𝑒𝑓𝑒𝑟𝑒𝑛𝑐𝑒 𝑡𝑒𝑚𝑝𝑙𝑎𝑡𝑒
+                       ∑𝑠𝑒𝑟𝑣𝑒𝑟 (𝐹𝑜𝑜𝑡𝑝𝑟𝑖𝑛𝑡𝑚𝑎𝑛𝑢𝑓𝑎𝑐𝑡𝑢𝑟𝑖𝑛𝑔 + 𝐹𝑜𝑜𝑡𝑝𝑟𝑖𝑛𝑡𝑈𝑠𝑎𝑔𝑒 + 𝐹𝑜𝑜𝑡𝑝𝑟𝑖𝑛𝑡𝑂𝑝𝑒𝑟𝑎𝑡𝑖𝑜𝑛𝑠
+                    =
+                                        𝑛𝑢𝑚𝑏𝑒𝑟 𝑜𝑓 𝑖𝑛𝑠𝑡𝑎𝑛𝑐𝑒𝑠𝑟𝑒𝑓𝑒𝑟𝑒𝑛𝑐𝑒 𝑡𝑒𝑚𝑝𝑙𝑎𝑡𝑒
+
+The calculation of the average footprint of the use of a VM is identical for each range. The result is then
+used as a basis for distributing the environmental footprint between customers.
+
+
+                                                                                                                     16
+         3.2.2.4 Distribution of the environmental footprint according to use
+
+Once collected, data from each server is aggregated by range and datacentre to determine the total
+carbon footprint. Then there is the distribution between users:
+
+   •    Customers share the physical servers that host their instances. OVHcloud determines each
+        customer’s share of consumption, using a “weight” proportional to the number of instances they
+        own (expressed in multiples of the reference template), and a metered usage (hours billed).
+   •    The management and orchestration servers are shared for all users in a datacentre. Each customer
+        is allocated a share according to the volume of instances used by the customer. For example, a
+        customer representing 10% of all instances will be allocated 10% of the carbon footprint of the
+        management and orchestration servers.
+
+       3.2.3 Public Cloud Storage Scope
+         3.2.3.1 Definition and challenges
+
+Storage of data (files, databases, backups, archives) is a significant issue in terms of greenhouse gas
+emissions. Storage infrastructure are based on servers equipped with a large number of hard disks,
+sometimes distributed over several geographical zones. Replication mechanisms (2, 3, erasure coding,
+etc.) guarantee data durability, but mechanically increase the overall footprint.
+
+Two large perimeters are distinguished:
+
+   •    Block Storage: A solution for storing segmented data in fixed-size blocks, stored on disks
+        connected to instances via storage arrays. Data is striped across independent disks. Each block is
+        treated separately.
+   •    Object Storage: a technology that offers an online storage service, accessible via protocols such as
+        S3, Swift or equivalent, and allows data to be stored without any space limit. You can push any type
+        of data into an object storage service.
+
+         3.2.3.2 Calculation methods
+
+The same calculation logic used to calculate the usage footprint of “Compute” services is applied to
+calculate the usage footprint of storage services.
+
+It consists of several steps:
+
+   •    Hardware inventory: servers assigned to storage are identified (number, models, installed disk
+        capacity, location),
+   •    Calculation of the total storage capacity of the servers: the number and type of disks are taken into
+        account, integrating the size limitation rules according to the technologies used and the
+        replication/erasure coding mechanisms.
+   •    Unit environmental footprint calculation: Emissions attributed to storage servers are reported
+        against the total effective storage capacity. This calculation determines the average storage
+        footprint of 1Gb in each range.
+   •    Distribution of the environmental footprint according to usage: customers are then allocated a
+        share of the overall impact, in proportion to the usage measured (amount of data stored and
+        duration of service use).
+
+
+
+
+                                                                                                 17
+  3.3 Allocation to customers and report
+       3.3.1 Proportional distribution for Public Cloud products
+
+The distribution of the carbon footprint is based on the proportion of use observed. The criteria can be
+combined (e.g. number of  duration instances, volume hosted  duration) to reflect reality as closely as
+possible.
+
+In determining each customer’s share, three factors are taken into account:
+
+   •    The number of instances of the reference template consumed (or the sum of the coefficients if the
+        instance is different from the reference template). The carbon footprint of a virtual machine is then
+        multiplied by the reference template for the range.
+   •    The instance reservation time. We integrate the actual time for reserving instances (in hours). The
+        more instances a customer keeps reserved, the greater their footprint share.
+   •    The share of management and orchestration servers. We use a ratio based on the number of hours
+        that services are reserved in the entire datacentre. It was decided to use a calculation model
+        combining the number of instances with their size. The weighting of reference template is
+        preferred to avoid a customer with very large but few machines being underbilled compared to a
+        customer who multiplies small instances.
+
+The total environmental footprint of each customer is calculated. This result is returned monthly to
+customers to facilitate monitoring.
+
+       3.3.2 Edit report
+
+Each emission, regardless of its nature (Manufacturing, Usage and Operations), is reported in the
+customer’s greenhouse gas emissions estimation document, as presented in the Figure 8. This document,
+generate through the Environmental Impact Tracker, restitutes the results in monthly and annual time
+periods to facilitate monitoring in .pdf format.
+
+
+
+
+                                                                                                 18
+Figure 8 - Report template (source: OVHcloud)
+
+
+
+
+                                                19
+This policy brief provides a general framework for assessing and distributing the carbon footprint within
+two major perimeters: dedicated servers (Baremetal and Hosted Private Cloud) and mutualized servers
+(Public Cloud “Compute” and Public Cloud “Storage”).
+
+By systematically taking inventory of equipment, consolidating reliable data and implementing fair
+distribution rules, this system gives organizations and our customers a clear view of their responsibilities
+in terms of environmental impacts. It also allows you to identify priority optimization levers (reduction of
+stored volumes, right-sizing of computing instances, redesign of web hosting, etc.).
+
+Once this computing system is in place, it becomes possible to drive a more ambitious Green IT strategy.
+The improvements achieved on each of the perimeters can be cumulative and create a virtuous circle, to
+the benefit of both economic performance and the reduction of environmental impacts. Finally,
+engagement and awareness raising from all stakeholders, from the provider to the end users, remains
+essential to move towards a more sober and environmentally friendly cloud model.
+
+
+
+
+                                                                                                         20
+Glossary
+CPU        Central Processing Unit
+
+CUE        Carbon Usage Effectiveness
+
+GHG        Greenhouse gases
+
+GPU        Graphic Processing Unit
+
+GHG        Green House Gazes
+
+HDD        Hard Disk Drive
+
+kgCO2eq    Kilogram of carbon dioxide equivalent
+
+PCB        Printed Circuit Board
+
+PCIe       Peripheral Component Interconnect Express
+
+PUE        Power Usage Effectiveness
+
+RAM        Random-Access Memory
+
+SSD        Solid State Drive
+
+T&D        Transport and Distribution
+
+VM         Virtual Machine
+
+WTT        Well to tank
+
+WUE        Water Usage Effectiveness
+
+
+
+
+                                                       21
+Table of Figures
+FIGURE 1 - PERIMETERS FOR ASSESSING THE GHG EMISSIONS OF CLOUD SERVICES (SOURCE: OVHCLOUD)................................................ 3
+FIGURE 2 - DIAGRAM OF THE GLOBAL APPROACH CHOSEN FOR ENVIRONMENTAL FOOTPRINT ASSESSMENT (SOURCE: OVHCLOUD .................. 4
+FIGURE 3 - EXPLAINING PICTURE OF THE COMPOSITION OF THE OVHCLOUD SERVER .............................................................................. 5
+FIGURE 4 - OVHCLOUD COMPONENTS LIFECYCLE (SOURCE: OVHCLOUD)............................................................................................ 7
+FIGURE 5 - MAIN POWER CONSUMPTIONS SOURCES FOR OPERATING A SERVER (SOURCE: OVHCLOUD)..................................................... 8
+FIGURE 6 – ELEMENTS FOR WORKLOAD-BASED POWER CONVERSION .................................................................................................. 9
+FIGURE 7 - HETEROGENEOUS CONFIGURATION OF SERVERS HOSTING A PUBLIC CLOUD RANGE ............................................................... 14
+FIGURE 8 - REPORT TEMPLATE (SOURCE: OVHCLOUD) ................................................................................................................... 18
+
+
+
+
+Table of Tables
+TABLE 1 - CARBON FOOTPRINT OF MAJOR COMPONENTS (SOURCE: IJO, 2022) ................................................................................... 6
+TABLE 2 - GHG INTENSITY OF ELECTRICITY MIX WHERE OVHCLOUD OPERATE ..................................................................................... 10
+TABLE 3 - TABLE OF OVHCLOUD OFFERS WITH THE DEDICATED OR MUTUALIZED SERVICES CATEGORIZATION ............................................ 12
+TABLE 4 - REFERENCE TEMPLATE OF B3 RANGE............................................................................................................................. 15
+
+
+
+
+Table of Equations
+EQUATION 1 - CALCULATION OF THE ENVIRONMENTAL FOOTPRINT OF SERVER MANUFACTURING (EXCLUDING REFURBISHMENT) .................... 6
+EQUATION 2 - CALCULATION OF THE ENVIRONMENTAL FOOTPRINT OF SERVER MANUFACTURING (WITH REFURBISHMENT) ............................ 7
+EQUATION 3 - CALCULATION OF THE ENVIRONMENTAL FOOTPRINT OF THE USAGE PHASE OF A SERVER ...................................................... 9
+EQUATION 4 - COMPUTING A CUSTOMER'S ENVIRONMENTAL FOOTPRINT WITH DEDICATED SERVERS ....................................................... 13
+EQUATION 5 - CALCULATION OF THE ENVIRONMENTAL FOOTPRINT OF AN INSTANCE OF THE REFERENCE TEMPLATE .................................... 16
+
+
+
+
+                                                                                                                                                                   22
+

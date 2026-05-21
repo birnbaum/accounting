@@ -1,0 +1,1421 @@
+           Designing Cloud Servers for Lower Carbon
+    Jaylen Wang∗ , Daniel S. Berger†,‡ , Fiodar Kazhamiaka† , Celine Irvene† , Chaojie Zhang† , Esha Choukse† ,
+      Kali Frost† , Rodrigo Fonseca† , Brijesh Warrier† , Chetan Bansal† , Jonathan Stern† , Ricardo Bianchini† ,
+                                                Akshitha Sriraman∗
+                          ∗ Carnegie Mellon University † Microsoft ‡ University of Washington
+
+
+
+
+   Abstract—To mitigate climate change, we must reduce carbon     solution. Server SKU design is the process by which existing
+emissions from hyperscale cloud computing. We find that cloud     hardware components are selected and composed into servers.
+compute servers cause the majority of emissions in a general-     Typically, cloud providers design compute server SKUs to meet
+purpose cloud. Thus, we motivate designing carbon-efficient
+compute server SKUs, or GreenSKUs, using recently-available low-  performance and cost goals. To reduce emissions, we introduce
+carbon server components. To this end, we design and build three  a new way of designing carbon-efficient compute server SKUs,
+GreenSKUs using low-carbon components, such as energy-efficient   or “GreenSKUs,” that trade off performance for lower carbon.
+CPUs, reused old DRAM via CXL, and reused old SSDs.                  We find that designing and deploying carbon-efficient Green-
+   We detail several challenges that limit GreenSKUs’ carbon      SKUs is promising for four reasons. First, we show that compute
+savings at scale and may prevent their adoption by cloud providers.
+To address these challenges, we develop a novel methodology and   servers cause the majority of cloud emissions, and their design
+associated framework, GSF (GreenSKU Framework), that enables      directly impacts both embodied and operational emissions.
+a cloud provider to systematically evaluate a GreenSKU’s carbon   Indeed, with a ∼six-year lifetime for cloud servers [88],
+savings at scale. We implement GSF within Microsoft Azure’s       design choices made in the next two years directly affect
+production constraints to evaluate our three GreenSKUs’ carbon    the industry’s 2030 carbon goals. Second, it is challenging for
+savings. Using GSF, we show that our most carbon-efficient
+GreenSKU reduces emissions per core by 28% compared to            cloud providers to rely on manufacturing’s decarbonization,
+currently-deployed cloud servers. When designing GreenSKUs to     as many manufacturers have decarbonization targets that lag
+meet applications’ performance requirements, we reduce emissions  behind cloud providers’ targets by over a decade [88]. Third,
+by 15%. When incorporating overall data center overheads, our     as we will show, cloud servers are often underutilized [50],
+GreenSKU reduces Azure’s net cloud emissions by 8%.               making a case for designing servers that right-size performance
+                                                                  to save emissions. Fourth, GreenSKU design and deployment
+                       I. I NTRODUCTION
+                                                                  is more feasible today due to the availability of carbon-efficient
+   To mitigate climate change, we must reduce carbon emissions commodity server components, e.g., energy-efficient cores [4].
+from Information and Communication Technology (ICT), which           Due to GreenSKUs’ promise, we design and build three
+can cause 20% of global carbon emissions by 2030 [76]. Histori- GreenSKUs using low-carbon components that mitigate cloud
+cally, ICT’s emissions reduced when sharing compute resources compute servers’ key sources of operational and embodied
+using cloud computing [36]. However, today, projections show emissions. Our GreenSKUs incrementally incorporate three
+that significant emissions arise from cloud computing itself, low-carbon components: energy-efficient high-thread-count
+due to its massive growth [73], [76]. Thus, it is now critical to CPUs [4], reuse of old DRAM with Compute Express Link
+reduce cloud computing’s emissions [38], [47]. Indeed, major (CXL) [103], and reuse of old Solid State Drives (SSDs).
+cloud providers have set aggressive decarbonization deadlines,       While GreenSKUs promise carbon savings, we demonstrate
+targeting significant emissions reductions by 2030 [10], [27]. several challenges that limit cloud providers from practically
+   To reduce ICT’s emissions from cloud computing, we must deploying them at scale. First, we find that a GreenSKU may
+reduce the cloud’s operational emissions (e.g., from producing compromise performance. For example, a GreenSKU built with
+electricity to run data centers) and embodied emissions (e.g., many energy-efficient, i.e., efficient, cores [4] typically has
+from semiconductor fabs that make server components) [65]. lower single-thread performance. In practice, only some cloud
+Historically, cloud computing’s operational emissions exceeded applications, e.g., those not bound by single-thread performance,
+its embodied emissions. To reduce operational emissions, will run on such a GreenSKU. Thus, it is challenging to
+hyperscale cloud providers improve energy efficiency [45], [52], design GreenSKUs while effectively navigating their emissions
+[62], [79], [96], [118], [132], [134] and use more renewable vs. performance tradeoff, to justify deploying them at scale.
+energy [35], [48], [65]. Today, the decrease in operational Second, a GreenSKU’s operational and embodied emissions
+emissions due to such solutions has caused embodied emissions can have complex tradeoffs. For example, reusing an older
+to account for 50%–82% of cloud emissions [65], [88]. Thus, server component can reduce embodied emissions, but may
+it is crucial to reduce both emission types.                      increase operational emissions due to the component’s poor
+   To reduce cloud computing’s operational and embodied energy efficiency [64]. Third, each new SKU adds operational
+emissions, we identify designing carbon-efficient cloud com- complexity and cost. Thus, while cloud applications are highly
+pute server Stock Keeping Units (SKUs) as a promising diverse, cloud providers must limit how many SKU types
+they deploy. We refer to these factors (e.g., performance) that         public cloud like Azure, applications typically run within
+impact whether a GreenSKU can practically be deployed at                Virtual Machines (VMs) on compute servers [66]. While there
+scale, as the “adoption” of the GreenSKU. It is critical and            are many compute server types, the most common types today
+challenging for cloud providers to identify which GreenSKU              use a general-purpose x86 or ARM CPU, significant DDR5
+designs are adoptable, i.e., able to save carbon while meeting          memory capacity, a few NVMe SSDs, and a Network Interface
+diverse applications’ deployment requirements at scale.                 Card (NIC). Additionally, storage services, such as object stores,
+   To address these challenges, we develop a novel methodology          are hosted on dedicated storage servers that contain arrays of
+and framework, GSF, to enable cloud providers to evaluate a             hard disks, with fewer computational resources.
+GreenSKU’s carbon savings in the cloud. GSF systematically                 We focus on reducing emissions for general-purpose cloud
+considers the major factors that influence a GreenSKU’s                 compute servers that form a large portion of Azure’s global
+benefits at scale. GSF’s components model each major factor,            fleet and carbon emissions. Although we do not focus on
+such as modeling a GreenSKU’s at-scale impact on carbon,                heterogeneous compute, our work may be used to develop
+performance, maintenance, server adoption, resource allocation,         GreenSKUs for heterogeneous platforms in future work.
+and server fragmentation. GSF abstracts these components’                  In this section, we first detail a breakdown of a cloud’s overall
+relationships from how a cloud provider implements each                 emissions. We then discuss how cloud servers are designed
+component, enabling a cloud provider to flexibly use GSF in             and utilized today. Finally, we introduce key design goals for
+their cloud to estimate a GreenSKU’s net carbon savings.                low-carbon compute servers, i.e., GreenSKUs.
+   We implement GSF within Microsoft Azure’s production
+
+
+
+
+                                                                        Carbon Emission Breakdown [%]
+                                                                                                                      Operational Emissions                         Embodied Emissions
+constraints to evaluate our three GreenSKUs’ carbon savings at                                          100
+                                                                                                                           Network
+                                                                                                                                                      100
+                                                                                                                                                            Other                                CPU
+                                                                                                              Other                                                    Network
+scale. Our carbon model reflects Azure’s data center design. We
+                                                                                                                           Storage            CPU                                        DRAM
+study representative applications in Azure to identify those that                                        75                                            75
+                                                                                                                                                                       Storage
+run effectively on our GreenSKUs. We also simulate workload
+                                                                                                         50                                   DRAM     50
+                                                                                                                                                             IT
+packing on our GreenSKUs under production constraints.                                                         IT
+                                                                                                                          Compute                                                        SSDs
+                                                                                                                                              SSDs
+   Using our GSF implementation, we show that our Green-                                                                  Servers
+                                                                                                                                                                       Compute
+                                                                                                         25
+                                                                                                                                              NICs     25
+                                                                                                                                                                       Servers           NICs
+SKUs reduce carbon emissions per core by 28% compared to                                                                                      Other                                      Other
+currently-deployed cloud servers at Azure. When deploying                                                 0
+                                                                                                      Across                Within         Within
+                                                                                                                                                        0
+                                                                                                                                                        Across          Within        Within
+GreenSKUs in a way that meets applications’ performance                                             Data Center              IT           Compute     Data Center        IT          Compute
+
+goals, we reduce emissions by 15%. Finally, when incorporating                                            Fig. 1. Carbon breakdown of general-purpose data centers at Azure.
+overall data center overheads, our GreenSKUs reduce net cloud
+emissions by 8%, which is a significant reduction at scale.               Sources of data center carbon emissions. To understand
+   In summary, we contribute:                                          GreenSKU design opportunities, we analyze how different
+   • A demonstration of the opportunity to significantly reduce        server types and their hardware components contribute to a
+      cloud emissions by designing and deploying carbon-               general-purpose cloud’s emissions. Similar to prior work [64],
+      efficient server hardware, i.e., GreenSKUs, at scale.            [65], we adopt the greenhouse gas protocol’s definition of
+   • The development of three new GreenSKU prototypes with             emissions from Scope 1 (i.e., direct emissions), Scope 2
+      carbon-efficient server components.                              (i.e., indirect emissions from consuming power), and Scope 3
+   • A study of the challenges that limit GreenSKUs’ adoption          (i.e., indirect emissions from manufacturing and transporting
+      and carbon savings at scale.                                     procured products like servers). We refer to Scope 1 emissions
+                                                               1
+   • A novel methodology and associated framework, GSF ,               as direct emissions, Scope 2 emissions as operational emissions,
+      that helps cloud providers to systematically evaluate a          and Scope 3 emissions as embodied emissions, matching prior
+      GreenSKU’s carbon savings at scale.                              work’s terminology [64], [65], [115]. With these definitions,
+   • An evaluation of our GreenSKUs by using GSF within                we use our carbon model (detailed later in §IV and §V) to
+      a leading cloud provider’s production constraints, to            estimate a cloud data center’s carbon emissions breakdown.
+      demonstrate our GreenSKUs’ carbon savings.                          We estimate operational emissions using power traces from
+   We motivate GreenSKUs in §II and describe our GreenSKU              Azure. To calculate embodied emissions, we estimate raw
+prototypes in §III. We detail GSF in §IV and its implementation        materials from vendor manifests, measure devices’ silicon
+in §V. We use GSF to evaluate our GreenSKUs in §VI. We                 area, and use averaged emissions for manufacturing processes
+discuss GreenSKUs’ practicality in §VII, open questions in             reported in industry datasets such as IMEC [21] and Maker-
+§VIII, and related work in §IX. We conclude in §X.                     site [25]. Our embodied emission estimation counts emissions
+                                                                       once per component across the supply chain, making it directly
+ II. O PPORTUNITIES AND C HALLENGES WITH D ESIGNING
+                                                                       comparable to operational emissions. The sum of all three
+                                G REEN SKU S
+                                                                       emission types, i.e., direct, operational, and embodied, defines
+   Cloud platforms offer diverse services including infrastruc- a cloud’s total carbon emissions.
+ture, platform, and software as a service. In a general-purpose           We find that direct emissions are negligible, as they mainly
+  1We open-source an implementation of GSF’s carbon model [18], [123], arise from backup diesel generators [78]. Thus, we only
+which is available at https://github.com/Azure/AzurePublicDataset      study operational and embodied emissions. The relative weight
+
+
+
+                                                                    2
+between the two differs between data centers due to local energy         there is one baseline SKU for every CPU generation.
+mixes [35]. Hence, we present these emission breakdowns                     Cloud customers underutilize cloud servers. There is
+separately and then discuss their relative weights.                      significant evidence that cloud users frequently do not utilize
+   Fig. 1 shows the breakdown of operational and embodied                high per-core performance, thereby exacerbating emissions.
+emissions in Azure’s cloud data centers. At the data center level,       First, prior work has extensively documented that cloud CPUs
+IT equipment dominates operational and embodied emissions.               are severely underutilized [37], [50], [63], [88], [116], [121],
+The rest arises due to cooling, power distribution, and building         [128]. For example, 75% of Azure VMs exhibit less than
+emissions. Within IT, there are three dominant server types:             25% CPU utilization [50]. Of note, this low CPU utilization
+compute, storage, and network servers. Of these, compute                 persists despite significant advances in cluster scheduling,
+servers consume most of the power, while storage servers have            which allocate up to 85% of cores to VMs [39], [66], [116],
+a large embodied footprint and consume relatively less power.            [121]. However, VMs frequently do not use these allocated
+   We further attribute compute servers’ emissions to their              cores, which causes underutilization [50].
+composite hardware components. This breakdown is influenced                 Other cloud server resources are similarly underutilized. For
+by server generation and vendor; we focus on a current-                  example, average memory bandwidth utilization in Azure is
+generation AMD Genoa server [6]. We find that the largest                only ∼15% [41]. We find similar underutilization of SSD IOPS
+carbon contributors differ between the operational and em-               and bandwidth. While underutilization occurs on most servers,
+bodied emissions breakdown. For operational, CPUs have the               some customers’ VMs utilize all available performance. Thus,
+largest impact with the remaining emissions distributed across           the demand for higher per-core performance exists and is likely
+DRAM, SSDs, NICs, and other components like fans. For                    to continue to exist on some servers.
+embodied, DRAM and SSDs dominate emissions, mainly due                      Second, we find that customers continue to use old VM
+to their high capacities and large silicon area: our server has          generations even when higher-performing generations are
+12 DIMMs and 6 SSDs, each containing many chips.                         available. We even see new deployments of VMs that are
+   In our accounting, we only count renewable energy purchases           multiple generations behind the latest. Thus, the core-hours
+that match a data center’s location. We find that most data cen-         of old VM generations continue to grow, which can require
+ters use 40%–80% renewable energy at Azure. This renewable               running old VM generations on new servers, where components
+energy mix leads to operational emissions accounting for about           like the CPU may be under-clocked to match old servers’
+58% of total carbon emissions, implying that compute servers             performance. Maintainability and compatibility in large code
+account for 57% of data center emissions. Within compute                 bases may take precedence over new VMs’ higher performance.
+servers, the top three component contributors are DRAM (35%                 Design goals and constraints for low-carbon servers. Our
+total contribution), SSDs (28%), and CPUs (24%). With a                  goal is to reduce net cloud emissions by designing low-carbon
+hypothetical 100% renewable energy mix, operational emissions            GreenSKUs. To this end, we must address three design goals.
+would account for 9% of data center emissions and compute                   (D1) Account for tradeoffs between operational vs. embodied
+servers for 44% of data center emissions. These results motivate         emissions. Operational and embodied emissions have complex
+the urgent need to reduce compute servers’ emissions.                    tradeoffs [88]. For example, reusing components reduces
+   Today’s performance-focused cloud server design. To                   embodied [64], but may increase operational emissions due to
+enable carbon-aware server design, we must first understand              worse energy efficiency. Thus, a GreenSKU that reduces cloud
+the conventional server design process and objectives. In the last       emissions must balance operational and embodied emissions.
+decade, to design cloud servers, cloud providers have followed              (D2) Account for data center impacts and side effects from
+the faster-at-similar-price (FSP) business model. With FSP,              introducing GreenSKUs. Adding server SKUs to a data center
+the provider introduces a faster VM generation at roughly the            fleet can have side effects that may increase emissions. For
+same price every few years. Faster implies a target X% higher            example, cloud providers deploy extra servers as a buffer to
+per-core performance on a fixed benchmark set [3], [9], [17].            absorb spikes in demand growth, to account for the time it takes
+   Unfortunately, achieving these per-core speed-ups is in-              to deploy additional servers. Offering numerous server options
+creasingly challenging in today’s age of limited technology              can reduce demand multiplexing among applications, which
+scaling [54]. For example, consecutive Intel VM generations              may increase the variance in demand growth for each option.
+on Amazon AWS (M6i and M7i) achieve X=15% higher                         Thus, adding many server options may require larger buffers,
+performance per core at almost the same price per core [28].             increasing emissions. We detail this challenge in §IV-D.
+However, achieving this higher performance forces AWS to                    (D3) Model performance and adoption impacts for user
+use 48-core Intel Xeon CPUs [8], [28], which maximize power,             applications. We must design a server that will be widely
+cache, and memory bandwidth per core. Intel also offers 60-core          adopted and in a way that reduces net emissions. This design
+Xeon CPUs in the same generation [2], which have significantly           is challenging as many low-carbon components’ performance
+lower carbon emissions per core, due to their lower Thermal              is lower than the servers built under the FSP model (see §III).
+Design Power (TDP) per core (i.e., 5.83 Watts vs. 6.25 Watts).
+However, 60-core Xeon CPUs would not have achieved the                               III. O UR G REEN SKU P ROTOTYPES
+required 15% per-core speedup. In this paper, we denote SKUs               The design space for GreenSKUs is large. We show the
+constructed within the FSP model as baseline SKUs. Typically,            practicality and effectiveness of building GreenSKUs that target
+
+
+
+                                                                     3
+      CPU Characteristic                   Bergamo   Rome(Gen 1)       Milan (Gen 2)   Genoa (Gen 3)
+      Cores per socket                     128       64                64              80                  no signs of aging within five years [106]. Fig. 2 shows failure
+      Max core freq. (GHz)                 3.0       3.0               3.7             3.7
+      LLC size per socket (MiB)            256       256               256             384                 rates for DDR4 DIMMs in Azure over a 7-year deployment
+      TDP (W)                              350       240               280             300-350
+                                                                                                           period. After an initial period of higher Annual Failure Rates
+                            TABLE I                                                                        (AFRs), they tend to stay constant [111]. While we do not
+   C OMPARING BASELINE AMD CPU S TO THE EFFICIENT B ERGAMO CPU.
+                                                                                                           yet have at-scale data for beyond 7 years, internal accelerated
+                                                                                                           aging studies show that AFRs remain flat beyond 12 years.
+Normalized Failure
+
+
+
+
+                     1.0
+                                                                                                              Historically, reusing old DRAM was challenging as DDR
+      Rate
+
+
+
+
+                     0.5
+                                                                                                           generations are not backward compatible, i.e., it was infeasible
+                     0.0                                                                                   to attach DDR4 in currently-deployed DDR5 servers. However,
+                            0              20            40                  60              80
+                                                     Months Deployed                                       with the wide availability of CXL [103], old DDR4 can be
+                                                                                                           attached to CXL controllers, which, in turn, are attached to
+Fig. 2. Moving average (black) of raw (gray) normalized failure rates vs.                                  the modern PCIe5 interface. Fig. 3 shows an exemplary CXL
+DDR4 DIMMs’ deployment time in production. Failure rates tend to stay
+constant over a 7-year period.
+                                                                                                           card that can hold DDR4 DIMMs. Reusing old DRAM can
+                                                                                                           significantly reduce embodied emissions at the cost of higher
+                                                                                                           operational emissions, due to more power consumed by CXL
+the top three carbon contributors in compute servers: CPUs,                                                and the old DIMMs’ lower density compared to new DIMMs.
+DRAM, and SSDs (Fig. 1), which cause 67% of a server’s                                                        We use off-the-shelf CXL controllers that support DDR4
+net emissions. We build GreenSKUs with efficient CPUs and                                                  (e.g., SMC [32], MXC [12]). We decommission a rack of
+reduce embodied emissions by reusing DRAM and SSDs from                                                    Azure servers that was deployed in 2018. These servers have
+decommissioned servers. These designs are deployable today.                                                two sockets, each with six low-capacity and six high-capacity
+   Other GreenSKU designs that reuse NICs or use low-power                                                 DDR4 DIMMs. We reuse the high-capacity DDR4 DIMMs in
+DRAM may be feasible, but, yield low returns today. These                                                  our prototype, attaching four DIMMs to each CXL controller.
+designs can help target residual emissions for a potential second-
+
+
+
+
+                                                                                                                                                Interface
+
+
+                                                                                                                                                            Interface
+generation GreenSKU. Future GreenSKU designs may also                    Old SSD (~2015)
+
+
+
+
+                                                                                                                                                   m.2
+
+
+                                                                                                                                                              e1.s
+include optimizations that are at a research stage today (e.g.,
+leaner processor microarchitectures [65]). We design GSF to
+                                                                   Fig. 4. Old m.2 SSDs from 2015 can be attached in new servers with a
+flexibly consider various such GreenSKU designs.                   passive adapter card in the modern e1.s format.
+   Low-carbon components. We use three low-carbon compo-
+nents in our prototype. First, we use efficient CPUs. Power-          Finally, we consider reused SSDs, as it is also practical to
+efficient cores, which enable very high thread and core counts reuse old SSDs in new servers. Similar to DRAM, the SSD
+for scale-out applications, are now widely available [102]. interface standard has moved from m.2 PCIe3 to E1.S PCIe5
+They include Ampere’s 192-core ARM CPUs [7], AMD’s 128- drives. Fortunately, PCIe is backward compatible.
+core/256-thread x86 Bergamo CPUs [4], and Intel’s 288-core            SSDs have enough lifetime left for reuse. Typically, modern
+x86 Sierra Forest CPUs [22]. Since these CPUs have 40%–60% SSDs fail due to exhausting flash erasure cycles [91], [101].
+more cores at comparable power consumption to mainstream After seven years, most SSDs offer more than half of the
+CPUs, they significantly reduce operational emissions per core. guaranteed erasure cycles. Reusing SSDs can reduce embodied
+   We specifically choose AMD Bergamo in our GreenSKU emissions at the cost of higher operational emissions.
+prototype, as it provides the highest thread-count option on          We use m.2 SSD drives from decommissioned Azure servers.
+the market today and has full support for Type 3 CXL devices They are attached via an off-the-shelf passive PCB-adapter (e.g.,
+(CXL.mem), making it practically deployable in our cloud.          2008M2 [24]), as shown in Fig. 4. Further, we 3D print cases,
+                                                                   so that the PCB fits into existing E1.s rails and cages.
+                           Old DDR4 DIMMs (~2015)
+
+                                  CXL 1.1
+                                 Controller                                                                         Reused
+                                                                                                                     DDR4     DDR5 efficient DDR5
+                                                                                                                                     CPU
+                           Old DDR4 DIMMs (~2015)                                                                 Reused
+                                                                                                                   DDR4           Reused    Reused
+                                PCIe5 Interface                                                                                    SSDs      DDR4
+                                                                                                           2 OU
+
+
+
+
+                                                                                                                           e1.s
+Fig. 3. Old DDR4, deployed starting in 2015, can be attached in new servers
+with a CXL controller card that attaches to PCIe5.                                                         Fig. 5. Our GreenSKU-Full design with AMD’s efficient CPU, reused DDR4
+                                                                                                           DRAM (via CXL), and reused m.2 SSDs (via e1.s and PCIe adapters).
+   Next, we consider reused DRAM. We find that it is practical
+to reuse old DRAM in new servers. In a review of old server                                                   Prototype SKUs. In Fig. 5, we show a logical diagram of our
+life cycles at Azure, we find that numerous old DDR4 DIMMs                                                 GreenSKU and an image of our GreenSKU prototype. We build
+can be reused due to their host servers reaching the end of                                                three GreenSKUs by incrementally adding each component.
+their deployment. Critically, these old DIMMs show no sign                                                    1) GreenSKU-Efficient: a GreenSKU with AMD’s efficient
+of increasing failure rates. Prior work notes that DRAM shows                                                    Bergamo CPU
+
+
+
+                                                                                                       4
+   2) GreenSKU-CXL: GreenSKU-Efficient with reused DDR4 enables a cloud provider to evaluate different GreenSKU
+       memory attached through CXL                              designs. GSF systematically considers seven major factors that
+   3) GreenSKU-Full: GreenSKU-CXL with reused SSDs              influence a GreenSKU’s carbon savings at scale. GSF considers
+   The GreenSKU-Full design reuses 8 DDR4 DIMMs attached each factor using distinct components in its framework, as
+via two CXL cards (2DPC). We also reused 12 old m.2 SSDs in shown in Fig. 6. We believe GSF can be flexibly used by other
+addition to two new E1.s drives. In aggregate, our components cloud providers, as it abstracts components’ relationships from
+use all 128 PCIe lanes on the AMD Bergamo server.               cloud-provider-specific component implementation details.
+   Performance characteristics. Low-carbon components may          Assumptions. GSF estimates operational and embodied
+have lower performance than baseline SKUs’ components. We       emissions    and excludes negligible direct emissions (§II). It
+briefly describe these performance properties, which motivates  assumes    that  cloud users make SKU adoption decisions
+key components in GSF.                                          based  on   application   performance. However, GSF can also
+   AMD Bergamo has a lower frequency and less LLC capacity      accommodate      other  decision    factors with minimal changes.
+compared to three AMD generations deployed at Azure (see        GSF   considers    key  first-order   effects of GreenSKU design
+Table I). Thus, Bergamo incurs 10% and 6% per-core slowdown     and  assumes    that  other   effects  stay constant. For example,
+in Sysbench [77], relative to Genoa and Milan, respectively.    it assumes    that the total   workload   (e.g., application’s load),
+   Reusing DDR4 memory via CXL incurs higher latency [81]       networking    emissions,  and   storage  emissions  remain the same.
+of about 280ns at medium load, compared to 140ns for local      While   we   have   limited   experience   with  using  GSF within
+DDR5 accesses. While CXL adds memory bandwidth on top           automatic    design   space    exploration   tools, we  recommend
+of DDR5, bandwidth per core may be lower than in baseline       humans   in  the SKU    design   process.
+SKUs. For example, 32 CXL/PCIe5 lanes offer about 100 GB/s         High-level overview. GSF’s initial inputs are highlighted in
+using CXL’s 256-byte interleaving [103]. AMD Genoa, with 80     yellow  in Fig. 6. They are: (1) a target data center workload,
+cores and 460 GB/s, offers 5.8 GB/s per core. AMD Bergamo, represented as a record of VM deployments over a time
+with 128 cores and 460 + 100 GB/s, offers 4.4 GB/s per core. period, (2) data used to calculate data center emissions, which
+   Our internal analyses show some deployed applications for includes carbon data (e.g., a component’s power and embodied
+which memory bandwidth usage is growing, as well as many emissions) and data center parameters (e.g., a component’s
+important applications that exhibit low memory bandwidth lifetime), (3) component annual failure rates (AFRs), (4) a
+usage. We expect low-bandwidth applications to continuously GreenSKU design, (5) a set of currently-deployed baseline
+provide opportunities for memory reuse via CXL.                 SKU designs, and (6) a set of representative applications that
+   To reduce CXL-induced slowdowns, we use Pond’s ap- report their performance and can run on the GreenSKU. We
+proach [81]. We use hardware counters to identify which believe this framework specification is generic and can apply
+applications can run entirely using CXL memory without facing to evaluate carbon optimizations beyond the ones we explore.
+a slowdown. For other applications, we provision memory            GSF’s final output is the data center emissions from deploy-
+across DDR5 and DDR4 and use Pond’s prediction model [81] ing a GreenSKU. To estimate this final output, GSF calculates
+to identify untouched memory regions that can be located on the following intermediate outputs for both the GreenSKU
+DDR4. On average, untouched memory is almost half of a and baseline SKUs (shown in blue boxes in Fig. 6): (1) the
+VM’s memory capacity [81]. When this untouched memory is number of servers that must be deployed to serve a given data
+exposed as a virtual compute-less NUMA node, the VM leaves center workload, (2) the cores per server, and (3) the carbon-
+it untouched and does not incur a slowdown [81]. This approach per-core emitted over the server’s lifetime. Multiplying these
+ensures that 98% of applications incur <5% slowdown with intermediate outputs per SKU and adding all SKUs’ results
+CXL, compared to running entirely with DDR5. In future CPUs, yields compute clusters’ carbon emissions. Then, adding in
+hardware tiering can further improve CXL performance [136]. other carbon sources (e.g., storage servers’ emissions) estimates
+   Reused SSDs also provide lower bandwidth and lower the overall data center emissions. Note that while we use cores
+random IO per second. In our measurements for random write as the main server resource unit, other units can be substituted.
+speeds, old SSDs offer 1GB/s and 250 IOPS, whereas new             GSF formalizes relationships between components with
+SSDs offer 2.3 GB/s and 600 IOPS. We mitigate lower SSD explicit definitions of inputs and outputs that connect each
+performance using multiple striped RAID sets that each offer component. These definitions account for dependencies between
+more bandwidth and IOPS than the FSP configurations. Due components while allowing a cloud provider to implement a
+to this mitigation, old SSDs have no adoption side effects.     component based on their unique cloud constraints. In §V, we
+   Although we build our GreenSKUs using low-carbon com- describe how we implement each GSF component at Azure.
+ponents, they may not be deployable due to the challenges          We organize GSF’s components into three levels, i.e., the
+outlined in §II. Thus, we need a systematic way of accounting server-, rack-, and data center-level, based on which physical
+for these challenges, to evaluate GreenSKUs’ benefits at scale. level of the data center the component models. We first detail
+                                                                GSF’s carbon model (§IV-A) which spans all levels. We then
+          IV. GSF: T HE G REEN SKU F RAMEWORK                   discuss each component in each level (§IV-B - §IV-D) by
+   To evaluate a GreenSKU, GSF estimates a data center’s specifying (1) which factor the component considers, (2) the
+emissions from deploying a GreenSKU at scale. Thus, GSF component’s inputs, and (3) the component’s outputs.
+
+
+
+                                                                 5
+                GSF outputs                                                                                                                to suitably serve the target workload. GSF’s performance
+                            # of deployable                    # of Baseline SKUs                                                          component must quantify such performance effects.
+                (i)                                                                                            Storage &
+                        GreenSKUs in data center              needed in data center                    +      networking
+                                    x                                       x                                                                 As shown in the bottom table in Fig. 6, the performance
+                                                                                                               overhead
+                                                              # of cores per Baseline
+                (ii)    # of cores per GreenSKU        +
+                                                                        SKU                                      =                         component profiles a GreenSKU’s relative performance. To
+                                    x                                       x                                Data center                   this end, it takes as input (1) the GreenSKU and baseline SKU
+                          Amortized CO2e per                   Amortized CO2e per                               CO2e
+                (iii)      GreenSKU core                        Baseline SKU core                                                          designs to compare against and (2) representative applications
+                                                                                                                                           that each report a metric to define the application’s performance
+                               Server counts                                                         Ideal cluster sizes
+                                                                                                                                           (e.g., tail latency, peak throughput, low-load latency).
+                GSF inputs                        Growth Buffer                             Cluster Sizing
+                                                                                                                                              This component outputs a scaling factor for each application.
+
+
+
+
+                                                                                                                     cluster config.
+                                                                                                                     Updated
+                (1) VM workload
+  Core counts
+
+
+
+
+                                                                 §IV.D                                       §IV.D
+                                                                                            Rs Do VMs fit?
+                                                                                                                                           This factor defines how many GreenSKU cores per baseline
+                (2) Carbon data                                                          AF
+                                                  Maintenance                        r
+                                                                                                                                           SKU core are needed for a VM to achieve the applica-
+                                                                                 rve          Yes/No
+                (3) AFR data                                                Se
+                                                                 §IV.B                                                                     tion’s performance goals. To maintain accurate application
+                                                                                           VM Allocation
+                                                  Carbon Model                                               §IV.C                         characterization over time, GSF can work in tandem with
+                (4) GreenSKU design
+                                                                 §IV.A          CO2e per core                                              existing capacity planning approaches, such as Flux [53], which
+                (5) Baseline SKU                   Performance                                Adoption                                     maintains an active view of the major services in a data center.
+                    design(s)
+                                                                 §IV.B                                       §IV.C                            Maintenance. When server failures occur, a fraction of
+                 (6) Applications       Perf. metric       Scaling factor          GreenSKU adoption
+                                                                                                                                           servers are out of service, waiting to be repaired [89]. These
+                 Web search             Tail latency       1.0                     Adopt                                                   failures result in the need for additional servers, i.e., an out-of-
+                 Database               Throughput         1.2                     Don’t adopt
+                  …                      …                  …                       …                                                      service overhead. Since GreenSKUs can influence the rate
+                                                                                                                                           of server failures, this overhead must be calculated (e.g.,
+Fig. 6. Overview of the GreenSKU Framework (GSF). Components are solid-
+line boxes. GSF’s inputs are highlighted in yellow. Inputs and outputs between
+                                                                                                                                           using server components’ AFRs). The maintenance component
+components are in gray boxes. Each component contributes to producing the                                                                  outputs out-of-service overheads for all SKUs.
+necessary outputs, as shown in blue, to calculate data center emissions.
+                                                                                                                                           C. Cluster-Level Components
+
+A. Carbon Model Component                                                                                                                     A GreenSKU’s adoption and VM allocation can impact the
+                                                                                                                                           entire compute cluster’s design and efficiency.
+   GSF’s carbon model component must calculate a given
+SKU’s emissions as a carbon dioxide equivalent (CO2 e), which                                                                                 Adoption. GSF’s adoption component helps decide which
+is a common metric to measure global warming potential [94].                                                                               applications in the target workload can run on a GreenSKU
+To calculate carbon, the model must estimate embodied emis-                                                                                while meeting deployment goals (e.g., performance goals).
+sions and power consumption at the server, rack, and data center                                                                              As performance is often a first-order goal for applications,
+level. The model’s inputs include server lifetime and the carbon                                                                           this component’s inputs are (1) each application’s scaling factor
+intensity of the energy consumed (CO2 e/MWh). By accounting                                                                                as outputted by the performance component and (2) the CO2 e-
+for the operational emissions over the server’s lifetime, the                                                                              per-resource value for the baseline SKUs and GreenSKU from
+model can aggregate operational and embodied emissions.                                                                                    the carbon model. The carbon information enables the adoption
+Finally, the model must account for power consumed by onsite                                                                               component to balance a GreenSKU’s carbon savings against
+non-IT equipment, e.g., cooling and power distribution devices,                                                                            the carbon cost of additional server resources required to
+to determine the Power Usage Effectiveness (PUE) factor.                                                                                   scale on the GreenSKU. If applications have other deployment
+   The model must also amortize emissions across levels in the                                                                             constraints (e.g., an application requiring a full baseline server
+data center. For example, a rack’s emissions can be divided                                                                                to run on), they must be annotated with such constraints.
+across the rack’s servers to amortize it. Thus, the model                                                                                     The adoption component outputs whether each application
+must consider constraints on the number of servers-per-rack                                                                                should adopt the GreenSKU, i.e., whether the GreenSKU meets
+and racks-per-data center, which depend on space and power.                                                                                applications’ goals and reduces carbon emissions.
+Moreover, as components can have different lifetimes, each                                                                                    VM allocation and packing. Server design impacts how well
+component’s embodied emissions must be normalized.                                                                                         VMs can be packed into a cluster: a logical unit of hundreds of
+   To model emissions at the application level, the carbon                                                                                 servers to which a VM deployment is routed. Packing density,
+model must output emissions amortized at a hardware resource                                                                               which is the ratio of allocated to allocatable resources, such as
+granularity that allows attributing emissions to VMs. For                                                                                  CPU cores and memory, on non-empty servers [66], directly
+example, we chose to use CO2 e-per-core as a common metric                                                                                 affects the required number of servers. Packing density is
+and output of this model.                                                                                                                  influenced by a GreenSKU’s resource capacities and the number
+                                                                                                                                           of servers in a cluster. The VM deployment also defines the
+B. Server-Level Components                                                                                                                 workload demand over time that the cluster must serve.
+  We identify server performance and maintenance as the main                                                                                  This component takes as input (1) a VM workload, which
+considerations that directly influence a GreenSKU’s emissions.                                                                             defines a trace of server resource requests, (2) the adoption
+  Performance. Since an application running on a GreenSKU                                                                                  and scaling factor for each application to account for which
+may face a lower performance-per-core, it may scale up/out                                                                                 VMs can run and then must scale on GreenSKUs, and (3)
+
+
+
+                                                                                                                                       6
+the cluster configuration, i.e., the number of GreenSKUs and CXL controllers, fans, and secure control management boards.
+baseline SKUs, that is being used to support the VM workload. Typically, a server’s average power consumption is lower
+   This component leverages packing efficiency information to than the sum of its components’ TDP [79]. Thus, we scale
+output whether the given cluster configuration can support the components’ TDP using a derating factor, d. We model
+workload without rejecting any VM’s resource requests.            inefficiencies in power electronics (e.g., voltage regulators)
+                                                                  using a loss factor, l. Thus,
+D. Data Center-Level Components                                                           X                   
+                                                                                  Ps =             T DPi ∗ di (1 + l)            (1)
+   We identify two factors, cluster sizing and growth buffers,
+                                                                                           comp. i
+that influence the total number of servers required across all
+compute clusters in a data center.                                  To model rack-level power (Pr ), we estimate each rack-level
+   Cluster sizing. The cluster sizing component’s goal is component’s power and the number of servers per rack (Ns ):
+to determine how many baseline SKUs and GreenSKUs                                                          X
+                                                                                      Pr = N s ∗ Ps +               Pj           (2)
+are required to service a data center’s VM workload. This
+                                                                                                       rack comp. j
+component must determine the maximum portion of the cluster
+that can run GreenSKUs while still servicing the demand from To calculate Ns , if Pr,cap is the rack’s power capacity and
+applications that cannot adopt the GreenSKU.                      Ns,cap is the number of servers that can fit in the rack: Ns =
+   To this end, this component takes as input (1) the VM min(⌊Pr,cap /Ps ⌋, Ns,cap ).
+allocation component’s output, i.e., whether a given cluster of     Then, to model the data center’s power (PDC ), we use the
+GreenSKUs and baseline SKUs can support a workload and number of racks (Nr ), the power dedicated to networking and
+(2) the maintenance component’s output, i.e., the servers’ out- storage (X), and PUE: PDC = (Nr ∗ Pr + X) ∗ P U E. We
+of-service overhead, which influences how clusters are sized calculate Nr similarly to how we calculate Ns , except using
+to manage out-of-service GreenSKUs and baseline SKUs.             data center space/power limitations for compute racks. Since a
+   This component tunes the cluster size using the VM alloca- data center’s operational emissions depend on server lifetime
+tion component to check if a cluster can host the workload trace, (L) and the energy source’s carbon intensity (CI), its operational
+via simulation. The final output is the number of GreenSKUs emissions are: Eop,DC = PDC ∗ L ∗ CI, which includes server-
+and baseline SKUs in a right-sized cluster configuration.         (Eop,s ) and rack-level (Eop,r ) operational emissions.
+   Growth buffer. Following standard inventory management           Next, we model embodied emissions by aggregating a data
+practices, a cloud provider maintains a growth buffer, i.e., center components’ embodied emissions. To model a server’s
+extra server capacity to absorb spikes in VM deployment embodied emissions (Eemb,s ), we use carbon data derived
+growth rates, thus mitigating delays in acquiring and deploying using a model similar to those in the literature [64]. To
+additional servers. This buffer is sized to trade off the cost model the carbon embodied in silicon chips, circuit boards,
+of deploying unused capacity with the risk and subsequent auxiliary electronics, server chassis, and power supplies, we use
+opportunity cost of not having enough capacity.                   component tear downs, CO2 e/cm2 data, and CO2 e/kg values
+   To determine the growth buffer size, this component’s input from public and private data sources [21], [25]. Similar to prior
+is the cluster sizing component’s final output, which provides work [115], we consider reused server components to be in
+a cluster configuration that is properly sized for a certain VM their “second life,” with zero embodied emissions.
+workload demand while not considering future growth.                To model rack-level embodied emissions (Eemb,r ), we add
+   This component’s output is the total number of GreenSKUs embodied emissions from servers, rack structures, and other
+and baseline SKUs required in a cluster deployment to both rack-level hardware (e.g., power bus, rack controller):
+service the current demand and also handle VM deployment                                                     X
+growth using the growth buffer.                                               E emb,r =  N s ∗ E emb,s +             CO2 ej      (3)
+                                                                                                         rack comp. j
+           V. GSF I MPLEMENTATION FOR A ZURE                          To model data center-level embodied emissions (Eemb,DC ),
+   To evaluate the carbon savings of the three GreenSKUs we           we add the embodied emissions from compute racks, net-
+built (see §III), we implement each GSF component under               working/storage (Y ), and the non-IT equipment/building (Z):
+Azure’s production constraints.                                       Eemb,DC = Nr ∗ Eemb,r + Y + Z.
+   Implementing GSF’s carbon model component. Our                        Finally, we determine the final CO2 e-per-core value by first
+carbon model implementation aggregates embodied and opera-            calculating the number of cores in the data center: Nc,DC =
+tional emissions from server, rack, and data center components.       Nc,s ∗ Ns ∗ Nr , where Nc,s is the number of cores per server.
+We build on prior carbon models [64], [115] to model server           Then, the CO2 e-per-core is: (Eop,DC + Eemb,DC )/Nc,DC .
+emissions in the cloud. Similar to the ACT model [64],                   We now show an example of how we calculate emissions at
+we calculate server-level emissions by aggregating server             the server- and rack-level using our above model. For brevity,
+components’ embodied and operational emissions.                       we omit data center-level carbon calculations, which are similar
+   First, to model operational emissions, we calculate average        to rack-level carbon calculations. In our carbon model, we use
+server power (Ps ), which includes the power consumed by              proprietary carbon values. As we are unable to open-source
+each server component, including CPUs, DIMMs, SSDs, NICs,             this data, in this example, we use values from public datasets
+
+
+
+                                                                  7
+of components’ carbon, as well as best-effort estimates when                        Nc,r , we multiply the number of servers in a rack by the
+data is unavailable. From these datasets, we source embodied                        number of cores per server, i.e., Nc,r = 16 ∗ 128 = 2048.
+emissions and power data for key GreenSKU-CXL components—                           GreenSKU-CXL’s rack-level CO2 e-per-core is then Er /Nc,r =
+CPU, DRAM, SSD, and CXL controller. We provide this data                            63, 351/2, 048 kgCO2 e = 31 kgCO2 e.
+in Table V in Appendix A. We describe key carbon calculations                          Implementing GSF’s performance component. Prior work
+for brevity2 , round intermediate calculations’ outputs, and show                   identifies that six application classes run in the majority of VMs
+how to calculate amortized emissions across CPU cores.                              in Azure [95]. They include: (1) big data (e.g., in-memory data
+   To calculate GreenSKU-CXL’s embodied emissions, Eemb,s ,                         stores), (2) web applications (e.g., information retrieval), (3)
+we multiply each server component’s capacity by its embodied                        real-time communication or RTC (e.g., speech recognition), (4)
+emissions-per-capacity. GreenSKU-CXL has an AMD Bergamo                             Machine Learning (ML) inference (e.g., image recognition), (5)
+CPU, 768GB of DDR5 DRAM, 256GB of reused DDR4                                       web proxy (e.g., front-end web server), and (6) DevOps (e.g.,
+DRAM, 20TB of SSD, and a CXL controller. Thus, for example,                         code compilation). The reported share of production core-hours
+to calculate the DDR5 DRAM’s embodied emissions, we                                 for each application class [95] is shown in Table III.
+multiply its capacity (768GB) with its embodied emissions-                             Across these six classes, we benchmark 20 open-source
+per-capacity (1.65 kgCO2 e). We then add these components’                          and closed-source applications’ performance. For big data,
+embodied emissions to calculate a total Eemb,s of 1644 kgCO2 e.                     we study Redis [43]: an in-memory key–value store,
+   To estimate GreenSKU-CXL’s operational emissions, we                             Masstree [74], [90]: a key-value database, Silo [74],
+use Eq. 1 to calculate server-level power as the product of                         [108]: an Online Transaction Processing (OLTP) database, and
+each component’s capacity, TDP-per-capacity, and derating                           Shore [68], [74]: an OLTP database. For web applications,
+factor, while considering losses from power electronics. As an                      we study Xapian [33], [74] and four Microsoft production
+example of power loss, we model that the CPU faces a 5%                             services—WebF-Dynamic, WebF-Hot, WebF-Cold, and
+power overhead from its voltage regulator losses. We derive                         WebF-Mix. For RTC, we study Moses: a speech translation
+the derating factor as a fraction of TDP utilization at a given                     service [74], [130] and Sphinx [74], [80]: a speech recognition
+percentage of max SPEC rate [122]; at 40% SPEC rate, the                            service. For ML inference, we study Img-DNN [74]—an
+corresponding derating factor is 0.44. Applying this derating                       image recognition service. For web proxy, we study front-
+factor to every component, Eq. 1 results in Ps = 403W.                              end web servers like Nginx [109], Caddy [58], Envoy [16],
+   Next, we calculate rack-level emissions. Since there is a                        HAProxy [19], and Traefik [104]. For DevOps, we evaluate
+lack of public data on an empty rack’s emissions, we use the                        Build-Python, Build-Wasmer, and Build-PHP.
+estimates for a rack’s TDP and embodied emissions in Table V.                          We measure a GreenSKU’s performance by setting a Service
+To calculate rack-level emissions, we consider the number                           Level Objective (SLO) based on a baseline SKU’s performance.
+of servers in a rack; a rack with 32U of space available for                        Our baseline SKUs are three deployed server generations, Gen
+servers can fit 16 GreenSKU-CXL servers with a form factor                          1, 2, 3 (see Table I). Successive baseline SKUs use newer
+of 2U. We calculate rack power constraints by subtracting the                       hardware and have better performance. To achieve comparable
+rack’s power (500W) from the rack’s power capacity limit                            performance as the high-performance baseline SKU, we scale
+(15,000W) and dividing by the server-level power, Ps , i.e.,                        up the number of VM cores on the GreenSKU to 8, 10, and
+⌊(15, 000 − 500)/403⌋ = 35. As this value is greater than 16,                       12 cores and compare the resulting performance against an
+the rack is space-constrained to Ns = 16 servers.                                   8-core VM running on the baseline SKU. Using these results,
+   To calculate rack-level embodied emissions, we use Eq. 3 to                      we calculate the scaling factors relative to each baseline SKU.
+multiply the number of GreenSKU-CXLs and the server-level                              Implementing GSF’s maintenance component. We use
+embodied emissions. We then add an empty rack’s embodied                            Little’s law [107] to estimate that the fraction of out-of-service
+emissions, i.e., Eemb,r = 16 ∗ 1644 + 500 = 26, 804 kgCO2 e.                        servers is the product of average repair time and server AFR.
+   To calculate rack-level operational emissions, we apply Eq. 2                    From observations at Azure, we find that our GreenSKUs’
+to calculate rack-level power, Pr . An empty rack’s power                           design choices do not significantly affect repair time. Our
+consumption is 500W. Thus, Pr = 16 ∗ 403 + 500 = 6953W.                             GreenSKUs’ components like reused DIMMs and SSDs are
+The lifetime of our servers, L, is 6 years (52, 560 hours).                         easily accessible, and diagnosing them is a well-established
+We calculate that CI = 0.1 kgCO2 e/kWh by averaging the                             process due to their previous deployment at Azure.
+estimated carbon intensity across Azure’s large data center                            To estimate our GreenSKU-Full’s AFR, we must consider
+regions. Thus, Eop,r = L ∗ CI ∗ Pr = 36, 547 kgCO2 e.                               failures from reusing older DIMMs and SSDs. These compo-
+   The net rack-level emissions, Er , is the sum of a rack’s                        nents typically increase server AFR, as they often fail even in
+operational and embodied emissions, i.e., Er = Eop,r +Eemb,r =                      baseline SKUs3 . We approximate the average failure rate by
+26, 804 + 36, 547 kgCO2 e = 63, 351 kgCO2 e.                                        adding these components’ AFRs4 . For example, a baseline SKU
+   Finally, we calculate the rack-level CO2 e-per-core by di-                       with 12 DIMMs and 6 SSDs has an AFR of 4.8. Our GreenSKU-
+viding Er by number of cores in a rack, Nc,r . To calculate                           3 DIMMs and SSDs constitute half of a server’s AFR [89], with AFRs of
+                                                                                    approximately 0.1 and 0.2, respectively.
+   2 The complete set of calculations using our open-source carbon model [18]         4 Concurrent failures largely occur due to class failures, e.g., recalls for
+is in Appendix A.                                                                   production days of a component, and occur rarely for old reused components.
+
+
+
+
+                                                                                8
+Full has 20 DIMMs and 14 SSDs (Table IV), causing an AFR                 application on a GreenSKU instead, i.e., adopt it, using our
+of 7.2. We use the same AFRs for new and reused components,              adoption model and the VM’s application assignment. If a VM
+as we empirically observe that reused DIMMs and SSDs have                can adopt the GreenSKU, we multiply the VM’s core count
+lower or equal AFRs than new components (§II).                           and memory allocation size by the scaling factor required to
+   To reduce repair rates, we use Fail-In-Place (FIP) [89] at            run its application on the GreenSKU. We use the scaling factor
+Azure. FIP is highly effective for GreenSKU-Full, due to its             that corresponds to the VM’s pre-defined server generation.
+large number of DIMMs and SSDs. Using a conservative FIP                    Apart from VMs that do not adopt the GreenSKU, we have
+effectiveness rate of 75% for DRAM and SSD [89], the repair              long-living “full-node VMs” that require a dedicated server.
+rate per 100 servers for the baseline SKU and GreenSKU-Full              We strictly assign these VMs to baseline SKUs, as they have
+reduces to 3 and 3.6 (from AFRs of 4.8 and 7.2), respectively.           fewer resources, i.e., dedicating a GreenSKU’s increased cores
+   We now estimate the higher maintenance emissions, COOS ,              and memory to such a VM would cause wasted resources.
+due to GreenSKU-Full’s higher repair rate. COOS is the product              Implementing GSF’s cluster sizing component. We use
+of a SKU’s per-server repair rate, the number of servers (Ns )           the VM arrival/departure trace and each VM’s GreenSKU
+needed to run our applications, and the per-server emissions             adoption decision to determine how many baseline SKUs and
+(Es ). On average, we need 0.66 GreenSKU-Fulls per baseline              GreenSKUs are required to serve the cluster’s VM workload.
+SKU, when we factor in a GreenSKU-Full’s increased resources             We find the number of such servers using our VM allocation
+while scaling VM cores to match baseline SKU performance.                simulator. To this end, we first right-size a baseline SKU-
+However, we must also account for our GreenSKU-Full’s per-               only cluster by increasing the number of simulated servers
+server carbon being 26.2% higher than the Gen3 baseline                  until no VM is rejected, i.e., identify the minimum number
+SKU, as GreenSKU-Full has more resources. On multiplying                 of servers in a baseline SKU-only cluster that can host all
+the calculated repair rate, Ns , and Es normalized to the baseline       VMs. Next, we incrementally replace each baseline SKU with
+SKU’s Es , we get: COOS = 3×1×1 = 3 for the baseline SKU                 enough GreenSKU servers until no VM is rejected. We repeat
+and COOS = 3.6 × 0.66 × 1.262 = 2.98 for GreenSKU-Full.                  this process until we can no longer replace baseline SKUs,
+Thus, GreenSKU-Full’s maintenance overheads are negligible.              to identify the right number of baseline SKUs required to
+   Implementing GSF’s adoption component. Our adoption                   run the VMs that cannot adopt the GreenSKU. This search
+component assumes that cloud users aim to reduce their                   identifies the cluster size of GreenSKUs and baseline SKUs
+applications’ emissions while meeting performance goals. Thus,           that minimizes emissions while supporting our VM workload.
+to decide whether an application can adopt a GreenSKU, we                   Implementing GSF’s growth buffer component. Typically,
+calculate the carbon required to service the application on a            the growth buffer size is calculated using models that require
+GreenSKU. To this end, we multiply the number of GreenSKU                historical workload trends [49]. As we do not have such trends
+cores needed to achieve the baseline SKU’s performance                   for a new GreenSKU, we use a workaround that enables a
+(determined from GSF’s performance component) by the CO2 e-              VM to fungibly run on a GreenSKU while there is enough
+per-core determined from the carbon model. We also calculate             GreenSKU capacity available. If there is no such capacity, the
+this value for the baseline SKU, using 8 cores and the baseline          VM may also run on a baseline SKU. This approach maintains
+SKU’s CO2 e-per-core. We model that an application will adopt            the growth buffer using only baseline SKUs, whose historical
+a GreenSKU if the calculated carbon value to run the application         workload trends are available. It also overcomes the need for
+on the GreenSKU is lower than the baseline’s, i.e., running on           multiple buffers, simplifying GreenSKU deployment. However,
+the GreenSKU saves carbon while meeting performance goals.               this approach marginally increases emissions, as the entire
+We repeat this step for each representative application.                 buffer has carbon-inefficient baseline SKUs. We consider these
+   Implementing GSF’s VM allocation component. To                        emissions in our savings estimate.
+evaluate how effectively varied-sized VMs can be packed within
+GreenSKU servers, we use a VM allocation simulator that                       VI. E VALUATING OUR G REEN SKU S U SING GSF
+captures Azure’s production scheduler’s key VM placement                    We use our GSF implementation at Azure to evaluate our
+rules. These rules include (1) using best-fit placement heuristics       GreenSKUs from §III. We compare each of our GreenSKUs,
+that reduce resource fragmentation, (2) preferring to place              i.e., GreenSKU-Efficient, GreenSKU-CXL, and GreenSKU-Full,
+VMs on non-empty nodes, and (3) enforcing VM placement                   against baseline SKUs from three generations. Since we noted
+constraints. Our simulations use real VM arrival/departure               the quantitative carbon contributions of some GSF components
+traces and VM configurations from multiple Azure data centers.           (e.g., maintenance) earlier, in §V, we omit those components.
+   Since the applications running in VMs are opaque in                      Evaluating GreenSKUs’ performance and adoption. To
+production traces, we assign each VM in our trace to one of              evaluate our GreenSKUs’ performance, we measure the 95th %
+our representative benchmark applications. We determine the              tail latency across different Queries Per Second (QPS) loads for
+application class by sampling from the core hour percentages             one representative applications in each application class. Similar
+in Table III. We then uniformly sample from that application             to prior work [46], [85], [137], we set applications’ SLO as the
+class to assign an application to the VM.                                95th % (tail) latency achieved at 90% of the compared baseline
+   The VM’s server generation (i.e., Gen 1, 2, or 3) is pre-             SKU’s peak saturation throughput. Across all experiments with
+defined in our traces. We determine whether a VM can run its             these applications, we conduct three trials and report our data
+
+
+
+                                                                     9
+                                                Masstree (Big Data)                      Xapian (Web App)                                                                              GreenSKU Performance
+                                                                                                                                                                                           Scaling Factor
+                                  3                                            4
+                                  2                 Violates SLO               3                                         Application Category
+                                                                                                                                                       % of Fleet
+                                                                                                                                                                         Application   Gen1   Gen2    Gen3
+                                                                                                                                                      Core Hours
+                                          SLO                                  2
+                                  1                                            1                                                                                            Redis      1      1       1
+
+                                  0                90% Peak Load               0                                         Big Data                             32
+                                                                                                                                                                         Masstree      1      1       >1.5
+                                                                                                                                                                             Silo      >1.5   >1.5    >1.5
+                                      0         2000 4000 6000                     0   2000 4000 6000 8000                                                                  Shore      1      1       1
+   95th Percentile Latency (ms)
+
+
+
+
+                                                   Moses (RTC)                             Img-DNN (ML)                                                                    Xapian      1      1       1.5
+                                  6                                            2                                                                                    WebF-Dynamic *     1      1.25    1.25
+                                                                                                                         Web App                              27        WebF-Hot *     1      1.25    1.5
+                                  4                                                                                                                                    WebF-Cold *     1      1       1
+                                                                               1                                                                                        WebF-Mix *     1      1       1
+                                  2
+                                                      Satisfies SLO                                                      Real-Time Communication              24
+                                                                                                                                                                             Moses     1      1       1.25
+                                  0                                            0                                                                                            Sphinx     1      1.25    1.25
+                                      0          1000        2000       3000       0   2000 4000 6000 8000
+                                                                                                                         Machine Learning Inference           11          Img-DNN      1      1       1
+                                                Nginx (Web Proxy)
+                                                                                                                                                                            Nginx      1      1       1.25
+                                  8                                                      GreenSKU-Efficient (8C)                                                            Caddy      1      1       1
+                                  6                                                      GreenSKU-Efficient (10C)
+                                                                                                                         Web Proxy                             4            Envoy      1      1       1
+                                                                                                                                                                          HAProxy      1      1       1.25
+                                  4                                                      GreenSKU-Efficient (12C)                                                         Traefik      1      1       1.25
+                                  2                                                      Gen3 Baseline (8C)                                                          Build-Python      1      1       1.25
+                                  0                                                                                      DevOps                                1     Build-Wasmer      1      1       1.25
+                                      0         10000     20000       30000                                                                                             Build-PHP      1      1       1.25
+                                                                        Load (QPS)
+                                                                                                                                                       TABLE III
+Fig. 7. 95th % tail latency vs. load (QPS) for applications spanning five of our                                         G REEN SKU-E FFICIENT ’ S PERFORMANCE SCALING FACTOR COMPARED TO
+six application categories. Tail latency is shown for 8-core configurations for                                          G EN 1, 2, 3 FOR EACH APPLICATION . “∗ ” IS A PRODUCTION APPLICATION .
+the Gen3 baseline SKU (in orange). Results for GreenSKU-Efficient are shown
+up to the scaling required to achieve comparable performance, if possible, to
+                                                                  slowdowns normalized to the Gen3 server, when using 8 cores.
+Gen3. The dotted orange line indicates an SLO set using Gen3’s latency at
+90% of peak load. For some applications (e.g., Xapian and Nginx), our
+                                                                  GreenSKU-Efficient outperforms Gen1 for all applications,
+GreenSKU-Efficient can achieve the SLO with scaling; for other applications
+(e.g., Masstree), the scaling required outweighs carbon savings.  while facing only 1.15x-1.17x slowdown compared to Gen3.
+                                                                     We repeat these experiments for all 20 applications, calcu-
+                                         GreenSKU-
+   DevOps App.     Gen1     Gen2    Gen3
+                                         Efficient
+                                                   GreenSKU-CXL   lating  the scaling factors required relative to the three baseline
+  Build-PHP       1.27     1.11    1.00  1.17      1.38           SKUs. We report these scaling factors in Table III.
+  Build-Python    1.28     1.13    1.00  1.15      1.21
+  Build-Wasmer    1.34     1.19    1.00  1.15      1.28              For seven applications, GreenSKU-Efficient meets Gen3’s
+                                TABLE II                          SLO     without any scaling. For another nine applications,
+    G REEN SKU-E FFICIENT ’ S NORMALIZED SLOWDOWN COMPARED TO     scaling by 25% is required to achieve Gen3’s SLO. Some
+      BASELINE SKU S WHEN COMPILING THREE D EVO PS PROGRAMS .     applications, such as Silo, have a significant scaling factor.
+                                                                  Our GSF adoption component’s implementation notes that
+                                                      th
+with 99% confidence intervals. We also measure 99 % latency these applications cannot be run on GreenSKU-Efficient, as
+and notice similar behaviors.                                     they offset GreenSKU-Efficient’s carbon savings. These results
+   We first evaluate GreenSKU-Efficient’s performance and show that GSF can help determine scaling factors to identify
+adoption. We study 20 applications running on GreenSKU- when an application can be deployed on a GreenSKU to achieve
+Efficient and compare its performance against the baseline carbon savings while meeting performance goals.
+Gen 1, 2, 3 servers. For brevity, in Fig. 7, we show the             As with prior work [46], [119], we define 30% of peak
+   th                                                             throughput     as “low” load to measure GreenSKU-Efficient’s
+95 % (tail) latency across different loads for one representative
+application in each application class. To compare performance     impact    on  low-load    latency, which is a key metric for some
+and determine the scaling factors, we scale the number of VM      latency-critical   applications.    We compare the low-load latency
+cores on GreenSKU-Efficient to 8, 10, and 12 and compare the      of  each    application    running     on GreenSKU-Efficient when
+resulting tail latency against an 8-core VM running on Gen 1,     scaled   with   the  scaling   factor  relative to our baseline SKUs.
+2, 3 servers. We show results up to the minimum number of         Running     on  GreenSKU-Efficient        results in a median low-load
+cores on GreenSKU-Efficient that achieves a peak saturation       latency   (across   applications)   that   is 8.3% and 2% lower than
+throughput closest to our Gen3 server. We omit results for Gen1   Gen1    and  Gen2,    respectively,   and   16% higher than Gen3. As
+and Gen2, as they consistently perform worse than Gen3.           applications     often  express   SLOs     in  terms of tail latency and
+   We observe that for applications such as Masstree, even        peak   throughput    [95],  this 16%    increase   in low-load latency is
+with 12 cores, GreenSKU-Efficient cannot match Gen3’s peak        unlikely   to  significantly   impact    the  GreenSKU’s     adoption.
+throughput, and violates SLOs beyond 6000 QPS. However,              Next,   we  study   GreenSKU-CXL’s         performance   by evaluating
+for other applications, such as Xapian, Moses, and Nginx,         the  performance     impact   of  reusing   older   memory   via  CXL. In
+                                                                                               th
+GreenSKU-Efficient achieves SLOs with 10–12 cores. Thus,          Fig.  8, we   show    the 95    %  latency    vs. load  for two  represen-
+GreenSKU-Efficient effectively meets the performance goals tative applications, Moses and HAProxy, that, respectively,
+of several latency-critical applications, albeit with scaling.    exhibit a high and low latency penalty with CXL compared to
+   Next, we show our DevOps applications’ results in Table II     GreenSKU-Efficient’s       performance.
+separately, as they only report throughput. We report average        We find that running on GreenSKU-CXL greatly affects
+
+
+
+                                                                                                                    10
+ 95th Percentile Latency (ms)                 Moses (RTC)                        HAProxy (Web Proxy)                          1.0
+                                6 High CXL impact                       8                                                            Baseline Core           GreenSKU Core
+                                                                                        Low CXL impact                               Baseline Memory         GreenSKU Memory
+                                                                        6
+
+
+
+
+                                                                                                                        CDF
+                                4 SLO                                                                                         0.5
+                                                                        4
+                                2                                       2                                                     0.0
+                                0                                       0                                                           0.65        0.70        0.75      0.80      0.85          0.90        0.95
+                                    0     1000      2000    3000             0    10000 20000   30000    40000                                               Mean Node Packing Density
+                                                                     Load (QPS)
+                                                      GreenSKU-Efficient        GreenSKU-CXL                          Fig. 9. CDF of the mean packing density for core (solid) and memory
+                                                                                                                      (dashed) across servers for each trace. We show the packing density for the
+Fig. 8. 95th % tail latency vs. load for an application that is more (Moses)                                          all-baseline cluster (in orange) and the GreenSKU-Fulls in the final simulated
+and less (HAProxy) impacted by reusing memory via CXL. The number of                                                  cluster (in green). Our GreenSKU-Full design makes a carbon tradeoff, as it
+cores is equivalent in both GreenSKU configurations and is the number of                                              shows better memory packing density with worse core packing density.
+cores required to achieve that application’s SLO relative to Gen3.
+                                                                                                                              1.0
+                                                                                                                                                                                              GreenSKU
+
+
+
+
+                                                                                                                        CDF
+                                                                                                                              0.5
+Moses’s performance. Moses saturates early, at 1700 QPS,
+                                                                                                                                                                Baseline Memory              CXL Memory
+                                                                                                                                                                GreenSKU Memory
+                                                                                                                              0.0
+and fails to meet the SLO from 1200 QPS. Since Moses uses                                                                                  40          50        60        70           80           90          100
+speech language models that have a large memory footprint, it                                                                                               Mean Max Memory Utilization
+
+is significantly memory bound. Thus, its performance is heavily                                                       Fig. 10. CDF of the mean per-server maximum memory utilization across
+impacted by the increased memory latency with CXL.                                                                    all servers for a cluster of baseline SKUs and GreenSKU-CXL. The shaded
+                                                                                                                      region indicates memory accessed through CXL on the GreenSKU. Almost all
+   In contrast, HAProxy meets the SLO across most high load                                                           servers can service their VMs’ memory demand with local DDR5 memory.
+conditions and only faces an 11% reduction in peak throughput
+compared to GreenSKU-Efficient. Since HAProxy is a load
+balancer that is compute- and network-bound, its performance                                                          memory reused via CXL. In most traces, we see a maximum
+is minimally affected when running on GreenSKU-CXL.                                                                   memory utilization below 60%, which can be accommodated
+   We note that 20.2% of our applications, weighted by pro-                                                           by GreenSKU-CXL’s local memory. Only 3% of traces have a
+portion of fleet core-hours, do not face significant performance                                                      memory utilization that would require using CXL.
+penalties when running on GreenSKU-CXL. These applications                                                               Moreover, we can leverage our observation that CXL does
+can run in VMs whose entire memory is backed by CXL. Other                                                            not cause a performance loss for 20% of our applications, to
+VMs can benefit from running on a GreenSKU that uses a mix                                                            schedule these applications to use CXL-backed memory. Thus,
+of DDR5 and CXL-attached DDR4 memory (§III).                                                                          using the VM allocator, we show that reusing DRAM via CXL
+   Evaluating GreenSKUs’ impact on VM packing. We now                                                                 does not significantly impact GreenSKU-CXL’s adoption.
+evaluate how well we can pack VMs on our GreenSKUs. We                                                                   Evaluating GreenSKUs’ carbon savings. We now evaluate
+run VM packing simulations on 35 production VM traces. For                                                            our GreenSKUs’ carbon savings using the average grid carbon
+each trace, we select the minimum size of the baseline SKU                                                            intensity across major Azure data center regions. Table IV
+and GreenSKU clusters that avoid VM rejection.                                                                        shows our GreenSKUs’ per-core operational and embodied
+   Fig. 9 shows the mean VM packing densities’ distribution                                                           emissions savings over the Gen3 baseline SKU. “Baseline-
+across production traces, comparing right-sized clusters of                                                           Resized” is the baseline SKU when its memory:core ratio is
+baseline SKUs and GreenSKU-Fulls. We find different VM                                                                reduced from 9.6 to 8. This ratio is carbon-optimal for our
+packing densities across the baseline SKU and GreenSKU-                                                               workload traces, based on GSF’s estimates. Thus, “Baseline-
+Full due to differing core counts, i.e., 80 vs. 128 cores, and                                                        Resized” saves 4% carbon compared to the baseline SKU (3%
+memory:core ratios, i.e., 9.6 vs. 8, respectively. The baseline                                                       operational and 6% embodied carbon savings).
+SKU’s higher memory:core ratio causes higher core-packing                                                                GreenSKU-Efficient uses the carbon-optimal memory:core
+density at the expense of memory wastage. Thus, we show how                                                           ratio of 8 with its efficient CPU. Due to its efficient CPU’s lower
+GSF’s VM allocation and cluster sizing components can help                                                            power consumption per core, GreenSKU-Efficient saves 29%
+study VM packing on GreenSKUs and its impact on emissions.                                                            in operational emissions. Furthermore, as GreenSKU-Efficient
+   The packing density also helps understand server compo-                                                            leads to more cores per server and rack, it better amortizes the
+nents’ utilization. Using the packing density, we validate if we                                                      rack- and data-center-level embodied emissions per core. Thus,
+can back untouched memory with reused DRAM via CXL, thus                                                              GreenSKU-Efficient saves 14% embodied emissions per core,
+reducing CXL-induced performance loss. To this end, we note                                                           resulting in 23% net per-core carbon savings.
+that in our VM traces, each VM reports the maximum amount                                                                GreenSKU-CXL replaces 30% of GreenSKU-Efficient’s mem-
+of its allocated memory that it uses over its lifetime. We replay                                                     ory with 32GB DDR4 DIMMs connected via CXL. Since these
+each trace and periodically take snapshots of the servers, to                                                         CXL controllers consume additional power, GreenSKU-CXL
+aggregate the maximum memory usage across all VMs on                                                                  achieves 6% lower per-core operational emission savings com-
+each server. We then average across servers and snapshots to                                                          pared to GreenSKU-Efficient. However, due to DDR4 memory
+identify a trace’s average maximum memory utilization.                                                                reuse, GreenSKU-CXL saves 11% more per-core embodied
+   We show a CDF of the mean per-server maximum memory                                                                emissions compared to GreenSKU-Efficient, improving the net
+utilization in Fig. 10 for clusters with both baseline-only                                                           per-core savings by 1% compared to GreenSKU-Efficient.
+SKUs and GreenSKU-CXLs. The shaded portion is the 25% of                                                                 Finally, GreenSKU-Full replaces 60% of GreenSKU-CXL’s
+
+
+
+                                                                                                                 11
+  SKU                    #           # × DIMM          # × SSD             Operational    Embodied         Total          A. GreenSKU Cost Analysis
+  Config.                Cores       (GB)              (TB)                Savings        Savings          Savings
+ Baseline                80         12 × 64            6×2                 -              -                -                 GSF can be adapted to analyze GreenSKUs’ effect on Total
+ Baseline-
+                         80         10 × 64            6×2                 3%             6%               4%
+ Resized                                                                                                                  Cost of Ownership (TCO) by replacing the carbon model with
+ GreenSKU-
+ Efficient
+                         128        12 × 96            5×4                 29%            14%              23%            a TCO model. Since TCO data is sensitive, we share high-level
+ GreenSKU-                          12 × 64
+ CXL
+                         128
+                                    8 × 32 CXL
+                                                       5×4                 23%            25%              24%            insights from our TCO analysis.
+ GreenSKU-                          12 × 64            2×4                                                                   Our TCO analysis reveals that a cost-efficient server SKU is
+                         128                                               17%            43%              28%
+ Full                               8 × 32 CXL         12 × 1 Reuse
+
+                               TABLE IV
+                                                                                                                          only 5% less costly compared to our carbon-efficient GreenSKU.
+   P ER - CORE OPERATIONAL , EMBODIED , AND TOTAL CARBON SAVINGS                                                          This relatively small TCO loss may be tolerable to a cloud
+( CALCULATED BASED ON THE AVERAGE CARBON INTENSITY FOR MAJOR                                                              provider seeking to meet aggressive decarbonization targets.
+  A ZURE REGIONS ) RELATIVE TO OUR G EN 3 BASELINE SKU FOR FOUR
+            INCREMENTAL G REEN SKU CONFIGURATIONS .
+                                                                                                                          Moreover, cloud providers can use GSF to evaluate other SKUs
+                                                                                                                          that achieve the required carbon vs. cost tradeoff.
+                                  GreenSKU-Efficient         GreenSKU-CXL                GreenSKU-Full
+                                                                                                                          B. GreenSKU vs. Other Carbon Reduction Strategies
+                    20
+   Cluster carbon
+    savings (%)
+
+
+
+
+                                                                                                                             To reduce emissions, prior work has proposed (1) in-
+                    10                                                                                                    creasing renewables use [10], (2) improving servers’ energy
+                          Azure                   Azure        Azure
+                     0 us-south                  us-east    europe-north                                                  efficiency [93], and (3) increasing server lifetimes [115], [126].
+                      0.00   0.05         0.10       0.15     0.20     0.25     0.30          0.35       0.40             We comment on how designing GreenSKUs can be a more
+                                                 Carbon intensity (kgCO2 e/kWh)
+                                                                                                                          practical and complementary approach to reduce emissions.
+Fig. 11. End-to-end cluster-level carbon savings relative to clusters of all                                                 Increasing renewable generation. Cloud providers reduce
+baseline SKUs across a range of carbon intensities evaluated for our three                                                emissions by increasing renewable energy use [1], [10]. We
+GreenSKU configurations. The vertical lines mark estimated carbon intensities
+for the energy used by three Azure data center regions [26]. The best GreenSKU                                            calculate that an increase of 2.6% in the percentage of energy
+design depends on the data center’s operating conditions.                                                                 coming from renewables for the average Azure data center is
+                                                                                                                          required to match our GreenSKU-Full’s data center-wide carbon
+                                                                                                                          savings. While this increase appears small, there are major
+storage with reused SSDs. As reused SSDs are less energy                                                                  challenges in realizing it. First, in many parts of the world,
+efficient, GreenSKU-Full saves 6% lesser per-core operational                                                             including the United States, grid decarbonization has been
+emissions compared to GreenSKU-CXL. However, due to SSD                                                                   slow due to infrastructural and political challenges, with the
+reuse, GreenSKU-Full saves 18% more embodied emissions                                                                    renewable percentage increasing by 1.2% annually on average
+compared to GreenSKU-CXL. Thus, GreenSKU-Full achieves                                                                    in the last five years [15]. Second, it is challenging for a data
+a 28% per-core carbon savings compared to the baseline SKU.                                                               center to fully utilize an increase in renewables; prior work
+   We now evaluate our GreenSKUs’ cluster-level carbon                                                                    suggests that increasing renewable energy coverage from 95%
+savings. We compare the carbon savings achieved by a cluster                                                              to 99.9% requires investing 5× the cost required to go from
+of GreenSKUs and baseline SKUs against a cluster of all                                                                   0% to 95%, due to the long tail in generation variance [35].
+baseline SKUs. In Fig. 11, we show the cluster-level carbon                                                                  Improving server energy efficiency. Improving energy effi-
+savings achieved by GreenSKU-Efficient, GreenSKU-CXL, and                                                                 ciency reduces operational emissions [64], [131]. We analyze
+GreenSKU-Full. We evaluate across a spectrum of carbon                                                                    how much servers’ energy efficiency must increase to achieve
+intensity values. We annotate the carbon intensities for the                                                              our GreenSKU-Full’s data center-wide carbon savings. We
+energy used by three Azure data center regions.                                                                           optimistically assume that improvements in energy efficiency
+   The cluster with GreenSKUs saves 6%–25% carbon com-                                                                    (1) do not increase embodied emissions and (2) occur uniformly
+pared to the baseline SKUs’ cluster. The lower-carbon Green-                                                              across server components. We use the current average grid
+SKU configuration depends on the carbon intensity of the data                                                             intensity of some of Azure’s largest regions for our analysis.
+center’s grid, which affects operational emissions. At higher                                                                We estimate that all server components must become 28%
+carbon intensity, as with the Azure-europe-north data                                                                     more energy efficient. Achieving such improvements can take
+center region, GreenSKU-Efficient saves more carbon as it                                                                 years. For example, upgrading from AMD’s Zen 3 to Zen 4
+does not have inefficient reused components. At lower carbon                                                              (separated by two years) improves energy-efficiency by 25% [6].
+intensity, as with the Azure-us-south region, saving                                                                      Note that upgrading every cloud server every two years would
+embodied emissions matters more. Thus, GreenSKU-Full saves                                                                cause high embodied emissions, decreasing carbon savings.
+more carbon as it saves more embodied emissions from reuse.                                                                  Increasing server lifetime. To reduce emissions, prior
+                                                                                                                          works extend server lifetime via scheduling [126], better
+                               VII. W HY D ESIGN G REEN SKU S ?                                                           maintenance [88], and reuse of discarded devices [115]. We
+                                                                                                                          analyze how much server lifetimes must increase by, to achieve
+   We detail why reducing emissions by deploying GreenSKUs                                                                our GreenSKU-Full’s carbon savings, with a simplifying as-
+(1) also reduces cost and (2) is more practical compared to other                                                         sumption that extending lifetimes does not increase operational
+cloud emission reduction approaches. We use the flexibility of                                                            emissions. Using Azure’s renewables mix, we estimate the
+our GSF’s carbon model to perform such comparisons.                                                                       required lifetime extension to be 6 → 13 years.
+
+
+
+                                                                                                                     12
+   Extending lifetimes to 13 years requires a radical data center    Designing server SKUs. Prior work on server SKU de-
+stack redesign. For example, maintenance can become cost          sign [44], [69] primarily improves performance and cost, rather
+prohibitive over this time frame [88], [89]. Older servers also   than carbon. SoftSKU [112] considers the performance impact
+tend to have higher per-core operational emissions relative       of running services on efficient cores, but does not consider
+to newer hardware [64], [75]. GSF can evaluate server             carbon. Other works [56], [67], [93], [114], [133] redesign
+lifetime extension by considering such extension’s impact on      servers to improve energy efficiency. In contrast, we show
+maintenance, performance, and emissions.                          how to systematically evaluate a carbon-efficient server SKU’s
+   Summary. Thus, strategies like increasing renewable energy     potential to reduce emissions.
+use, improving energy efficiency, and increasing lifetimes           Reducing carbon emissions. Many works build systems
+require significant investment and navigation of deployment       to improve cloud resource utilization [46], [57], [59], [60],
+challenges, to achieve our GreenSKUs’ carbon savings. The         [72], [86], [87], [92], [97], [113], [135], energy efficiency [45],
+latter two approaches trade off operational vs. embodied          [51], [52], [62], [105], and power management [71], [79], [96],
+emissions in a way that can hurt net carbon savings in some       [118], [132], [134]. While these systems might indirectly lower
+deployment scenarios. Our evaluation with GSF shows that          carbon emissions, they do not explicitly consider the tradeoffs
+our GreenSKU designs navigate this tradeoff to save carbon        between operational and embodied emissions. Moreover, these
+across diverse carbon intensities, as summarized in Fig. 11.      works can augment GreenSKUs to improve resource utilization.
+                                                                     Prior work reduces operational emissions by shifting a
+                       VIII. D ISCUSSION                          data center’s workload spatially (i.e., across data centers) and
+   We briefly discuss open questions and limitations.             temporally (i.e., batching workloads during certain periods) to
+   Scheduling real-time applications. We show how to eval- leverage renewables’ availability [20], [35], [40], [99], [110],
+uate GreenSKU deployment. Run-time systems that leverage [129]. These solutions can apply on top of GreenSKUs.
+GreenSKUs, post-deployment, are an opportunity for future            Switzer et al., [115] run some services on discarded smart-
+work. For example, auto-scalers [98], [100] can improve phones, as they find that it offers more carbon savings compared
+GreenSKUs’ performance during load changes. Tuning CPU to old laptops and servers. Prior works [89], [117], [124]–[126]
+configurations (e.g., frequency) [70], [112] can also help a also extend server lifetimes to reduce embodied emissions,
+GreenSKU adapt to application changes post-deployment.            which adds a dimension to the GreenSKU design space. Gupta
+   Navigating component search space. While our GreenSKU et al. [64] motivate saving carbon from reducing and reusing
+achieves significant carbon savings, it may not be the optimal hardware. GSF enables evaluating such carbon-efficient server
+configuration. When designing our GreenSKUs, we used parts optimizations’ benefits at data center scale.
+of GSF to iterate through hundreds of configurations. To             Planning cloud capacity. Prior works on capacity planning
+identify optimal configurations, we must consider components’     determine    the resource capacity required to support a data
+dynamic interactions in terms of performance (e.g., memory and    center’s  workload   [42], [61], [84], [120], [127]. We build on
+core frequency) and compatibility (e.g., CXL-compatibility).      these  approaches   by introducing emissions as a key metric to
+We expect that a future search framework could consider such      consider  in  capacity planning decisions. Flux [53] distributes
+interactions and repeatedly run GSF to evaluate emissions.        service  capacity  across geo-distributed servers. Such capacity
+   Heterogeneous compute on GreenSKUs. GSF focuses                management     solutions can  help intelligently distribute services
+on general-purpose compute servers. Extending GSF to study        across  data  centers with  different GreenSKU capacities.
+GreenSKUs with heterogeneous accelerators, e.g., for ML, may                               X. C ONCLUSION
+require adjustments. For example, the adoption model’s “scaling
+                                                                     To reduce cloud emissions, designing carbon-efficient Green-
+factor” may need to reflect scaling out across CPUs and/or
+                                                                  SKUs is a promising solution. Thus, we designed three
+accelerators. Such extensions can help study accelerator-reuse
+                                                                  GreenSKUs with low-carbon server components. However, it
+for less compute-intensive ML models and reusing offload
+                                                                  is challenging to determine our GreenSKUs’ carbon savings at
+engines for less IO-intensive tasks [55], [82], [83].
+                                                                  scale. To this end, we developed a novel framework, GSF, to
+   Assumptions. GSF pessimistically assumes that scaling out help cloud providers to systematically evaluate a GreenSKU’s
+requires a proportional increase in core count, memory, and benefits. We applied GSF within Azure’s production constraints
+disk capacity. While this assumption may be true for some to evaluate our GreenSKUs. We found that our GreenSKUs
+applications, it was rarely true in our experiments. Thus, it may reduce emissions by 28% compared to the currently-deployed
+be possible to further reduce DRAM and SSD provisioning.          cloud servers. They also reduce Azure’s net emissions by 8%.
+   Limitations. While our carbon model considers key carbon
+contributors, it may not cover all factors. The underlying carbon                       ACKNOWLEDGEMENT
+data is also changing as emissions-tracking processes mature.        We thank the anonymous reviewers for their insightful
+                                                                  feedback. This work was partially supported by an NSF
+                      IX. R ELATED W ORK                          CAREER Award CCF-2340042. Jaylen Wang was supported
+   To the best of our knowledge, GSF is the first framework by an NSF Graduate Research Fellowship, a Benjamin Garver
+to help cloud providers systematically evaluate server designs’ Lamme/Westinghouse Graduate Fellowship, and a Jack and
+emissions at data center scale. We now discuss related work. Mildred Bowers Scholarship in Engineering.
+
+
+
+                                                                    13
+                             R EFERENCES                                          [29] “Nytro 3530 - 1920GB | Seagate US,” https://www.seagate.com/
+                                                                                       esg/planet/product-sustainability/nytro-3530-sustainability-report/, (Ac-
+ [1] “2022 Environmental Sustainability Report,” https://query.prod.cms.rt.            cessed on 04/26/2024).
+     microsoft.com/cms/api/am/binary/RW14sJN, (Accessed on 04/26/2024).           [30] “PEX 8732,” https://www.broadcom.com/products/pcie-switches-
+ [2] “4th Gen Intel Xeon Scalable Processors,” https://download.intel.com/             retimers/pcie-switches/pex8732, (Accessed on 04/26/2024).
+     newsroom/2023/data-center-hpc/4th-Gen-Xeon-Scalable-Product-                 [31] “Server Rack Sizes Matter: 3 Critical Rack Server Dimensions,”
+     Brief.pdf, (Accessed on 04/26/2024).                                              https://www.vertiv.com/en-emea/about/news-and-insights/articles/
+ [3] “Amazon EC2 M7a Instances,” https://aws.amazon.com/ec2/instance-                  educational-articles/server-rack-sizes-matter-get-these-3-critical-rack-
+     types/m7a/, (Accessed on 04/26/2024).                                             server-dimensions-right/, (Accessed on 04/26/2024).
+ [4] “AMD adds 128-core Bergamo and 3D V-Cache Genoa CPUs to Zen 4                [32] “Smart Memory Controllers — Microchip Technology,” https://www.
+     Epyc lineup,” https://www.xda-developers.com/amd-128-core-bergame-                microchip.com/en-us/products/memory/smart-memory-controllers, (Ac-
+     genoa-epyc-cpu/, (Accessed on 04/26/2024).                                        cessed on 04/26/2024).
+ [5] “AMD EPYC 9754 Benchmarks For The 128-Core Bergamo Review,”                  [33] “The Xapian Project,” https://xapian.org/, (Accessed on 04/26/2024).
+     https://www.phoronix.com/review/amd-epyc-9754-bergamo, (Accessed             [34] “Understanding the Advantages and Disadvantages of Linear
+     on 04/26/2024).                                                                   Regulators,” https://www.digikey.com/en/articles/understanding-the-
+ [6] “AMD’s Financial Analyst Day 2023 Press Release,”                                 advantages-and-disadvantages-of-linear-regulators, (Accessed on
+     https://ir.amd.com/news-events/press-releases/detail/1078/amd-                    04/26/2024).
+     details-strategy-to-drive-next-phase-of-growth-across, (Accessed on          [35] B. Acun, B. Lee, F. Kazhamiaka, K. Maeng, M. Chakkaravarthy,
+     04/26/2024).                                                                      U. Gupta, D. Brooks, and C.-J. Wu, “Carbon Explorer: A Holistic
+ [7] “AmpereOne         192-core      CPU      Family    Product      Brief,”          Approach for Designing Carbon Aware Datacenters,” International
+     https://amperecomputing.com/briefs/ampereone-family-product-brief,                Conference on Architectural Support for Programming Languages and
+     (Accessed on 04/26/2024).                                                         Operating Systems, 2023.
+ [8] “AWS is running a 96-core, 192-thread, custom Xeon server,” https:           [36] D. Albano, D. Abood, A. Armstrong, R. Murdoch, and J. Whitney,
+     //www.theregister.com/2023/08/03/aws custom xeon m7i instances/,                  “Cloud Computing and Sustainability: The Environmental Benefits of
+     (Accessed on 04/26/2024).                                                         Moving to the Cloud,” 2010, (Whitepaper).
+ [9] “Azure Compute Units,” https://learn.microsoft.com/en-us/azure/virtual-      [37] P. Ambati, I. Goiri, F. Frujeri, A. Gun, K. Wang, B. Dolan, B. Corell,
+     machines/acu, (Accessed on 04/26/2024).                                           S. Pasupuleti, T. Moscibroda, S. Elnikety, M. Fontoura, and R. Bianchini,
+[10] “Carbon free energy for Google Cloud regions,” https://cloud.google.              “Providing SLOs for Resource-Harvesting VMs in Cloud Platforms,” in
+     com/sustainability/region-carbon, (Accessed on 04/26/2024).                       Symposium on Operating Systems Design and Implementation, 2020.
+[11] “CONDA: Managing Environments,” https://conda.io/projects/conda/             [38] N. Amla, D. D. Silva, M. Littman, and M. Parashar, “NSF on Chien’s
+     en/latest/user-guide/tasks/manage-environments.html, (Accessed on                 Grand Challenge for Sustainability,” Communications of the ACM,
+     04/26/2024).                                                                      vol. 66, pp. 36–37, 2023.
+[12] “CXL Memory eXpander Controller (MXC),” https://www.montage-                 [39] H. Barbalho, P. Kovaleski, B. Li, L. Marshall, M. Molinaro, A. Pan,
+     tech.com/MXC, (Accessed on 04/26/2024).                                           E. Cortez, M. Leao, H. Patwari, Z. Tang, T. Santos, L. R. Gonçalves,
+[13] “Data center rack density: How high can it go?” https:                            D. Dion, T. Moscibroda, and I. Menache, “Virtual Machine Allocation
+     //www.sdxcentral.com/articles/analysis/data-center-rack-density-                  with Lifetime Predictions,” Conference on Machine Learning and
+     how-high-can-it-go/2023/09/, (Accessed on 04/26/2024).                            Systems, 2023.
+[14] “Dell LCA, Poweredge r740,” https://corporate.delltechnologies.              [40] N. Bashir, T. Guo, M. Hajiesmaili, D. Irwin, P. Shenoy, R. Sitaraman,
+     com/content/dam/digitalassets/active/en/unauth/data-sheets/products/              A. Souza, and A. Wierman, “Enabling Sustainable Clouds: The Case for
+     servers/lca poweredge r740.pdf, (Accessed on 04/26/2024).                         Virtualizing the Energy System,” in Symposium on Cloud Computing,
+[15] “Electricity Data - U.S. Energy Information Administration (EIA),” https:         2021.
+     //www.eia.gov/electricity/data.php#summary, (Accessed on 04/26/2024).        [41] D. S. Berger, D. Ernst, H. Li, P. Zardoshti, M. Shah, S. Rajadnya,
+[16] “Envoy proxy,” https://www.envoyproxy.io/, (Accessed on 04/26/2024).              S. Lee, L. Hsu, I. Agarwal, M. D. Hill, and R. Bianchini, “Design
+[17] “Google Cloud Machine Types,” https://cloud.google.com/compute/docs/              Tradeoffs in CXL-Based Memory Pools for Public Cloud Platforms,”
+     machine-resource, (Accessed on 04/26/2024).                                       IEEE Micro, vol. 43, pp. 30–38, 2023.
+[18] “GreenSKU-Model,” https://github.com/Azure/AzurePublicDataset.               [42] R. Boone, ““Capacity Prediction” instead of “Capacity Planning”: How
+[19] “HAProxy - The Reliable, High Perf. TCP/HTTP Load Balancer,” https:               Uber Uses ML to Accurately Forecast Resource Utilization,” https://
+     //www.haproxy.org/, (Accessed on 04/26/2024).                                     www.usenix.org/conference/srecon18americas/presentation/boone, 2018,
+[20] “Helping you pick the greenest region for your Google Cloud re-                   (Accessed on 04/26/2024).
+     sources,” https://cloud.google.com/blog/topics/sustainability/pick-the-      [43] J. Carlson, Redis in Action. Simon and Schuster, 2013, (Book).
+     google-cloud-region-with-the-lowest-co2, (Accessed on 04/26/2024).           [44] A. M. Caulfield, E. S. Chung, A. Putnam, H. Angepat, J. Fowers,
+[21] “IMEC netzero virtual fab,” https://netzero.imec-int.com/, (Accessed              M. Haselman, S. Heil, M. Humphrey, P. Kaur, J.-Y. Kim, D. Lo,
+     on 04/26/2024).                                                                   T. Massengill, K. Ovtcharov, M. Papamichael, L. Woods, S. Lanka,
+[22] “Intel Announces 288-Core Sierra Forest CPU, 5th-Gen Xeon,”                       D. Chiou, and D. Burger, “A Cloud-Scale Acceleration Architecture,”
+     https://www.tomshardware.com/news/intel-announces-288-core-                       in International Symposium on Microarchitecture, 2016.
+     processor-5th-gen-xeon-arrives-december-14,          (Accessed        on     [45] G. Chen, W. He, J. Liu, S. Nath, L. Rigas, L. Xiao, and F. Zhao, “Energy-
+     04/26/2024).                                                                      Aware Server Provisioning and Load Dispatching for Connection-
+[23] “Intel Core i7-5960X, -5930K And -5820K CPU Review: Haswell-                      Intensive Internet Services,” in Symposium on Networked Systems Design
+     E Rises,” https://www.tomshardware.com/reviews/intel-core-i7-5960x-               and Implementation, 2008.
+     haswell-e-cpu,3918.html, (Accessed on 04/26/2024).                           [46] S. Chen, C. Delimitrou, and J. F. Martı́nez, “PARTIES: QoS-Aware
+[24] “M.2 E1.S Adapter,” https://www.microsatacables.com/m-2-nvme-ssd-                 Resource Partitioning for Multiple Interactive Services,” in International
+     to-edsff-e1-s-interface-adapter-card, (Accessed on 04/26/2024).                   Conference on Architectural Support for Programming Languages and
+[25] “Makersite Data Platform,” https://makersite.io/makersite-ai-data-apps/,          Operating Systems, 2019.
+     (Accessed on 04/26/2024).                                                    [47] A. A. Chien, “Computing’s Grand Challenge for Sustainability,” Com-
+[26] “Microsoft Datacenter Statistics and Sustainability Fact Sheets,” https:          munications of the ACM, vol. 65, p. 5, 2022.
+     //datacenters.microsoft.com/, (Accessed on 04/26/2024).                      [48] A. A. Chien, C. Zhang, and L. Lin, “Beyond PUE: Flexible Datacenters
+[27] “Microsoft will be carbon negative by 2030,” https://blogs.microsoft.             Empowering the Cloud to Decarbonize,” Workshop on Sustainable
+     com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/, (Ac-              Computer Systems, 2022.
+     cessed on 04/26/2024).                                                       [49] S. Chopra, G. Reinhardt, and M. Dada, “The Effect of Lead Time
+[28] “New Seventh-Generation General Purpose Amazon EC2 In-                            Uncertainty on Safety Stocks,” Decision Sciences, vol. 35, pp. 1–24,
+     stances,” https://aws.amazon.com/blogs/aws/new-seventh-generation-                2004.
+     general-purpose-amazon-ec2-instances-m7i-flex-and-m7i/, (Accessed            [50] E. Cortez, A. Bonde, A. Muzio, M. Russinovich, M. Fontoura, and
+     on 04/26/2024).                                                                   R. Bianchini, “Resource Central: Understanding and Predicting Work-
+
+
+
+
+                                                                             14
+     loads for Improved Resource Management in Large Cloud Platforms,”           [69] K. Hazelwood, S. Bird, D. Brooks, S. Chintala, U. Diril, D. Dzhulgakov,
+     in Symposium on Operating Systems Principles, 2017.                              M. Fawzy, B. Jia, Y. Jia, A. Kalro, J. Law, K. Lee, J. Lu, P. Noordhuis,
+[51] C. Delimitrou and C. Kozyrakis, “Paragon: QoS-aware Scheduling for               M. Smelyanskiy, L. Xiong, and X. Wang, “Applied Machine Learning
+     Heterogeneous Datacenters,” in International Conference on Architec-             at Facebook: A Datacenter Infrastructure Perspective,” in International
+     tural Support for Programming Languages and Operating Systems,                   Symposium on High Performance Computer Architecture, 2018.
+     2013.                                                                       [70] C.-H. Hsu, Y. Zhang, M. A. Laurenzano, D. Meisner, T. Wenisch,
+[52] C. Delimitrou and C. Kozyrakis, “Quasar: Resource-Efficient and                  J. Mars, L. Tang, and R. G. Dreslinski, “Adrenaline: Pinpointing and
+     QoS-Aware Cluster Management,” in International Conference on                    Reining in Tail Queries with Quick Voltage Boosting,” in International
+     Architectural Support for Programming Languages and Operating                    Symposium on High Performance Computer Architecture, 2015.
+     Systems, 2014.                                                              [71] M. Jalili, I. Manousakis, I. n. Goiri, P. A. Misra, A. Raniwala, H. Alissa,
+[53] M. Eriksen, K. Veeraraghavan, Y. Abdulghani, A. Birchall, P.-Y. Chou,            B. Ramakrishnan, P. Tuma, C. Belady, M. Fontoura, and R. Bianchini,
+     R. Cornew, A. Kabiljo, R. K. S, M. Lieuw, J. Meza, S. Michelson,                 “Cost-Efficient Overclocking in Immersion-Cooled Datacenters,” in
+     T. Rohloff, H. Russell, J. Qin, and C. Tang, “Global Capacity                    International Symposium on Computer Architecture, 2021.
+     Management With Flux,” in Symposium on Operating Systems Design             [72] Z. Jia and E. Witchel, “Nightcore: Efficient and Scalable Serverless
+     and Implementation, 2023.                                                        Computing for Latency-Sensitive, Interactive Microservices,” in Interna-
+[54] H. Esmaeilzadeh, E. Blem, R. St. Amant, K. Sankaralingam, and                    tional Conference on Architectural Support for Programming Languages
+     D. Burger, “Dark Silicon and the End of Multicore Scaling,” in                   and Operating Systems, 2021.
+     International Symposium on Computer Architecture, 2011.                     [73] N. Jones, “How to stop data centres from gobbling up the world’s
+[55] D. Firestone, A. Putnam, S. Mundkur, D. Chiou, A. Dabagh, M. An-                 electricity,” Nature, vol. 561, pp. 163–166, 2018.
+     drewartha, H. Angepat, V. Bhanu, A. Caulfield, E. Chung, H. K.              [74] H. Kasture and D. Sanchez, “TailBench: A Benchmark Suite and Eval-
+     Chandrappa, S. Chaturmohta, M. Humphrey, J. Lavier, N. Lam, F. Liu,              uation Methodology for Latency-Critical Applications,” in International
+     K. Ovtcharov, J. Padhye, G. Popuri, S. Raindel, T. Sapre, M. Shaw,               Symposium on Workload Characterization, 2016.
+     G. Silva, M. Sivakumar, N. Srivastava, A. Verma, Q. Zuhair, D. Bansal,      [75] D. Kline, N. Parshook, X. Ge, E. Brunvand, R. Melhem, P. K.
+     D. Burger, K. Vaid, D. A. Maltz, and A. Greenberg, “Azure Accelerated            Chrysanthis, and A. K. Jones, “GreenChip: A tool for evaluating holistic
+     Networking: SmartNICs in the Public Cloud,” in Symposium on                      sustainability of modern computing systems,” Sustainable Computing:
+     Networked Systems Design and Implementation, 2018.                               Informatics and Systems, vol. 22, pp. 322–332, 2019.
+[56] E. Frachtenberg, A. Heydari, H. Li, A. Michael, J. Na, A. Nisbet, and       [76] B. Knowles, “ACM TechBrief: Computing and Climate Change,” 2021.
+     P. Sarti, “High-Efficiency Server Design,” in International Conference      [77] A. Kopytov, “SysBench: a system performance benchmark,” http://
+     for High Performance Computing, Networking, Storage and Analysis,                sysbench.sourceforge.net/, (Accessed on 04/26/2024).
+     2011.                                                                       [78] C. Koronen, M. Åhman, and L. J. Nilsson, “Data centres in future
+[57] K. Fu, W. Zhang, Q. Chen, D. Zeng, X. Peng, W. Zheng, and M. Guo,                European energy systems—energy efficiency, integration and policy,”
+     “QoS-Aware and Resource Efficient Microservice Deployment in Cloud-              Energy Efficiency, vol. 13, pp. 129–144, 2020.
+     Edge Continuum,” in International Parallel and Distributed Processing       [79] A. Kumbhare, R. Azimi, I. Manousakis, A. Bonde, F. V. Frujeri,
+     Symposium, 2021.                                                                 N. Mahalingam, P. Misra, S. A. Javadi, B. Schroeder, M. Fontoura,
+[58] M. Furtak and M. P. Wittie, “The Oddness of Webpages,” in Network                and R. Bianchini, “Prediction-Based Power Oversubscription in Cloud
+     Traffic Measurement and Analysis Conference, 2019.                               Platforms,” in Annual Technical Conference, 2021.
+[59] Y. Gan, M. Liang, S. Dev, D. Lo, and C. Delimitrou, “Sage: Practical        [80] K.-F. Lee, H.-W. Hon, and R. Reddy, “An Overview of the SPHINX
+     and Scalable ML-Driven Performance Debugging in Microservices,” in               Speech Recognition System,” Transactions on Acoustics, Speech, and
+     International Conference on Architectural Support for Programming                Signal Processing, vol. 38, pp. 35–45, 1990.
+     Languages and Operating Systems, 2021.                                      [81] H. Li, D. S. Berger, L. Hsu, D. Ernst, P. Zardoshti, S. Novakovic,
+[60] Y. Gan, Y. Zhang, D. Cheng, A. Shetty, P. Rathi, N. Katarki, A. Bruno,           M. Shah, S. Rajadnya, S. Lee, I. Agarwal, M. D. Hill, M. Fontoura,
+     J. Hu, B. Ritchken, B. Jackson, K. Hu, M. Pancholi, Y. He, B. Clancy,            and R. Bianchini, “Pond: CXL-Based Memory Pooling Systems for
+     C. Colen, F. Wen, C. Leung, S. Wang, L. Zaruvinsky, M. Espinosa,                 Cloud Platforms,” in International Conference on Architectural Support
+     R. Lin, Z. Liu, J. Padilla, and C. Delimitrou, “An Open-Source                   for Programming Languages and Operating Systems, 2023.
+     Benchmark Suite for Microservices and Their Hardware-Software               [82] H. Li, M. Hao, S. Novakovic, V. Gogte, S. Govindan, D. R. Ports,
+     Implications for Cloud & Edge Systems,” in International Conference              I. Zhang, R. Bianchini, H. S. Gunawi, and A. Badam, “LeapIO: Efficient
+     on Architectural Support for Programming Languages and Operating                 and Portable Virtual NVMe Storage on ARMSoCs,” in International
+     Systems, 2019.                                                                   Conference on Architectural Support for Programming Languages and
+[61] A. Gandhi, M. Harchol-Balter, R. Raghunathan, and M. A. Kozuch,                  Operating Systems, 2020.
+     “AutoScale: Dynamic, Robust Capacity Management for Multi-Tier Data         [83] A. Liguori, “The Nitro Project–Next Generation AWS Infrastructure,”
+     Centers,” Transactions on Computer Systems, vol. 30, pp. 1–26, 2012.             in Symposium on High Performance Chips, 2018.
+[62] J. Gao, H. Wang, and H. Shen, “Smartly Handling Renewable Energy            [84] R. M. Llamas, “Capacity Planning at Scale,” https://www.usenix.org/
+     Instability in Supporting A Cloud Datacenter,” in International Parallel         conference/srecon16europe/program/medrano-llamas, 2016, (Accessed
+     and Distributed Processing Symposium, 2020.                                      on 04/26/2024).
+[63] P. Garraghan, P. Townend, and J. Xu, “An Analysis of the Server Char-       [85] D. Lo, L. Cheng, R. Govindaraju, L. A. Barroso, and C. Kozyrakis,
+     acteristics and Resource Utilization in Google Cloud,” in International          “Towards Energy Proportionality for Large-Scale Latency-Critical
+     Conference on Cloud Engineering, 2013.                                           Workloads,” in International Symposium on Computer Architecture,
+[64] U. Gupta, M. Elgamal, G. Hills, G.-Y. Wei, H.-H. S. Lee, D. Brooks,              2014.
+     and C.-J. Wu, “ACT: Designing Sustainable Computer Systems With             [86] S. Luo, H. Xu, C. Lu, K. Ye, G. Xu, L. Zhang, Y. Ding, J. He, and
+     An Architectural Carbon Modeling Tool,” in International Symposium               C. Xu, “Characterizing Microservice Dependency and Performance:
+     on Computer Architecture, 2022.                                                  Alibaba Trace Analysis,” in Symposium on Cloud Computing, 2021.
+[65] U. Gupta, Y. G. Kim, S. Lee, J. Tse, H.-H. S. Lee, G.-Y. Wei, D. Brooks,    [87] S. Luo, H. Xu, K. Ye, G. Xu, L. Zhang, J. He, G. Yang, and C. Xu,
+     and C.-J. Wu, “Chasing Carbon: The Elusive Environmental Footprint               “Erms: Efficient Resource Management for Shared Microservices with
+     of Computing,” in International Symposium on High-Performance                    SLA Guarantees,” in International Conference on Architectural Support
+     Computer Architecture, 2021.                                                     for Programming Languages and Operating Systems, 2022.
+[66] O. Hadary, L. Marshall, I. Menache, A. Pan, E. E. Greeff, D. Dion,          [88] J. Lyu, J. Wang, K. Frost, C. Zhang, C. Irvene, E. Choukse, R. Fonseca,
+     S. Dorminey, S. Joshi, Y. Chen, M. Russinovich, and T. Moscibroda,               R. Bianchini, F. Kazhamiaka, and D. S. Berger, “Myths and Miscon-
+     “Protean: VM Allocation Service at Scale,” in Symposium on Operating             ceptions Around Reducing Carbon Embedded in Cloud Platforms,” in
+     Systems Design and Implementation, 2020.                                         Workshop on Sustainable Computer Systems, 2023.
+[67] J. Hamilton, “Cooperative Expendable Micro-Slice Servers (CEMS):            [89] J. Lyu, M. You, C. Irvene, M. Jung, T. Narmore, J. Shapiro, L. Marshall,
+     Low Cost, Low Power Servers for Internet-Scale Services,” in Confer-             S. Samal, I. Manousakis, L. Hsu, P. Subbarayalu, A. Raniwala,
+     ence on Innovative Data Systems Research, 2009.                                  B. Warrier, R. Bianchini, B. Schroeder, and D. S. Berger, “Hyrax:
+[68] S. Harizopoulos, D. J. Abadi, S. Madden, and M. Stonebraker, OLTP                Fail-in-Place Server Operation in Cloud Platforms,” in Symposium on
+     through the Looking Glass, and What We Found There, 2018, (Book).                Operating Systems Design and Implementation, 2023.
+
+
+
+
+                                                                            15
+ [90] Y. Mao, E. Kohler, and R. T. Morris, “Cache Craftiness for Fast               [112] A. Sriraman, A. Dhanotia, and T. F. Wenisch, “SoftSKU: Optimizing
+      Multicore Key-Value Storage,” in European Conference on Computer                    Server Architectures for Microservice Diversity @Scale,” in Interna-
+      Systems, 2012.                                                                      tional Symposium on Computer Architecture, 2019.
+ [91] S. McAllister, B. Berg, J. Tutuncu-Macias, J. Yang, S. Gunasekar, J. Lu,      [113] A. Sriraman and T. F. Wenisch, “µTune: Auto-Tuned Threading for
+      D. S. Berger, N. Beckmann, and G. R. Ganger, “Kangaroo: Caching                     OLDI Microservices,” in Conference on Operating Systems Design and
+      Billions of Tiny Objects on Flash,” in Symposium on Operating Systems               Implementation, 2018.
+      Principles, 2021.                                                             [114] J. Stojkovic, C. Liu, M. Shahbaz, and J. Torrellas, “µManycore: A
+ [92] A. Mirhosseini, S. Elnikety, and T. F. Wenisch, “Parslo: A Gradient                 Cloud-Native CPU for Tail at Scale,” in International Symposium on
+      Descent-based Approach for Near-optimal Partial SLO Allotment in                    Computer Architecture, 2023.
+      Microservices,” in Symposium on Cloud Computing, 2021.                        [115] J. Switzer, G. Marcano, R. Kastner, and P. Pannuto, “Junkyard
+ [93] A. Mirhosseini, A. Sriraman, and T. F. Wenisch, “Enhancing Server                   Computing: Repurposing Discarded Smartphones to Minimize Carbon,”
+      Efficiency in the Face of Killer Microseconds,” in International                    in International Conference on Architectural Support for Programming
+      Symposium on High Performance Computer Architecture, 2019.                          Languages and Operating Systems, 2023.
+ [94] R. K. Pachauri and A. Reisinger, Climate Change 2007: Synthesis               [116] M. Tirmazi, A. Barker, N. Deng, M. E. Haque, Z. G. Qin, S. Hand,
+      Report. Contribution of Working Groups I, II and III to the Fourth                  M. Harchol-Balter, and J. Wilkes, “Borg: the Next Generation,” in
+      Assessment Report of the Intergovernmental Panel on Climate Change.                 European Conference on Computer Systems, 2020.
+      IPCC, 2007, (Book).                                                           [117] A. Tomlinson and G. Porter, “Something Old, Something New:
+                                                                                          Extending the Life of CPUs in Datacenters,” in Workshop on Sustainable
+ [95] A. Parayil, J. Zhang, X. Qin, Í. Goiri, L. Huang, T. Zhu, and C. Bansal,
+                                                                                          Computer Systems, 2022.
+      “Towards Cloud Efficiency with Large-scale Workload Characterization,”
+                                                                                    [118] R. Urgaonkar, U. C. Kozat, K. Igarashi, and M. J. Neely, “Dynamic
+      arXiv preprint, 2024.
+                                                                                          Resource Allocation and Power Management in Virtualized Data
+ [96] P. Patel, Z. Gong, S. Rizvi, E. Choukse, P. Misra, T. Anderson, and                 Centers,” in Network Operations and Management Symposium, 2010.
+      A. Sriraman, “Towards Improved Power Management in Cloud GPUs,”
+                                                                                    [119] B. Vamanan, H. B. Sohail, J. Hasan, and T. Vijaykumar, “TimeTrader:
+      Computer Architecture Letters, vol. 22, pp. 141–144, 2023.
+                                                                                          Exploiting Latency Tail to Save Datacenter Energy for Online Search,”
+ [97] H. Qiu, S. S. Banerjee, S. Jha, Z. T. Kalbarczyk, and R. K. Iyer, “FIRM:            in International Symposium on Microarchitecture, 2015.
+      An Intelligent Fine-grained Resource Management Framework for SLO-            [120] C. Verbowski, E. Thayer, P. Costa, H. Leather, and B. Franke, “Right-
+      Oriented Microservices,” in Symposium on Operating Systems Design                   Sizing Server Capacity Headroom for Global Online Services,” in
+      and Implementation, 2020.                                                           International Conference on Distributed Computing Systems, 2018.
+ [98] H. Qiu, W. Mao, C. Wang, H. Franke, A. Youssef, Z. T. Kalbarczyk,             [121] A. Verma, L. Pedrosa, M. Korupolu, D. Oppenheimer, E. Tune, and
+      T. Başar, and R. K. Iyer, “AWARE: Automate Workload Autoscaling                    J. Wilkes, “Large-scale cluster management at Google with Borg,” in
+      with Reinforcement Learning in Production Cloud Systems,” in Annual                 European Conference on Computer Systems, 2015.
+      Technical Conference, 2023.                                                   [122] J. von Kistowski, K.-D. Lange, J. A. Arnold, S. Sharma, J. Pais,
+ [99] A. Radovanović, R. Koningstein, I. Schneider, B. Chen, A. Duarte,                  and H. Block, “Measuring and Benchmarking Power Consumption
+      B. Roy, D. Xiao, M. Haridasan, P. Hung, and N. Care, “Carbon-Aware                  and Energy Efficiency,” in International Conference on Performance
+      Computing for Datacenters,” Transactions on Power Systems, vol. 38,                 Engineering, 2018.
+      pp. 1270–1280, 2022.                                                          [123] J. Wang, “GreenSKU-Model: ISCA Artifact.” [Online]. Available:
+[100] K. Rzadca, P. Findeisen, J. Świderski, P. Zych, P. Broniek, J. Kusmierek,          https://doi.org/10.5281/zenodo.10896255
+      P. K. Nowak, B. Strack, P. Witusowski, S. Hand, and J. Wilkes,                [124] J. Wang, U. Gupta, and A. Sriraman, “Characterizing Datacenter Server
+      “Autopilot: Workload Autoscaling at Google Scale,” in European                      Generations for Lifetime Extension and Carbon Reduction,” in Workshop
+      Conference on Computer Systems, 2020.                                               on NetZero Carbon Computing, 2023.
+[101] B. Schroeder, R. Lagisetty, and A. Merchant, “Flash Reliability in            [125] J. Wang, U. Gupta, and A. Sriraman, “Giving Old Servers New Life
+      Production: The Expected and the Unexpected,” in Conference on File                 at Hyperscale,” in Workshop on Hot Topics in System Infrastructure,
+      and Storage Technologies, 2016.                                                     2023.
+[102] M. Shahrad, J. Balkind, and D. Wentzlaff, “Architectural Implications         [126] J. Wang, U. Gupta, and A. Sriraman, “Peeling Back the Carbon Curtain:
+      of Function-as-a-Service Computing,” in International Symposium on                  Carbon Optimization Challenges in Cloud Computing,” in Workshop
+      Microarchitecture, 2019.                                                            on Sustainable Computer Systems, 2023.
+[103] D. D. Sharma, R. Blankenship, and D. S. Berger, “An Introduction              [127] R. Wang, L. Zhang, Y. Yang, Y. Zhen, B. Long, T. Wang, V. Govindaraj,
+      to the Compute Express Link (CXL) Interconnect,” arXiv preprint                     T. Palino, S. Tata, and V. Nair, “CapPredictor: A Capacity Headroom
+      arXiv:2306.11227, 2023.                                                             Prediction Framework in Cloud,” in Workshop on Cloud Intelligence,
+[104] R. Sharma, A. Mathur, R. Sharma, and A. Mathur, Introduction to                     2020.
+      Traefik. Springer, 2021, (Book).                                              [128] Y. Wang, K. Arya, M. Kogias, M. Vanga, A. Bhandari, N. J. Yadwadkar,
+[105] J. Shuja, K. Bilal, S. A. Madani, M. Othman, R. Ranjan, P. Balaji, and              S. Sen, S. Elnikety, C. Kozyrakis, and R. Bianchini, “SmartHarvest:
+      S. U. Khan, “Survey of Techniques and Architectures for Designing                   Harvesting Idle CPUs Safely and Efficiently in the Cloud,” in European
+      Energy-Efficient Data Centers,” IEEE Systems Journal, vol. 10, pp.                  Conference on Computer Systems, 2021.
+      507–519, 2016.                                                                [129] P. Wiesner, I. Behnke, D. Scheinert, K. Gontarska, and L. Thamsen,
+                                                                                          “Let’s Wait Awhile: How Temporal Workload Shifting Can Reduce Car-
+[106] T. Siddiqua, V. Sridharan, S. E. Raasch, N. DeBardeleben, K. B. Ferreira,
+                                                                                          bon Emissions in the Cloud,” in International Middleware Conference,
+      S. Levy, E. Baseman, and Q. Guan, “Lifetime Memory Reliability
+                                                                                          2021.
+      Data from the Field,” in International Symposium on Defect and Fault
+                                                                                    [130] K. Wołk and K. Marasek, “Real-Time Statistical Speech Translation,”
+      Tolerance in VLSI and Nanotechnology Systems, 2017.
+                                                                                          in New Perspectives in Information Systems and Technologies, vol. 1,
+[107] D. Simchi-Levi and M. A. Trick, “Introduction to “Little’s Law as                   2014, pp. 107–113.
+      Viewed on Its 50th Anniversary”,” Operations Research, vol. 59, pp.           [131] C.-J. Wu, R. Raghavendra, U. Gupta, B. Acun, N. Ardalani, K. Maeng,
+      535–535, 2011.                                                                      G. Chang, F. Aga, J. Huang, C. Bai, M. Gschwind, A. Gupta, M. Ott,
+[108] U. Sirin, P. Tözün, D. Porobic, A. Yasin, and A. Ailamaki, “Micro-                A. Melnikov, S. Candido, D. Brooks, G. Chauhan, B. Lee, H.-H.
+      Architectural Analysis of In-Memory OLTP: Revisited,” International                 Lee, B. Akyildiz, M. Balandat, J. Spisak, R. Jain, M. Rabbat, and
+      Conference on Management of Data, 2021.                                             K. Hazelwood, “Sustainable AI: Environmental Implications, Challenges
+[109] R. Soni, Nginx. Springer, 2016, (Book).                                             and Opportunities,” in Conference on Machine Learning and Systems,
+[110] A. Souza, N. Bashir, J. Murillo, W. Hanafy, Q. Liang, D. Irwin, and                 2022.
+      P. Shenoy, “Ecovisor: A Virtual Energy System for Carbon-Efficient            [132] Q. Wu, Q. Deng, L. Ganesh, C.-H. Hsu, Y. Jin, S. Kumar, B. Li,
+      Applications,” in International Conference on Architectural Support for             J. Meza, and Y. J. Song, “Dynamo: Facebook’s Data Center-Wide
+      Programming Languages and Operating Systems, 2023.                                  Power Management System,” in International Symposium on Computer
+[111] V. Sridharan and D. Liberty, “A Study of DRAM Failures in the                       Architecture, 2016.
+      Field,” in International Conference on High Performance Computing,            [133] J. H. Yahya, H. Volos, D. B. Bartolini, G. Antoniou, J. S. Kim, Z. Wang,
+      Networking, Storage and Analysis, 2012.                                             K. Kalaitzidis, T. Rollet, Z. Chen, Y. Geng, O. Mutlu, and Y. Sazeides,
+
+
+
+
+                                                                               16
+      “AgileWatts: An Energy-Efficient CPU Core Idle-State Architecture for
+      Latency-Sensitive Server Applications,” in International Symposium on
+      Microarchitecture, 2022.
+[134] C. Zhang, A. G. Kumbhare, I. Manousakis, D. Zhang, P. A. Misra,
+      R. Assis, K. Woolcock, N. Mahalingam, B. Warrier, D. Gauthier,
+      L. Kunnath, S. Solomon, O. Morales, M. Fontoura, and R. Bianchini,
+      “Flex: High-Availability Datacenters With Zero Reserved Power,” in
+      International Symposium on Computer Architecture, 2021.
+[135] Y. Zhang, W. Hua, Z. Zhou, G. E. Suh, and C. Delimitrou, “Sinan: ML-
+      Based and QoS-Aware Resource Management for Cloud Microservices,”
+      in International Conference on Architectural Support for Programming
+      Languages and Operating Systems, 2021.
+[136] Y. Zhong, D. S. Berger, C. Waldspurger, I. Agarwal, R. Agarwal, F. Hady,
+      K. Kumar, M. D. Hill, M. Chowdhury, and A. Cidon, “Managing
+      Memory Tiers with CXL in Virtualized Environments,” in Symposium
+      on Operating Systems Design and Implementation, 2024.
+[137] Z. Zhou, Y. Zhang, and C. Delimitrou, “AQUATOPE: QoS-and-
+      Uncertainty-Aware Resource Management for Multi-Stage Serverless
+      Workflows,” in International Conference on Architectural Support for
+      Programming Languages and Operating Systems, 2022.
+
+
+
+
+                                                                             17
+                         A PPENDIX A                                  data is useful within Azure, we cannot use it to describe
+                     A RTIFACT A PPENDIX                              our GreenSKU’s carbon savings. Thus, we collect open-
+A. Abstract                                                           source carbon data from public sources to both explain our
+                                                                      carbon model in §V and to provide a reproducible version
+    The artifact provides the carbon model that we use to evaluate
+                                                                      of our results (§A-F). For brevity, in this appendix, we only
+our GreenSKU designs’ carbon emissions (as described in §V).
+                                                                      include the data that is used in §V. However, the full data
+The artifact includes Python source code that implements the
+                                                                      set and explanations for how we source each data value
+carbon and maintenance models. As input to the carbon model,
+                                                                      is available in the artifact’s GitHub repository [18] within
+it includes a set of open-source embodied emissions and power
+                                                                      analysis/GreenSKU-Framework. Note that all paths in
+numbers for (1) the components we use to evaluate and design
+                                                                      this artifact are relative to this subdirectory.
+our GreenSKUs and (2) the Gen3 baseline SKU. The artifact
+                                                                         The open-source carbon data we use reasonably aligns with
+also provides source code to reproduce the open-source carbon
+                                                                      our internal carbon data, with inevitable differences, due to the
+savings results reported in §A-F.
+                                                                      specifics of Azure’s supply chain and hardware sourcing. Thus,
+    In summary, this artifact contributes (1) a reusable carbon
+                                                                      we do not officially endorse these data sources and we do
+model to calculate the carbon emissions of SKU designs, (2)
+                                                                      not claim that this open-source data represents internal carbon
+open-source data that can be used as input to the carbon model,
+                                                                      values. Rather, we collect this open-source data to show an
+and (3) code to reproduce our paper’s open-source results.
+                                                                      example of how to calculate a GreenSKU’s carbon savings.
+B. Artifact Check-List (meta-information)                                In Table V, we show the TDP and embodied emissions
+    • Program: Python3 scripts and Jupyter Notebook.                  values  used in Sec. V’s operational and embodied emissions
+    • Data set: We provide all required data sets in our artifact     example calculations. We require some additional parameters to
+      repository [18]. This repository includes open-source data sets convert these raw carbon numbers into data center-level carbon
+      for (1) carbon numbers for components used in our servers, estimates. We detail these parameters in Table VI. The complete
+      (2) compute cluster information, and (3) data center carbon
+      intensities.                                                    data set and derivations for the data we provide is available in
+    • Run-time environment: Any standard Python environment.          data/README.md in our GitHub repository [18].
+  • Hardware: No special hardware is required.
+  • Output: The Jupyter notebook will output the exact numbers,                                                     Embodied       carbon
+                                                                            Component            TDP (W)
+    tables, and figures that can be directly compared against expected                                              (kgCO2 e)
+    results.                                                                AMD Bergamo CPU      400 [5]            28.3 [4], [64]
+                                                                            DRAM (DDR5)          0.37 per GB [23]   1.65 per GB [14], [64]
+  • Experiments: We provide a Jupyter Notebook that uses the
+                                                                            DRAM (DDR4)          0.37 per GB [23]   0 (reused)
+    model and the inputs we provide to replicate the carbon savings         SSD                  5.6 per TB [29]    17.3 per TB [29]
+    calculations and analysis shown in the paper.                           CXL Controller       5.8 [30]           2.5 [32], [64]
+  • How much disk space is required (approximately)? About                  Rack misc.           500                500
+    500MB (mainly for the Python environment).                                                         TABLE V
+  • How much time is needed to prepare the workflow (approx-              O PEN - SOURCE TDP AND EMBODIED CARBON VALUES FOR COMPONENTS
+    imately)? Less than an hour.                                                   USED IN THE CARBON MODEL’ S EXAMPLE CALCULATION .
+  • How much time is needed to complete the experiments
+    (approximately)? A few minutes.
+  • Is the artifact publicly available? The artifact is available on         Parameter                            Value
+    Zenodo: https://doi.org/10.5281/zenodo.10896255 and GitHub:              Carbon intensity                     0.1 kgCO2 e/kWh [1]
+    https://github.com/Azure/AzurePublicDataset.                             Lifetime                             6 years [88]
+  • Code licenses (if publicly available)? See GitHub: https://
+                                                                             Derate factor at 40% SPEC throughput 0.44 [122]
+                                                                             Rack space capacity                  42U (−10U overhead) [31]
+    github.com/Azure/AzurePublicDataset.                                     Rack power capacity                  15kW [13]
+                                                                             CPU voltage regulator loss           1.05 [34]
+C. Artifact Description
+                                                                                                        TABLE VI
+   Access. The live repository [18], which contains all the                O PEN - SOURCE MODEL PARAMETERS USED FOR THE CARBON MODEL’ S
+                                                                                                  EXAMPLE CALCULATION .
+information about performing the artifact evaluation and
+reproducing the desired results, is available on GitHub:
+https://github.com/Azure/AzurePublicDataset. The artifact is D. Artifact Installation
+also archived and available on Zenodo with the DOI:
+                                                                   We now detail our artifact’s installation instructions. The
+https://doi.org/10.5281/zenodo.10896255.
+                                                                same instructions are available in our GitHub repository [18],
+   Hardware dependencies. Any machine with a Python
+                                                                which we suggest using to more easily copy commands. The
+environment can execute our scripts.
+                                                                installation should take less than half an hour.
+   Software dependencies. The carbon model requires a
+                                                                   First, install Anaconda [11]. Once installed, create the
+working Python environment. We suggest an Anaconda environ-
+                                                                conda environment:
+ment [11], installed through Miniconda (see the live repository
+for details on installation and setup). All Python dependencies $ c o n d a c r e a t e −−name c a r b o n m o d e l \
+are provided and are installed when performing the evaluation.      python =3.9
+   Data sets. In §VI, we use closed-source, internal carbon
+data to calculate our GreenSKUs’ carbon savings. While this To activate the virtual environment, run the following command:
+
+
+
+                                                                     18
+    Result in paper to reproduce                       Run time     Output file(s)
+    Last three columns of Table VIII                   <1 minute    figures/generated_figures/Table_VIII.csv
+    Appendix A-F claims: “We re-calculate the
+    savings we report to find an average cluster-                   figures/generated_figures/cluster_savings.txt
+                                                       <1 minute
+    level savings of 14%, leading to an overall data                figures/generated_figures/dc_savings.txt
+    center-level savings of 7%.”
+    Figure 12                                          1 minute     figures/generated_figures/Figure_12.png
+                                                              TABLE VII
+                                 R ESULTS TO REPRODUCE AND THEIR RESPECTIVE RUN TIMES AND OUTPUT FILES .
+
+
+                                                                            SKU                #          # × DIMM         # × SSD         Operational   Embodied       Total
+                                                                            Config.            Core       (GB)             (TB)            Savings       Savings        Savings
+$ conda a c t i v a t e carbon model
+                                                                           Baseline            80        12 × 64           6×2             -             -              -
+                                                                           Baseline-
+                                                                                               80        10 × 64           6×2             6%            10%            8%
+Next, clone our GitHub repository [18] into your working direc-            Resized
+                                                                           GreenSKU-
+tory. Then, run the following commands with the environment                                    128       12 × 96           5×4             16%           14%            15%
+                                                                           Efficient
+                                                                           GreenSKU-                     12 × 64
+activated to install the required dependencies.                            CXL
+                                                                                               128
+                                                                                                         8 × 32 CXL
+                                                                                                                           5×4             15%           32%            24%
+                                                                           GreenSKU-                     12 × 64           2×4
+                                                                                               128                                         14%           38%            26%
+$    cd A z u r e P u b l i c D a t a s e t                                Full                          8 × 32 CXL        12 × 1 Reuse
+
+$    cd a n a l y s i s / GreenSKU−Framework                                                          TABLE VIII
+                                                                        O PEN - SOURCE PER - CORE OPERATIONAL , EMBODIED , AND TOTAL CARBON
+$    pip i n s t a l l −r requirements . t x t                          SAVINGS ( CALCULATED BASED ON THE AVERAGE CARBON INTENSITY FOR
+$    conda i n s t a l l j u p y t e r l a b                            MAJOR A ZURE REGIONS ) RELATIVE TO OUR G EN 3 BASELINE SERVER FOR
+                                                                                   FOUR INCREMENTAL G REEN SKU CONFIGURATIONS .
+Once this is done, installation is complete.
+                                                                                                      GreenSKU-Efficient          GreenSKU-CXL               GreenSKU-Full
+E. Experiment Workflow
+                                                                                         20
+                                                                        Cluster carbon
+                                                                         savings (%)
+   Once     installed,   the      workflow       to     validate
+the    model     results   is    fully     contained      within                         10
+notebooks/carbon_savings.ipynb. This notebook                                                 Azure                   Azure         Azure
+uses the carbon model source code, the details of which are                               0 us-south                 us-east     europe-north
+                                                                                           0.00   0.05        0.10       0.15     0.20     0.25     0.30         0.35        0.40
+in src/README.md.                                                                                                    Carbon intensity (kgCO2 e/kWh)
+   The notebook performs the following tasks in order:
+                                                                        Fig. 12. End-to-end cluster-level carbon savings relative to baseline clusters
+   • Imports required packages, including the carbon model              across a range of carbon intensities evaluated for our three GreenSKUs. Vertical
+     and maintenance model Python modules.                              lines are estimated carbon intensities for the energy used by three Azure data
+                                                                        center regions [26]. Calculated using open-source data.
+   • Configures the required model parameters and steps
+     through how parameters are calculated/derived.
+   • Performs the carbon savings calculations using the carbon
+                                                                        data are shown in Fig. 12. While there are differences in terms
+     model to reproduce the results detailed in the next section.       of the achieved carbon savings for each design, we still see that
+F. Evaluation and Expected Results                                      reuse is especially effective at lower carbon intensities, where
+                                                                        embodied emissions dominates. We re-calculate the savings we
+   This artifact only reproduces results that can be obtained
+                                                                        report to determine an average cluster-level savings of 14%,
+from the carbon model alone. All results will be generated
+                                                                        leading to an overall data center-level savings of 7%.
+from running notebooks/carbon_savings.ipynb. Ta-
+ble VII describes the results to reproduce, their run time, and         G. Experiment Customization
+where the results are outputted. The output exactly matches                No changes to the original scripts/notebook are necessary to
+Fig. 12, as the model is fully deterministic for the same inputs.       reproduce the results. The model, however, is generalizeable
+   We now show the main results of the paper reproduced using           to evaluate other server designs, and the original parameters
+the open-source data we provide.                                        and inputs can be changed.
+   Per-core carbon savings. We use the open-source compo-
+nent carbon numbers outlined in §A-C to reproduce Table IV              H. Methodology
+using our open-source data, which we show in Table VIII.                       Submission, reviewing, and badging methodology:
+We find that the relative savings in Table IV are similar to                   • https://www.acm.org/publications/policies/artifact-
+Table VIII. The net carbon savings of GreenSKU-Full in                           review-and-badging-current
+Table VIII is similar to the reported savings using internal                   • http://cTuning.org/ae/submission-20201122.html
+numbers: 26% vs 28%.                                                           • http://cTuning.org/ae/reviewing-20201122.html
+   Cluster carbon savings across carbon intensities We
+also use the open-source data to recreate Fig. 11, one of our
+main results, containing the cluster-level carbon savings across
+carbon intensities. The reproduced results using open-source
+
+
+
+                                                                   19
+

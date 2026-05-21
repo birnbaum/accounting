@@ -1,0 +1,803 @@
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                                     1
+
+
+
+
+       C INERGY: Deterministic Power Monitoring for
+             Carbon Accounting in the Cloud
+              Pierre JACQUET 1 , Camille C OTI 1 , Marcos D IAS D E A SSUNÇÃO 1 , Romain ROUVOY 2
+                        1
+                  École de Technologie Supérieure, Université du Québec, Montréal, Canada
+                          2
+                            Univ. Lille, Inria, CNRS, UMR 9189 CRIStAL, France
+           {pierre.jacquet, camille.coti, marcos.dias-de-assuncao}@etsmtl.ca,
+                                   romain.rouvoy@univ-lille.fr
+
+
+
+   Abstract—Cloud providers now commonly offer tools to mon-              but they are still lacking a standardized model [7]. This lack
+itor the environmental impact of hosted services, aiming to               of standardization limits data comparability and obscures the
+inform customers about the carbon footprint of their infrastruc-          metrics themselves—as many methodologies are not publicly
+tures. A significant share of this impact arises from the power
+consumption of servers. To allocate server-related emissions,             disclosed—reducing their usefulness for emission-reduction
+these methodologies typically rely on resource-quantity-based             efforts.
+attribution and do not account for the effective usage of virtual            We argue that, beyond mandatory reporting, environmental
+resources. We demonstrate that resource usage can drastically             impact reporting across different cloud services can serve as a
+affect carbon estimations.                                                powerful lever for cloud optimization. While the optimization
+   This article proposes a framework, called C INERGY, to stan-
+dardize how cloud providers integrate the power consumption
+                                                                          of software power consumption is a well-studied field [8], the
+of virtual resources into their carbon calculators. It defines            environmental impact of selected cloud products (e.g., instance
+a baseline to deterministically assess the power consumption              types) remains underexplored.
+of a provisioned Virtual Machine (VM)—i.e., the same usage                   This article contributes to more transparent carbon ac-
+should yield the same power estimate—while still accounting               counting methodologies by focusing on the evaluation of the
+for consolidation gains enabled by virtualization. Our approach,
+constructed and evaluated empirically, achieves high precision,
+                                                                          power consumption of virtual resources, such as those offered
+with a mean absolute error of 6.6% across various hardware.               through Infrastructure-as-a-Service (I AA S) and Platform-as-
+   Using metrics collected from cloud providers, we reveal the            a-Service (PAA S) models. Depending on the carbon intensity
+impact of instance type on energy efficiency, with differences            of the electricity mix, operational power consumption can be
+reaching 85% for the same VM size. We also show that                      the primary contributor to a server’s CO2 emissions [9], [10],
+quantity-based carbon accounting methodologies can drastically
+                                                                          outweighing manufacturing impacts. Notably, many cloud data
+underestimate actual CO2 emissions—by up to a factor of three.
+                                                                          centers are located in regions with high carbon intensity (e.g.,
+                                                                          the United States).
+  Index Terms—Cloud computing, Power model, Carbon Ac-
+                                                                             Accounting for the environmental impact of power con-
+counting
+                                                                          sumption remains challenging. Cloud providers typically allo-
+                                                                          cate estimated impact based on the amount of virtual resources
+                        I. I NTRODUCTION                                  requested by clients. Such static ratios may be sufficient for
+   Efficiently reporting the environmental impact of cloud                distributing hardware manufacturing impacts, but they fail to
+services is an ongoing effort within the community, notably               reflect the effects of actual usage (how a client consumes its
+driven by the rapid growth of cloud workloads. For example,               resources) and platform load (which affects overall efficiency).
+between 2015 and 2022 (a period preceding the LLM era),                   This work shows that both factors can significantly alter power
+cloud workloads increased by 350%, while data center en-                  estimates and, consequently, the associated carbon emissions.
+ergy consumption reached about 1–1.5% of global electricity                  We introduce C INERGY, a framework for assessing the
+use [2]. Thus, companies must monitor the environmental                   power consumption of virtual resources in operational con-
+implications of their cloud usage. Cloud providers have de-               ditions. Our contributions are summarized as follows:
+veloped methods and tools known as "carbon calculators," in                 1) we review existing work on power profiling software and
+which the impact (expressed as the eqCO2 metric) of operated                    its limitations for carbon accounting purposes;
+servers is allocated among customers [3], [4], [5].                         2) we introduce a framework for evaluating the power con-
+   However, even though reporting CO2 indirect emissions is                     sumption of Virtual Machines (VMs) while integrating
+mandatory for large companies in some countries, there is                       load effects;
+still no clear methodology for reporting emissions associated               3) we quantify the energy efficiency across various cloud
+with virtual resources. Cloud providers typically estimate their                instance types, highlighting substantial disparities;
+emissions following the Greenhouse Gas (GHG) Protocol [6],                  4) we show that providers’ carbon accounting tools can sig-
+                                                                                nificantly underestimate operational emissions for certain
+  A preliminary version of this paper appeared in IEEE CCGrid 2025 [1].         profiles.
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                             2
+
+
+
+   Our work demonstrates that carbon accounting tools can         B. Power profiling software
+account for usage while remaining deterministic. Maintain-
+                                                                     Evaluating the energy usage of specific applications requires
+ing consistent readings for identical actions is crucial for
+                                                                  moving below the component-level granularity to determine
+interpretability. In addition, we partnered with OVHcloud,
+                                                                  what proportion of the system’s power can be attributed to
+one of the largest European cloud providers, to apply our
+                                                                  each software entity. Following the terminology introduced
+methodology on production platforms. Our findings show
+                                                                  in [15], we distinguish between energy calculators, energy
+that VM energy efficiency strongly depends on context. We
+                                                                  measurement software, and power profiling software.
+demonstrate that the average energy efficiency of different
+cloud instance types varies by up to 85% for the same VM size        Energy calculators rely on static computations to estimate
+under high consolidation (e.g., in oversubscribed contexts).      energy consumption by requiring users to fill in forms [16],
+Furthermore, we show that current carbon accounting tools         [17]. We exclude them from our scope, as our approach
+significantly overestimate platform efficiency, leading to a      focuses on proactive monitoring of VMs to compute their
+substantial underestimation of actual emissions.                  dynamic consumption. Monitoring is also easier to integrate in
+   We begin by reviewing related work on software power           practice, given that input parameters like usage ratios, often
+monitoring in Section II, then present our framework in           requested by calculators, are difficult to capture accurately.
+Section III. Section IV evaluates the precision of the models     VM workloads are typically non-linear and exhibit bursty
+on benchmark workloads, while Section V examines their            behavior.
+application in an operational context, highlighting efficiency       Energy measurement software tracks energy consumption
+variations and the limitations of current carbon tracking ap-     over a time window associated with the execution of a given
+proaches. Finally, we conclude in Section VI.                     software [18], [19]. They measure the total system energy be-
+                                                                  tween two timestamps and attribute it entirely to the software
+                    II. R ELATED W ORK                            under study. As such, they are only suitable in single-tenant
+                                                                  contexts, where no co-located workloads interfere. We exclude
+   In this section, we overview the context of software power     them from our scope due to the inherently multi-tenant nature
+consumption measurements in a cloud context and highlight         of the cloud environment.
+its limits for carbon accounting.
+                                                                     Power profiling software reports power consumption at the
+                                                                  application level. These tools are the focus of this study, as
+A. Measuring server power consumption                             VMs appear as processes from the host perspective. Two main
+   Server power consumption has been widely studied over the      categories can be distinguished: model-based and measure-
+past decades. It can be either directly measured or estimated.    based estimation.
+Early studies relied primarily on external wattmeters and            Model-based profiling can be characterized as top-down:
+instrumented hardware (e.g., modified power lines), enabling      starting from activity-related metrics available at the process
+fine-grained insight down to component-level power draw [11].     level (the top), it infers the underlying hardware power con-
+However, such setups are complex to generalize in large-scale     sumption. Models built on server component activity (e.g.,
+datacenters due to equipment and cost constraints. They are       CPU, memory, disk), such as those in [20], [21], can be applied
+therefore mainly used as a first step to build models based       to metrics collected from specific processes (e.g., VMs or
+on proxies that are correlated with power and more widely         containers). Alternatively, models can be trained directly on
+available (e.g., assembly instruction, hardware performance       specific VM workloads, leveraging hypervisor-level metrics
+counters).                                                        or more generic indicators (e.g., CPU usage) to accommo-
+   In recent years, access to power meters has been democra-      date workload diversity [11]. Model-based approaches provide
+tized. Sensors directly integrated by manufacturers into exist-   determinism—identical usage yields identical estimates—but
+ing components emerged, such as Smart Power Distribution          strongly depend on underlying assumptions, notably the choice
+Unit (PDU) or Baseboard Management Controller (BMC)               of metrics, model structure, and operating conditions (e.g.,
+sensors, accessible via IPMI [12], are commonly used de-          with or without Dynamic Voltage and Frequency Scaling
+pending on availability [13]. The most widely adopted method      (DVFS), with or without co-located workloads), which may
+for energy measurement is the Running Average Power Limit         diverge from real operational contexts.
+(RAPL) interface, introduced in [14], to capture the power           Measurement-based profiling leverages now-common inter-
+consumption of Intel/AMD processors.                              nal sensors to retrieve power draw. This type of profiling
+   Intel’s RAPL interface enables monitoring of CPU power         can be described as bottom-up: starting from a platform-
+consumption across several domains, depending on the pro-         level power source (the bottom), they infer the contribution
+cessor generation. These domains include the entire package,      of individual processes (the top) using suitable proxies. CPU
+CPU cores (PP0), non-core components, such as the integrated      time is a common proxy and is used by monitoring tools, such
+GPU (PP1), DRAM, and others. RAPL delivers accurate               as S CAPHANDRE [22] and J OULAR JX [23]. Other tools, like
+measurements, as its readings are based on integrated voltage     K EPLER, rely on performance counters in bare-metal environ-
+regulators available since the Intel Haswell architecture. AMD    ments or leverage eBPF to extract metrics within VMs. Some
+processors also expose RAPL-like interfaces; however, early       approaches emphasize adaptability by dynamically selecting
+implementations were based on software models rather than         proxies at runtime. For example, S ELF WATTS [24] (integrated
+direct hardware measurements.                                     into the P OWER API framework [25], [26]) continuously iden-
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                                 3
+
+
+
+tifies the performance counters most correlated with power              In the GHG Protocol [6] guidance, the approaches used
+consumption. Others, like K EPLER VM, may overlook cloud             by Azure and Google can be viewed as applications of the
+consolidation effects by relying solely on guest OS metrics.         method termed Single data point power consumption (based on
+    While bottom-up approaches better reflect operational con-       VM size and average power consumption) within the “virtual
+ditions by accounting for actual power draw, they face               machine power assessment” category. However, this method is
+critical limitations for carbon accounting due to their non-         described as suitable only for static workloads, whereas cloud
+deterministic nature. In particular, the energy efficiency of        workloads are inherently highly dynamic.
+a computing platform is not constant and varies with load               OVHcloud follows a different approach to assess the en-
+and consolidation. As emphasized in [27], power consumption          vironmental impact [33]. It attributes to each VM a share
+is contextual: it depends not only on how much a process             of the maximum power measured for the corresponding host
+consumes but also on the system’s overall load. For example,         type, proportional to the requested size, and then adjusts this
+a process using 20% of the CPU contributes very differently          value using the Power Usage Efficiency (PUE) and location-
+to the server’s total power depending on whether the server          specific electricity emission factors. This approach is closer to
+is idle or already at 80% utilization. In a cloud environment,       GHG recommendations for dynamic workloads, as it accounts
+this introduces a challenge: customers may receive different         for host-level utilization (the method referred to as Dynamic
+energy estimates for identical activities depending on the           power consumption calculations). However, it still does not
+behavior of co-located tenants. Since customers have no con-         account for the actual usage of virtual resources by clients.
+trol over server placement—an internal decision of the cloud            Not all providers disclose their accounting methodolo-
+provider [28]—this undermines consistency in accounting.             gies [5], which limits comparability and motivates the need
+Additional variability comes from tools that perform dynamic         for a common framework. This lack of transparency reinforces
+reconfiguration, such as S ELF WATTS that adapt their models         the need for a unified and robust approach to virtualized power
+at runtime.                                                          accounting.
+    Several other power models specifically designed for cloud          One reason current approaches often ignore usage is the
+environments have been proposed, targeting both VMs [29],            non-determinism it introduces due to workload interference
+[30] and containers [31]. B IT WATTS [32] distributes real-          and load-dependent energy efficiency. This work contributes
+time power consumption across VMs using a model based on             to improving the GHG assessment of VM power consumption
+CPU frequency and unhalted cycles, but shares the limitations        using hypervisor-level information.
+of process-level power models. J OULEMETER [29] constructs
+per-VM linear models based on CPU, memory, and disk usage,
+after a dedicated profiling phase. However, this approach            D. Synthesis
+becomes impractical at scale, as VMs often remain idle for
+long periods before becoming active. V METER [30] similarly             We propose to integrate customers’ virtual power usage and
+relies on linear models trained on performance counters,             cloud providers’ virtualization efficiency into carbon account-
+with workload-specific weights calibrated for each benchmark.        ing mechanisms. To the best of our knowledge, this article is
+In contrast, our objective is to develop a more generalized          the first to assess the power consumption of virtual resources
+approach capable of handling diverse and previously unseen           in real cloud environment conditions, where both the tenant
+workloads effectively.                                               usage and the platform load play a significant role. While our
+                                                                     framework may leverage the same metrics used in existing
+                                                                     power profiling software, our objective differs, as we estimate
+C. Carbon tracking tools                                             a virtual representative (yet deterministic) power consumption.
+   Most cloud providers offer online tools to estimate the envi-
+ronmental impact of their services. These tools usually follow
+the GHG Protocol [6], which structures emissions into scopes.                         III. C INERGY F RAMEWORK
+We focus on energy-related emissions falling under Scope 2—
+i.e., emissions associated with electricity production.                 We now present the core principles of our methodology. Our
+   For example, Azure [4] estimates regional carbon emissions        approach combines the strengths of top-down power profiling
+from data-center–level power measurements and allocates this         (ensuring determinism) with those of bottom-up profiling
+impact to customers using a normalized cost metric, resulting        (capturing the representativeness of runtime conditions).
+in a static attribution for a given VM type. The Google Cloud           To obtain a non-contextual estimate of a VM’s power
+Platform (GCP) [3] adopts a similar approach, allocating the         consumption, the framework first models its behavior under
+impact of the platform based on normalized resources and             a reference scenario. This baseline scenario, referred to as
+similarly abstracting the actual client usage of resources. One      the Worst Case Power Consumption (WCPC), is detailed in
+distinction is that platform impact is not measured at the data-     Subsection III-A, along with guidelines for its construction.
+center level but at the equipment level: internal service power         Next, to account for the energy savings enabled by virtual-
+consumption is measured and then allocated to products rely-         ization and workload consolidation, the framework adjusts this
+ing on these services (proportionally to resource quantity or        baseline using a per-instance-type energy efficiency model.
+internal pricing) at the regional level, enabling final allocation   The methodology for modeling this efficiency and applying
+to customers from aggregated measurements.                           it to the WCPC is described in Subsection III-B.
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                                          4
+
+
+
+A. Worst Case Power Consumption
+   In this subsection, we describe how to model the base power
+consumption used in the C INERGY framework. Specifically,
+we aim to estimate the power consumption of a VM running
+in isolation—that is, on a dedicated host—where all system
+power can be attributed to the single workload. This situation
+is referred to as the worst case, as servers are typically more
+energy efficient at higher usage [34].
+   To address this, we identify three key research questions:
+  1) How can WCPC be estimated?
+  2) How should static power consumption be distributed?
+  3) How can WCPC be applied in real-world scenarios?
+   We answer these questions in the following subsections and
+discuss the design choices made in the framework.
+   1) Estimating the WCPC: To ensure determinism in our
+power estimates, we adopt an approach inspired by top-down
+power profiling. We rely on metrics collected during process
+execution and infer the power that would be consumed by
+the underlying system. As discussed earlier, such approaches
+depend on modeling assumptions; here, we explicitly target a        Fig. 1. Illustration of reduced precision in regular models for low usage on
+scenario in which the VM runs in isolation. Unlike existing         a Broadwell architecture (Xeon E5-2620 v4)
+methods that derive VM-level estimates from generic server
+models, we build models directly from measurements on sys-
+tems hosting an isolated VM, ensuring results that accurately       phases typically requires a more intricate modeling approach;
+reflect its behavior.                                               for most tested processors, a polynomial regression of the fifth
+   Measuring the software’s power consumption in isolation          order was optimal to represent this specific range accurately.
+reduces two primary sources of bias. The first is interference         WCPC models must target the relevant usage range to
+from noisy neighbors—co-running threads that affect system          maintain precision. Specifically, when modeling the usage of a
+power consumption. The second is kernel activity variability:       VM of n cores, we select the range as follows: [0; host ncores →ω],
+by fixing the system configuration (hardware and OS), we            ω being a safety factor to ensure an accurate trend in the curve.
+create a consistent baseline. Our goal is to model power in         In this study, we determined ω based on the number of cores of
+this default setting. We now examine how the model must be          physical servers, aiming to limit the range to low CPU usage
+tailored to the specific context of our framework.                  phases (up to ↑40%). For instance, ω = 3 is appropriate for
+   2) Modeling power consumption:                                   VMs with 4 cores on hosts with 32 cores.
+      a) Load range: As cloud VMs typically have a small               It should be noted that models are constructed from the
+number of virtual CPUs (vCPUs) relative to their host               host’s perspective: physical power readings (e.g., RAPL) are
+servers [35], it is essential to model their isolated power         collected and correlated with host-level proxy metrics (e.g.,
+consumption on larger machines, particularly in low-usage           CPU load). Adopting this perspective is essential to apply
+regimes. Interestingly, the low-usage modeling of servers has       the models effectively. Consequently, VM usage must be
+certain limitations when based on overall data, an approach         translated into equivalent host-level metrics. For example, if a
+traditionally used by power profiling tools. Figure 1 illustrates   VM utilizes 100% of its 4 vCPUs, this should be represented
+this effect. The measurements obtained from the different           as ( 4→100
+                                                                           m )% of host CPU usage, where m is the total number
+CPU usage levels using RAPL were used to capture a third-           of physical cores. Similar conversions must be applied when
+order polynomial regression. This order was determined to be        using other kinds of resources (e.g., memory, disks).
+the most effective within the explored range. The regression              b) Workloads: The input workloads used to generate the
+performed well across the server range, achieving a coefficient     power model should be carefully selected. Cloud workloads
+of determination (R2 ) of 0.98 (with 1 being the maximum) and       are inherently diverse and treated as black boxes. However,
+a mean absolute error of 1.7 W . However, this performance          a common element across all VMs is the presence of a
+significantly decreases when focusing on the low-usage phase        guest operating system and, by extension, a guest scheduler.
+(below 15% CPU activity). In this low-usage phase, the mean         In both bare-metal and virtualized environments, schedulers
+absolute error nearly triples within the measures, increasing       are responsible for distributing workloads across available
+from 2.7 W to 4.6 W . This error is proportionally larger than      computing resources to maximize performance. This strategy
+the actual power values, as physical measurements are lower.        gradually loads shared resources—such as sibling cores and
+Additionally, the coefficient of determination drops to 0.84 in     cache levels—rather than saturating specific ones, directly
+this range. While the degree of degradation varies depending        affecting power consumption through the host’s DVFS policy,
+on the processor being tested, this issue consistently appeared     which should remain configured as in production.
+on our testbed. The complexity of patterns during low-usage            In practice, it is uncommon for all vCPUs to be fully utilized
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                                                           5
+
+
+
+simultaneously [36]. The guest kernel’s workload distribution                                      Training phase                           Production phase
+depends on its parallelism. Consequently, representative work-      Top-down model     Top-down / bottom-up
+loads should be selected to capture power variations induced            (WCPC)
+                                                                        PMbaseline
+                                                                                       (Cinergy constant ratio)
+                                                                                             Clusterbaseline
+                                                                                                                                VMa   VMb
+
+by DVFS. To explore this issue, we trained different models                                                    Model              VM
+                                                                                                                                   PM
+                                                                                                                                                  Cinergy
+                                                                                                                                                   agent
+                                                                                                                                                     Model
+                                                                                                                                     d PM
+under varying core loads. Specifically, we considered synthetic                                                                             PM1
+
+benchmarks that stress 25%, 50%, and 100% of their thread
+time, until the host was fully loaded. Loading a host with
+processes that use 25% of their thread time, compared to those     Fig. 2. Overview of the C INERGY power modeling framework
+that use 100%, allows more processes to run while keeping
+overall CPU usage the same, leading to a more distributed
+workload. We empirically determined the most representative           Once trained, the model is deployed on each physical host
+load level for a thread (analogous to a vCPU) among the 3          through a local agent that continuously monitors VM usage
+tested thread times by evaluating the accuracy of our trained      metrics. VMs can then query on-demand estimates of their
+models. We found that the 50 % load level was the most             power consumption.
+representative.                                                       We developed a Python toolkit (approximately 600 lines
+   3) Distributing static power consumption: Powering up           of code) to automate WCPC modeling. It generates diverse
+any server to execute its operating system and a hypervisor        workloads, including training workloads, isolated VMs, and
+leads to non-negligible static power consumption, notably          multiple concurrent VMs, and streamlines RAPL data collec-
+because the power drawn by some server components, such            tion across heterogeneous hardware. This tooling enables vali-
+as the motherboard, is not bound to resource usage. In servers     dation of model accuracy against ground-truth measurements.
+without GPUs, the CPU is the primary power-consuming com-             The C INERGY agent exposing WCPC estimations to users is
+ponent; we propose allocating the static power proportionally      implemented in Rust, in approximately 250 lines of code. The
+according to its adjusted allocation. We, therefore, adopt a       underlying design philosophy emphasizes simplicity: it loads
+methodology similar to the approach described in [6] and           the trained model and applies it on demand to produce power
+attribute the static power consumption using Equation 1.           estimates. To do so, it monitors system PIDs and identifies
+                                                                   QEMU/KVM processes. For each detected VM, it tracks CPU
+                           |allocation|                            usage—along with other potential proxies—via the /proc file
+              PVstatic
+                  M    =                    static
+                                        → Pserver            (1)
+                            host cores                             system. VMs can query their current power usage through a
+   This results in a de facto power attribution to VMs that is     REST endpoint exposed by the host.
+not directly tied to their dynamic usage, as providers allocate
+resources even when they are not actively used. However,           B. Cloud Instance Type Energy Efficiency
+the allocated resources may differ from the actual number of
+                                                                      The WCPC represents a worst-case estimate, rarely reached
+vCPUs in oversubscribed contexts (also known as overcommit-
+                                                                   in practice, as servers typically host multiple VMs simultane-
+ment), where virtual resources exceed the available physical
+                                                                   ously. This sharing increases resource utilization and improves
+resources on a server [37]. For static oversubscription—where
+                                                                   energy efficiency, due to the sublinear (often logarithmic)
+the same ratio is applied uniformly across all servers—the
+                                                                   shape of server power curves. Our goal is to capture these
+number of cores per VM in Equation 1 should reflect the effec-
+                                                                   energy savings from workload consolidation and integrate
+tive physical allocation. In contrast, dynamic oversubscription
+                                                                   them into our estimations.
+adjusts the oversubscription level based on each server’s actual
+                                                                      In other words, while top-down power profiling provides
+usage rather than relying solely on the initial allocation [38],
+                                                                   deterministic usage-based estimates (WCPC), we also aim to
+[39], [40]. In that specific case, we propose adjusting the VM
+                                                                   account for actual runtime conditions captured by bottom-up
+allocation by dividing it by the average oversubscription ratio
+                                                                   power profiling tools.
+observed across the cluster.
+   4) Applying to real-world systems: We now discuss how                                                               bottom-up model V M
+WCPC estimations can be integrated into real-world systems,                     C INERGY ratio V M =                                                         (2)
+                                                                                                                       top-down model V M
+like production cloud platforms. To this end, we developed
+                                                                      To bridge this gap, we introduce a consolidation factor
+tools to support the implementation of the framework. While
+                                                                   called the C INERGY ratio,1 . It is defined as the ratio between
+our methodology includes techniques from traditional power
+                                                                   the runtime (bottom-up) power estimation and the isolated
+profiling tools, its purpose diverges, necessitating distinct
+                                                                   (top-down) power estimation for a given VM. Since isolated
+design choices for both the training and production phases.
+                                                                   consumption is usually higher, the ratio typically falls between
+   As shown in Figure 2, the framework starts with a training
+                                                                   0 and 1. For cloud customers, the C INERGY ratio reflects the
+phase, where diverse workloads are used to calibrate the
+                                                                   energy efficiency gains enabled by infrastructure sharing. For
+WCPC model for the targeted Physical Machine (PM) type. As
+                                                                   example, a ratio of 0.4 indicates that only 40% of the power
+a top-down power estimation approach, the resulting model is
+                                                                   expected in isolation is effectively consumed—implying a 60%
+deterministic by construction. However, to better reflect oper-
+                                                                   saving thanks to consolidation.
+ational conditions (similarly to bottom-up models), we apply
+a constant correction ratio, described in the next subsection         1 Derived from “Cirrus,” a type of cloud, and “Synergy,” denoting an
+(cf. III-B).                                                       interaction producing a whole greater than the sum of its parts.
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                             6
+
+
+
+                                                               TABLE I
+                                                 P ROCESSORS USED IN OUR EXPERIMENTS
+
+                     Vendor     Architecture           CPU model           Cores / Threads      TDP       Release year
+                      Intel       Broadwell       Xeon E5-2620 v4 (→2)         16 / 32          85W           2016
+                      Intel    Cascade Lake-SP    Xeon Gold 5218R (→2)         40 / 80          125W          2020
+                      Intel      Ice Lake-SP     Xeon Platinum 8358 (→2)      64 / 128          250W          2021
+                      AMD            Zen1           EPYC 7351 (→2)             48 / 96          170W          2017
+                      AMD            Zen2           EPYC 7352 (→2)             48 / 96          155W          2019
+                      AMD            Zen3           EPYC 7513 (→1)             32 / 64          200W          2021
+
+
+
+   Many power profiling tools from the literature [22], [41],       of varying intensity levels were created using stress-ng,
+[42] can be used as the bottom-up component. A key con-             a widely-used benchmarking tool,2 with its default stressor
+sideration is ensuring that the static allocation mechanism         settings. We then gradually increased the host load by running
+is consistent between the two models to give representative         threads that used 50% of a CPU core, until reaching its total
+values.                                                             capacity.
+   In practice, we propose computing the C INERGY ratio per            The collected energy consumption data includes RAPL
+cluster, as each cloud instance type typically maps to a specific   measurements, including power usage for each CPU package.
+set of servers operated under similar constraints. Premium          We aggregated the reported readings to compute the total
+offerings with dedicated resources exhibit lower utilization        power consumption of multi-socket servers. We then applied
+due to the gap between provisioned and used resources.              a polynomial regression of order 5 to convert the CPU load
+Conversely, oversubscription increases hardware utilization for     into its corresponding power consumption (in Watts). Note
+instances with lower availability requirements.                     that while we chose to first evaluate the accuracy of simple
+   The mean C INERGY ratio for a given instance type can            models for the WCPC, our framework does not impose any
+then adjust the WCPC to reflect more realistic consumption          restrictions on alternative modeling strategies.
+while preserving determinism for carbon accounting. The
+C INERGY ratio notably promotes the savings resulting from          B. Ground Truth Measurements
+server consolidation that keep being seen negatively despite its
+potential to make cloud computing greener [36], [40], [43].            We launch a VM that runs a specific application under var-
+                                                                    ious CPU usage levels while monitoring the power consump-
+                                                                    tion measured by RAPL domains. This setup serves as the
+                IV. E MPIRICAL E VALUATION
+                                                                    baseline since we can fully attribute the power consumption
+   In this section, we focus on evaluating how accurately the       recorded by RAPL to the system’s single VM.
+WCPC can be inferred from runtime conditions. Note that                Our evaluation was executed on a VM with four vCPUs,
+the C INERGY framework does not impose restrictions on the          while running the social network application from the Death-
+choice of power model or hardware to model (we discussed            StarBench (DSB) [44]. The DSB features a microservices-
+in the previous section the interest of using generic power         based architecture, incorporating various components such as
+models). However, this section demonstrates that top-down           load balancers, proxies, message queues, databases, caches,
+models can be accurate on representative hardware (Xeon and         and services. We chose this architecture because of its com-
+EPYC architectures), even when using a simple proxy.                plexity and diverse components, which make it a strong
+   To this end, we used the Python toolkit introduced earlier to    candidate to benefit from energy monitoring capabilities. Ad-
+evaluate C INERGY in three steps. First, we developed power         ditionally, the DSB includes a workload generator based on
+models in a controlled environment for each hardware type (cf.      wrk2, enabling us to simulate realistic usage patterns during
+Subsection IV-A). Next, we measured the activity and corre-         our evaluation.
+sponding power consumption of a VM on a dedicated server               The VM’s activity was driven by the wrk2 workload gen-
+to establish a ground-truth reference (cf. Subsection IV-B).        erator, simulating several load phases: low (100 rps), medium
+Finally, we assessed the model’s ability to replicate this          (2,000 rps), high (5,000 rps), and very high (10,000 rps). We
+ground truth in a cloud-like scenario, where the same VM ran        selected these load levels based on the CPU utilization they
+alongside other processes on the host (cf. Subsection IV-C).        generated. Under the low-load scenario, the VM was primarily
+                                                                    idle, while the highest load completely engaged the CPU.
+A. Training WCPC Power Models                                          The CPU load of the VM and the corresponding CPU activ-
+  Cloud data centers operate various processors from differ-        ity observed from the host were continuously monitored over
+ent vendors and generations, each possessing unique energy          several hours to ensure accurate and representative readings.
+characteristics. To assess the broad applicability of our ap-
+proach, we evaluated it on multiple processors, as detailed in      C. Models Evaluation in a Cloud-like Environment
+Table I, paying careful attention to covering a wide diversity         Measurements of VM activity were conducted in a cloud-
+of architectures.                                                   like environment, where a VM ran alongside additional pro-
+  We trained power models for each server in a controlled
+environment using the CPU time as a proxy. Workloads                   2 https://github.com/ColinIanKing/stress-ng
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                                      7
+
+
+
+
+Fig. 3. WCPC power models trained with C INERGY for various server architectures
+
+
+
+cesses to simulate background noise. The same VM work-                          higher TDP and more threads resulted in a larger RMSE
+load, generated using wrk2 under identical parameters, was                      of 20.2 W and a MAPE of 15.1%.
+repeated during these tests. Throughout the experiments, the                  • Intel Xeon Platinum 8358 (Ice Lake-SP, 250 W TDP): this
+VM activity was continuously monitored while background                         high-TDP processor had an RMSE of 14.9 W and a
+processes were gradually introduced, varying the host’s load                    MAPE of 5.5%.
+from mostly idle to fully saturated.                                          • AMD EPYC 7351 (Zen1, 170 W TDP): prediction accu-
+   To assess the accuracy of our model under different condi-                   racy was high, despite a mostly linear pattern, with an
+tions, we applied various load patterns (low, medium, high, and                 RMSE of 6.8 W and a very low MAPE of 3.0%.
+very high) to the VM in a cyclical sequence. This approach                    • AMD EPYC 7352 (Zen2, 155 W TDP): results showed an
+enabled us to evaluate the model’s power estimations across a                   RMSE of 4.2 W and a MAPE of 2.6%.
+range of VM workloads and host load combinations.                             • AMD EPYC 7513 (Zen3, 200 W TDP): this model
+
+   Figure 3 depicts our WCPC power models across the studied                    reached an RMSE of 6.2 W and a MAPE of 6.0%.
+architectures. The ground-truth measurements, discussed in                    Our findings suggest that the higher RMSE observed in
+Subsection IV-B, are depicted in grey, while our power model’s             some settings is largely influenced by the variability in the
+predictions, which were trained using the generated data                   initial energy readings [45]. This behavior is inherent to fine-
+discussed in Subsection IV-A and the metrics collected from                grained ground-truth measurements, where repeated execu-
+this cloud-like environment, are plotted in orange. While the              tions of identical workloads can yield different power values
+VM activity leads to different host CPU usage depending on its             due to hardware and system-level effects. Our approach en-
+size, results are displayed based on VM CPU activity (x-axis)              forces deterministic power attribution, ensuring that identical
+to normalize the data. The static power consumption was allo-              VM activities are mapped to identical power estimates, without
+cated based on resource distribution in a non-oversubscribed               introducing systematic bias. While this comparison against
+setting for the ground truth and the power model predictions.              noisy reference measurements inflates error metrics, it does
+   Despite some inherent variability in power consumption                  not affect order-of-magnitude accuracy, which is sufficient for
+measurements [45], our power models report high accuracy in                carbon accounting.
+predicting power usage across different architectures. Below                  AMD’s Zen processors showed lower MAPE, likely because
+are the prediction statistics for WCPC estimations:                        their RAPL energy counters provide more stable readings
+   • Intel Xeon E5-2620 v4 (Broadwell, 85 W TDP): the model                that simplify modeling compared with noisier measurements.
+     achieved a Root Mean Squared Error (RMSE) of 3.8 W                    Overall, C INERGY models perform well across all tested
+     and a Mean Absolute Percentage Error (MAPE) of 7.2%.                  architectures. The average MAPE for all evaluated processors
+   • Intel Xeon Gold 5218R (Cascade Lake-SP, 125 W TDP):                   is approximately 6.6%, indicating a low mean relative error
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                                     8
+
+
+
+in the predictions. This supports the feasibility of accurate
+isolated power estimation in diverse hardware environments.
+
+D. Discussion & Limitations
+   We evaluated WCPC accuracy using a model based solely
+on CPU time and RAPL measurements, as these are commonly
+used by existing power profiling tools. While this approach
+achieves good accuracy on the evaluated generic workloads,
+it has important limitations. In particular, identical CPU time
+values can correspond to different power consumptions de-
+pending on the instruction mix and memory behavior (e.g.,
+scalar versus vector units, cache intensity), which can bias
+estimates for specific workloads. In addition, RAPL cap-
+tures only socket-level components (cores, uncore, cache)
+and excludes other resources such as network and storage,
+leading to an underestimation of total consumption. More fine-
+grained models incorporating additional performance counters
+or resource-specific measurements could therefore improve
+WCPC accuracy for heterogeneous workloads.
+   Our evaluation used production-class servers to ensure a
+measurable baseline for model accuracy, as isolated software
+power consumption can be directly measured—unlike bottom-
+up methods that infer it indirectly. This setup emphasizes
+higher power values due to the servers’ static consumption.
+Choosing an appropriate server baseline is context-specific.       Fig. 4. Power prediction for two types of VMs of bottom-up and top-down
+Instead, our framework focuses on quantifying energy effi-         models
+ciency savings from large-scale consolidation. To that end,
+we compute a VM’s worst-case consumption and apply the             usage (below 10%, subplot A) and high usage (above 85%,
+average C INERGY ratio of the cluster, yielding a deterministic    subplot B).
+yet realistic estimate that accounts for typical co-hosting. The       The estimation of our top-down model was steady on both
+next section provides examples of how the ratio behaves in a       low-usage and high-usage phases (around 17 W and 50 W,
+cloud-like setting.                                                respectively). Note that the slight variations observed in the
+                                                                   figures do not come from non-determinism but from the range
+             V. A PPLYING THE C INERGY RATIO                       of CPU loads (for CPU load qualified as low, there is a power
+   This section focuses on interpreting the C INERGY ratio         reading gap between 0% and 10% CPU load).
+in a cloud computing context. In Subsection V-A, we pro-               In contrast, the power estimation reported by the bottom-up
+vide an overview of consolidation gains for different VM           approach varied substantially. For example, for a VM reporting
+profiles. Then, in Subsection V-B, we present insights from        high CPU usage (subplot B), the bottom-up model estimates
+a partnership with OVHcloud—one of the largest European            the same 50 W when the host load is low (as expected, because
+cloud providers—on how energy efficiency varies across cloud       it is similar to an isolated context) but decreases to up to 10 W
+offers. Finally, Subsection V-C applies the C INERGY frame-        with a fully loaded host. It represents an 80% variation in the
+work to carbon accounting estimates, highlighting differences      power estimation due to external VM activities.
+compared to current methodologies.                                     With VMs under low load (subplot A), the two models
+                                                                   diverge, even when host activity is minimal. In such scenarios,
+                                                                   the bottom-up model, which relies on live RAPL measure-
+A. Consolidation efficiency across VM profiles
+                                                                   ments (as described in Equation 3), can occasionally report
+  To illustrate the effect of the C INERGY ratio on different      higher values than our isolated estimation. These anomalies
+VM profiles, we conducted an experiment where a VM power           stem from the variability inherent in power readings during
+consumption was measured under different host CPU loads.           low host load, where any kernel activity causing power spikes
+We computed power consumption estimates from our top-              is fully attributed to the VM, resulting in random peaks. Our
+down model and a bottom-up-like model using Equation 3.            top-down approach mitigates this variability, highlighting its
+                                                                   suitability even in predominantly dedicated host scenarios.
+                              CPUusage
+              PVbottom-up =      VM
+                                       → PRAP L              (3)   Interestingly, under low usage, the bottom-up model’s power
+                  M
+                              CPUusage
+                                 total                             estimation tends toward zero as the VM’s idle resources are
+  Figure 4 illustrates the power estimation obtained from          progressively used by other processes, mimicking behavior
+both top-down and bottom-up models when applied on the             observed in dynamically oversubscribed environments.
+4-vCPU VM. We distinguished two VM usage phases: low                   Subsequently, we analyzed the C INERGY ratio variation
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                                                 9
+
+
+
+for this VM as other processes introduced additional load
+in Figure 5. It summarizes the two scenarios by illustrating
+the evolution of the C INERGY ratio as a function of host
+load. To emphasize the energy efficiency gains associated
+with increased host utilization, C INERGY values exceeding
+one—caused by outlier readings in the bottom-up model—
+are not displayed. The results show that energy efficiency
+improvements become evident even at relatively low levels
+of host utilization. At a 20% host load, the C INERGY ratio
+demonstrates significant energy efficiency savings for both
+VMs. Specifically, the high-usage VM operates at 60% of its
+baseline power consumption (r = 0.6), while the low-usage
+VM sees even greater benefits, consuming just 10% (r = 0.1)
+of its initial power. As the host load approaches full capacity,
+the high-usage VM’s consumption decreases further to 20% of
+its isolated power consumption (r = 0.2), while the low-usage                 Fig. 6. Distribution of C INERGY ratio obtained by hosts of two different
+                                                                              OVHcloud instance types over a week
+VM trends towards 0.
+
+
+                                                                              achieve very high usage—and thus high energy efficiency with
+                                                                              a ratio that can fall below 0.3—this remains an exception, as
+                                                                              all provisioned resources must be fully used simultaneously
+                                                                              to reach this level. In practice, the average C INERGY ratio
+                                                                              is 0.81 for Public Cloud VMs, representing only a 19%
+                                                                              power reduction compared to the worst case. On the other
+                                                                              hand, VPS VMs have an average ratio of 0.44 (56% power
+                                                                              reduction). Comparing both ratios highlights that VPS VMs
+                                                                              are approximately 1.85→ more energy efficient than Public
+                                                                              Cloud ones, on average.
+                                                                                 This illustrates the trade-off between energy efficiency and
+                                                                              high availability—a choice that customers must consider ac-
+                                                                              cording to their needs. We believe that the C INERGY ratio is
+Fig. 5. C INERGY ratio evolution for different VM profiles depending on the   an insightful metric to assist customers in capturing this trade-
+host load                                                                     off. The average C INERGY ratio per cluster (or instance type)
+                                                                              can be published to preserve the determinism of our method
+                                                                              when applied to worst-case power estimates.
+B. Efficiency Variations Across Instance Types                                   In the studied dataset, variations in the C INERGY ratio
+   Cloud providers offer different products, varying the man-                 across hosts can only be partially explained by allocation
+aged stack (from I AA S to Software as a Service (SaaS)) and                  percentage. Hosts considered fully allocated exhibit only a
+the availability level. We now focus on illustrating energy                   marginally improved C INERGY ratio compared to the cluster
+efficiency variations between two cloud instance types. To                    average (e.g., 0.40 vs. 0.44 for VPS). This reflects a provider-
+that end, we partnered with OVHcloud. They notably pro-                       side consolidation strategy in which provisioned capacity does
+pose different VM-based products. One, referred to as Public                  not excessively exceed demand, improving overall cluster
+Cloud, guarantees resources—and therefore performance—                        efficiency and, consequently, the C INERGY metric.
+to customers. Another, referred to as Virtual Private Server                     Workload size also affects the metric. On hosts considered
+(VPS), offers lower guarantees and shares physical resources                  fully allocated, we observe a correlation between the number
+among tenants.                                                                of instances and the achieved efficiency. Hosts filled with many
+   We retrieved traces from two distinct clusters of servers,                 small VMs tend to be more heavily utilized and therefore
+each operating one of the instance types. Both clusters com-                  exhibit a lower C INERGY ratio than hosts allocated to fewer,
+prise more than 1, 000 physical servers and were studied over                 larger VMs. This trend holds for both VPS and Public Cloud
+one week. We collected their CPU load every 5 minutes and                     products, highlighting that small VMs sizes play an important
+converted it into a C INERGY ratio to better assess their energy              role in cloud catalogs, not only for packing efficiency but also
+efficiency. Specifically, we used the C INERGY ratio model                    for achieving higher server utilization.
+from Figure 5 for the high VM profile.                                           Note that, while differences between clusters here stemmed
+   Distribution of ratios is reported in Figure 6 as a Kernel                 from oversubscription, additional mechanisms such as spot
+Density Estimate (KDE). Unsurprisingly, VPS hosts reached                     VMs and harvesting VMs exist among cloud providers [46],
+higher load due to their oversubscribed context, and therefore                [47] to improve energy efficiency. These would also enhance
+better energy efficiency. While some Public Cloud hosts                       the C INERGY ratio.
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                                             10
+
+
+
+
+Fig. 7. Scope 2 carbon estimation (gCO2 ) across datacenters, VM usage profiles (4 cores), and instance types. Measurements are based on a Xeon E5-
+2620 v4 →2 server, using an external wattmeter to measure maximum and minimum power for static-allocation-based estimations.
+
+
+
+C. Impact on Carbon Accounting Tools                                       high usage (above 85%). The horizontal dotted line indicates
+   Finally, we highlight the impact of our power estimation                the current estimation for a 1-hour activity of this 4-core VM,
+method on carbon accounting tools. We focus on Scope 2                     which is static for a given datacenter, relying solely on size-
+of carbon accounting methodologies, which reports indirect                 based attribution.
+emissions associated with electricity consumption, notably                    For moderately to highly utilized resources, the current
+from servers. We use the current OVHcloud carbon accounting                static estimation underestimates CO2 emissions in both dat-
+methodology [33] (as of early 2026) as a baseline for several              acenters. This occurs because proportional attribution based
+reasons: the C INERGY ratio was evaluated in this context; the             on maximum power implicitly assumes a linear power model
+methodology and required data are publicly available; and it               and, therefore, a constant efficiency. However, servers are
+relies on server-level measurements, unlike other providers’               less efficient at low-to-mid load (the typical operating range
+approaches that use more aggregated attributions.                          in cloud environments) than at full load, following an ap-
+                                                                           proximately logarithmic power–load relationship. As a result,
+                                                                           linear allocation assigns less power than what is observed
+   footprint = power estimate → PUE → emission factor               (4)    under operational conditions. The effect is more pronounced
+                                                                           for Public Cloud products due to their lower average server
+   As defined in Equation 4, the usage footprint is com-                   utilization (i.e., lower C INERGY ratio).
+puted from the power estimate, the data center PUE, and                       The gap can be substantial, especially when extrapolated to
+a location-based emission factor sourced from the Electric-                monthly emissions in high–carbon-intensity contexts (higher
+ityMap database. Note that the product of PUE and the                      PUE and higher electricity carbon intensity), as observed
+emission factor approximates the Carbon Usage Effectiveness                in the US-based example. When scaling hourly emissions
+(CUE) metric [48].                                                         to one month, our estimation reaches 11.0 kgCO2 for an
+   In the OVHcloud methodology, the power estimate cor-                    actively used 4-core VPS VM (4.0 kgCO2 more than the
+responds to a fraction of the server’s measured maximum                    linear allocation), and 20.7 kgCO2 for the equivalent Public
+power consumption, obtained using an external wattmeter                    Cloud VM, corresponding to 3.0→ the current static estimate.
+under full load and allocated proportionally to the VM size.               Methodologies used by other providers that rely on aggregated
+In our methodology, the static power reference is likewise                 values (DC-scope or service-scope) are also likely biased in
+measured using an external wattmeter and dispatched in the                 estimating individual efficiency, since cluster characteristics
+same manner (as described in Equation 1), while dynamic                    are often heterogeneous.
+power consumption, derived from RAPL, is estimated as the                     Conversely, the CO2 emission estimate can be similar or
+WCPC of the VM multiplied by the C INERGY ratio.                           even lower for low or idle VM usage, especially in over-
+   Figure 7 reports different Scope 2 carbon footprint esti-               subscribed contexts. As utilization decreases, the estimation
+mations. Two OVHcloud datacenter contexts are shown: a                     primarily assigns to the VM the emissions corresponding to
+datacenter located in France (Gravelines, PUE 1.22, elec-                  static power components, which can yield values lower than
+tricity mix 56 gCO2 /kWh) and a datacenter located in the                  those obtained through proportional allocation based on peak
+United States (Vint Hill, Virginia, PUE 1.39, electricity                  power. For VPS, we assume an oversubscription ratio of 2,
+mix 418 gCO2 /kWh).                                                        which further reduces the attributed share. This illustrates that
+   As our method accounts for both actual VM usage (via                    oversubscription, while improving aggregate energy efficiency,
+the WCPC) and the consolidation efficiency of the instance                 also enables providers to amortize unused capacity. From
+type (via the C INERGY ratio), we consider a 4-core example                a user perspective, emissions can therefore be reduced by
+VM deployed on a representative host (Xeon E5-2620 v4 →2)                  removing unused VMs, resizing underutilized instances, or
+and apply the analysis to the two cloud products previously                selecting oversubscribed offerings for intermittent workloads.
+evaluated: VPS and Public Cloud. Three VM usage profiles                      Overall, this justifies integrating resource usage — both at
+are studied: low usage (below 10%), mid usage (45–55%), and                the VM level and at the cluster level — into carbon accounting
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                                             11
+
+
+
+tools to improve representativity and support more effective                                       R EFERENCES
+efficiency-oriented policies.                                         [1] P. Jacquet, C. Coti, M. D. De Assunção, and R. Rouvoy, “Cinergy:
+                                                                          Reasoning over the worst case power consumption of cloud virtual
+                      VI. C ONCLUSION                                     machines,” in 2025 IEEE 25th International Symposium on Cluster,
+                                                                          Cloud and Internet Computing (CCGrid), pp. 586–589, IEEE, 2025.
+   This article addressed the problem of power monitoring             [2] International Energy Agency, “Data centres and data transmission net-
+Virtual Machines (VMs) for carbon accounting needs. We                    works,” 2021. Available at https://www.iea.org/energy-system/buildings/
+propose a framework to integrate virtual deterministic power              data-centres-and-data-transmission-networks#programmes.
+                                                                      [3] GCP, “Carbon footprint reporting methodology,” 2024. Available at
+consumption into carbon accounting methodologies. It relies               https://cloud.google.com/carbon-footprint/docs/methodology.
+on modeling the Worst Case Power Consumption (WCPC)                   [4] Microsof, “Microsoft cloud for sustainability api calculation method-
+of the VM, and applying a factor capturing the consolidation              ology,” 2024. Available at https://learn.microsoft.com/en-us/industry/
+                                                                          sustainability/api-calculation-method.
+gain enabled by virtualization. As an example, we used                [5] AWS, “Understanding your carbon emission estimations,” 2024. Avail-
+polynomial functions to model a VM WCPC for different                     able at https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/
+server architectures. Despite their simplicity, these models              ccft-estimation.htmld.
+                                                                      [6] GeSI, “Ict sector guidance built on the ghg protocol product life
+achieved strong accuracy, with a MAPE of 6.6% across                      cycle accounting and reporting standard,” 2017.              Available at
+representative hardware. This level of error is close to the              https://ghgprotocol.org/sites/default/files/2023-03/GHGP-ICTSG%20-
+theoretical minimum, given the inherent variability of power              %20ALL%20Chapters.pdf.
+                                                                      [7] Boavizta, “Understanding the results of cloud providers’ carbon calcula-
+measurements at low utilization.                                          tor,” 2023. Available at https://boavizta.org/en/blog/calculettes-carbone-
+   Considering dynamic resource usage in carbon account-                  clouds-providers.
+ing reveals important patterns. It quantifies energy efficiency       [8] S. Georgiou, S. Rizou, and D. Spinellis, “Software development lifecycle
+                                                                          for energy efficiency: Techniques and tools,” ACM Comput. Surv.,
+differences between instance types providing the same ser-                vol. 52, Aug. 2019.
+vice under different guarantees (via the C INERGY ratio) and          [9] F. Peñaherrera, J. Hobohm, and K. Szczepaniak, LCA of Energy and
+demonstrates that current carbon accounting tools can signifi-            Material Demands in Professional Data Centers: Case Study of a Server,
+                                                                          pp. 79–88. Cham: Springer International Publishing, 2019.
+cantly underestimate CO2 emissions for certain VM profiles.          [10] B. Li, R. Basu Roy, D. Wang, S. Samsi, V. Gadepally, and D. Tiwari,
+   Beyond its theoretical contributions, this work has practi-            “Toward sustainable hpc: Carbon footprint estimation and environmen-
+cal implications. First, it can be seamlessly integrated into             tal implications of hpc systems,” in Proceedings of the International
+                                                                          Conference for High Performance Computing, Networking, Storage and
+cloud architectures to enhance existing carbon tracking tools.            Analysis, SC ’23, (New York, NY, USA), Association for Computing
+Second, it provides a standardized baseline for evaluating                Machinery, 2023.
+and communicating the energy efficiency benefits of cloud            [11] C. Möbius, W. Dargie, and A. Schill, “Power consumption estimation
+                                                                          models for processors, virtual machines, and servers,” IEEE Transactions
+providers’ software stacks, particularly in consolidation sce-            on Parallel and Distributed Systems, vol. 25, no. 6, pp. 1600–1614, 2013.
+narios. Future work includes integrating these principles into       [12] Intel, “Intelligent platform management interface specification,”
+the PowerAPI framework [26], enabling unified access to                   2013. Available at https://www.intel.fr/content/www/fr/fr/products/docs/
+                                                                          servers/ipmi/ipmi-second-gen-interface-spec-v2-rev1-1.html.
+different types of power profiling tools. We also plan to            [13] M. Agusti, E. Caron, B. Fichel, L. Lefèvre, O. Nicol, and A.-C.
+extend our approach to account for the power consumption                  Orgerie, “PowerHeat: A non-intrusive approach for estimating the power
+of additional physical resources, such as disks and network.              consumption of bare metal water-cooled servers,” in GreenCom 2024 -
+                                                                          20th IEEE International conference on Green Computing and Commu-
+                     S OFTWARE A RTEFACTS                                 nications, pp. 1–7, Aug. 2024.
+                                                                     [14] H. David, E. Gorbatov, U. R. Hanebutte, R. Khanna, and C. Le, “Rapl:
+  The Python toolkit used to generate WCPC models is                      Memory power estimation and capping,” in Proceedings of the 16th
+available in the first repository.3 To ensure reproducibility, the        ACM/IEEE international symposium on Low power electronics and
+                                                                          design, pp. 189–194, 2010.
+evaluation code (linked to model generation) is also provided        [15] M. Jay, V. Ostapenco, L. Lefevre, D. Trystram, A.-C. Orgerie, and
+as notebooks. The C INERGY prototype, which exposes the                   B. Fichel, “An experimental comparison of software-based power me-
+model to users, is available in a second repository.4 .                   ters: focus on cpu and gpu,” in 2023 IEEE/ACM 23rd International
+                                                                          Symposium on Cluster, Cloud and Internet Computing (CCGrid), 2023.
+                                                                     [16] A. Lacoste, A. Luccioni, V. Schmidt, and T. Dandres, “Quanti-
+                   ACKNOWLEDGEMENT                                        fying the carbon emissions of machine learning,” arXiv preprint
+   This work was supported by Mitacs/OVHcloud under                       arXiv:1910.09700, 2019.
+                                                                     [17] L. Lannelongue, J. Grealey, and M. Inouye, “Green algorithms: quan-
+project IT42864. It received partial support from the “Fru-               tifying the carbon footprint of computation,” Advanced science, vol. 8,
+galCloud” project by Inria and from the French government                 no. 12, p. 2100707, 2021.
+through the Agence Nationale de la Recherche (ANR) un-               [18] L. F. W. Anthony, B. Kanding, and R. Selvan, “Carbontracker: Tracking
+                                                                          and predicting the carbon footprint of training deep learning models,”
+der the France 2030 program, with CAREC LOUD (ANR-                        arXiv preprint arXiv:2007.03051, 2020.
+23-PECL-0003) and DISTILLER (ANR-21-CE25-0022)                       [19] B. Courty, V. Schmidt, S. Luccioni, Goyal-Kamal, MarionCoutarel,
+grants. Experiments presented in this article were carried out            B. Feld, J. Lecourt, LiamConnell, A. Saboni, Inimaz, supatomic, M. Lé-
+                                                                          val, L. Blanche, A. Cruveiller, ouminasara, F. Zhao, A. Joshi, A. Bogroff,
+using the Grid’5000 testbed, supported by a scientific inter-             H. de Lavoreille, N. Laskaris, E. Abati, D. Blank, Z. Wang, A. Catovic,
+est group hosted by Inria and including CNRS, RENATER,                    M. Alencon, Micha! St˛ech!y, C. Bauer, L. O. N. de Araújo, JPW, and
+and several universities as well as other organizations (see              MinervaBooks, “mlco2/codecarbon: v2.4.1,” May 2024.
+                                                                     [20] W. Lin, W. Wu, H. Wang, J. Z. Wang, and C.-H. Hsu, “Experimental
+https://www.grid5000.fr).                                                 and quantitative analysis of server power model for cloud data centers,”
+                                                                          Future Generation Computer Systems, vol. 86, pp. 940–950, 2018.
+
+
+  3 https://github.com/jacquetpi/cinergy-models
+  4 https://github.com/jacquetpi/cinergy-prototype
+IEEE TRANSACTIONS ON CLOUD COMPUTING, VOL. XX, NO. XX, DECEMBER YYYY                                                                                     12
+
+
+
+[21] W. Wu, W. Lin, L. He, G. Wu, and C.-H. Hsu, “A power consump-               [43] P. Jacquet, T. Ledoux, and R. Rouvoy, “Slackvm: Packing virtual ma-
+     tion model for cloud servers based on elman neural network,” IEEE                chines in oversubscribed cloud infrastructures,” in CLUSTER, pp. 190–
+     Transactions on Cloud Computing, vol. 9, no. 4, pp. 1268–1277, 2019.             201, IEEE, 2024.
+[22] Scaphandre, “Scaphandre documentation,” 2024. Available at https://         [44] Y. Gan, Y. Zhang, D. Cheng, A. Shetty, P. Rathi, N. Katarki, A. Bruno,
+     https://hubblo-org.github.io/scaphandre-documentation/.                          J. Hu, B. Ritchken, B. Jackson, K. Hu, M. Pancholi, Y. He, B. Clancy,
+[23] A. Noureddine, “Powerjoular and joularjx: Multi-platform software                C. Colen, F. Wen, C. Leung, S. Wang, L. Zaruvinsky, M. Espinosa,
+     power monitoring tools,” in 2022 18th International Conference on                R. Lin, Z. Liu, J. Padilla, and C. Delimitrou, “An Open-Source Bench-
+     Intelligent Environments (IE), pp. 1–4, 2022.                                    mark Suite for Microservices and Their Hardware-Software Implications
+[24] G. Fieni, R. Rouvoy, and L. Seinturier, “Selfwatts: On-the-fly selection         for Cloud & Edge Systems,” in ASPLOS, pp. 3–18, ACM, 2019.
+     of performance events to optimize software-defined power meters,” in        [45] Z. Ournani, M. C. Belgaid, R. Rouvoy, P. Rust, J. Penhoat, and
+     CCGRID, pp. 324–333, IEEE, 2021.                                                 L. Seinturier, “Taming energy consumption variations in systems bench-
+[25] M. Colmant, R. Rouvoy, M. Kurpicz, A. Sobe, P. Felber, and L. Sein-              marking,” in Proceedings of the ACM/SPEC International Conference
+     turier, “The next 700 cpu power models,” Journal of Systems and                  on Performance Engineering, ICPE ’20, p. 36–47, ACM, 2020.
+     Software, vol. 144, pp. 382–396, 2018.                                      [46] Google Cloud Platform, “Preemptible vm instances,” 2020. Available at
+[26] G. Fieni, D. R. Acero, P. Rust, and R. Rouvoy, “Powerapi: A python               https://cloud.google.com/compute/docs/instances/preemptible.
+     framework for building software-defined power meters,” Journal of Open      [47] Y. Wang, K. Arya, M. Kogias, M. Vanga, A. Bhandari, N. J. Yadwadkar,
+     Source Software, vol. 9, no. 98, p. 6670, 2024.                                  S. Sen, S. Elnikety, C. Kozyrakis, and R. Bianchini, “Smartharvest:
+[27] E. Cadorel and D. Saingre, “A protocol to assess the accuracy of process-        Harvesting idle cpus safely and efficiently in the cloud,” in 16th
+     level power models,” in 2024 IEEE International Conference on Cluster            European Conference on Computer Systems, EuroSys’21, ACM, 2021.
+     Computing (CLUSTER), 2024.                                                  [48] G. Fieni, R. Rouvoy, and L. Seinturier, “x pue: Extending power usage
+[28] O. Hadary, L. Marshall, I. Menache, A. Pan, E. E. Greeff, D. Dion,               effectiveness metrics for cloud infrastructures,” IEEE Transactions on
+     S. Dorminey, S. Joshi, Y. Chen, M. Russinovich, and T. Moscibroda,               Sustainable Computing, 2025.
+     “Protean: VM allocation service at scale,” in 14th USENIX Symposium
+     on Operating Systems Design and Implementation, OSDI’20, pp. 845–
+     861, USENIX Association, Nov. 2020.                                                                    Pierre Jacquet is a postdoctoral
+[29] A. Kansal, F. Zhao, J. Liu, N. Kothari, and A. A. Bhattacharya, “Virtual                            researcher at ÉTS Montréal (CA). He
+     machine power metering and provisioning,” in Proceedings of the 1st                                 received his Master’s degree in Computer
+     ACM symposium on Cloud computing, pp. 39–50, 2010.
+[30] A. E. Husain Bohra and V. Chaudhary, “Vmeter: Power modelling for                                   Science from Paris XII (FR) in 2021
+     virtualized clouds,” in 2010 IEEE International Symposium on Parallel                               and his PhD from the University of
+     & Distributed Processing, Workshops and Phd Forum (IPDPSW), 2010.                                   Lille (FR) in 2024. His research focuses
+[31] Tads, “Energy consumption measurements in docker,” in 2017 IEEE 41st
+     Annual Computer Software and Applications Conference (COMPSAC),                                     on resource scheduling and sustainable
+     vol. 2, pp. 272–273, 2017.                                                                          computing.
+[32] M. Colmant, M. Kurpicz, P. Felber, L. Huertas, R. Rouvoy, and A. Sobe,
+     “Process-level power estimation in vm-based systems,” in Proceedings
+     of the Tenth European Conference on Computer Systems, pp. 1–14, 2015.                                 Camille Coti is a professor at
+[33] OVHcloud, “Méthodologie du tracker d’impact environnemental                                         ÉTS Montréal (CA). After a PhD from
+     d’ovhcloud,” 2025. In French: https://corporate.ovhcloud.com/sites/                                 University Paris Sud-XI (FR) in 2009, she
+     default/files/2025-07/methodo_impacttracker_fr.pdf.
+[34] L. A. Barroso and U. Hölzle, “The case for energy-proportional com-                                 spent a decade at University Sorbonne
+     puting,” Computer, vol. 40, no. 12, pp. 33–37, 2007.                                                Paris Nord (FR) before moving to
+[35] P. Jacquet, T. Ledoux, and R. Rouvoy, “Cloudfactory: An open toolkit                                Canada in 2022. Among her interests are
+     to generate production-like workloads for cloud infrastructures,” in 11th
+     IEEE International Conference on Cloud Engineering, IC2E’23, 2023.                                  high-performance computing, distributed
+[36] P. Jacquet, T. Ledoux, and R. Rouvoy, “ SweetspotVM: Oversubscribing                                computing, and playing the trumpet.
+     CPU without Sacrificing VM Performance ,” in 2024 IEEE 24th Interna-
+     tional Symposium on Cluster, Cloud and Internet Computing (CCGrid),
+     pp. 148–157, IEEE Computer Society, May 2024.                                                          Marcos Dias De Assunção is an
+[37] P. Jacquet and A. Luxey-Bitri, “The case for time-shared computing                                  associate professor at ÉTS Montréal
+     resources,” in 11th Workshop on Computing within Limits (LIMITS),                                   (CA). He holds a PhD from the
+     2025.
+[38] E. Cortez, A. Bonde, A. Muzio, M. Russinovich, M. Fontoura,                                         University of Melbourne (AU) and was
+     and R. Bianchini, “Resource central: Understanding and predicting                                   previously a researcher at IBM Research
+     workloads for improved resource management in large cloud plat-                                     and Inria (FR). His research interests
+     forms,” in 26th Symposium on Operating Systems Principles, SOSP’17,
+     p. 153–167, ACM, 2017.                                                                              include data stream processing, edge
+[39] N. Bashir, N. Deng, K. Rzadca, D. Irwin, S. Kodak, and R. Jnagal,                                   computing, and reinforcement learning.
+     “Take it to the limit: Peak prediction-driven resource over-commitment
+     in datacenters,” in 16th European Conference on Computer Systems,
+     EuroSys’21, p. 556–573, ACM, 2021.                                                                     Romain Rouvoy is a full professor
+[40] P. Jacquet, T. Ledoux, and R. Rouvoy, “SCROOGEVM: boosting                                          at the University of Lille (FR) and a
+     cloud resource utilization with dynamic oversubscription,” IEEE Trans.                              member of the Spirals team (a joint team
+     Sustain. Comput., vol. 9, no. 5, pp. 754–765, 2024.
+[41] Kepler, “Kubernetes efficient power level exporter (kepler),” 2024.                                 with Inria and CRIStAL). His research
+     Available at https://sustainable-computing.io/.                                                     sits at the intersection of software
+[42] G. Fieni, R. Rouvoy, and L. Seinturier, “Smartwatts: Self-calibrating                               engineering and distributed systems,
+     software-defined power meter for containers,” in 2020 20th IEEE/ACM
+     International Symposium on Cluster, Cloud and Internet Computing                                    focusing on sustainable software services
+     (CCGRID), pp. 479–488, IEEE, 2020.                                                                  and user privacy.
+

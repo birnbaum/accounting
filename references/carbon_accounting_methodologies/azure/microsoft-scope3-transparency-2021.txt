@@ -1,0 +1,909 @@
+A new approach for Scope 3 emissions
+transparency
+
+
+
+© 2021 Microsoft. All rights reserved.
+Contents
+Foreword ............................................................................................................................................................................ 2
+Executive summary ......................................................................................................................................................... 3
+Introduction....................................................................................................................................................................... 6
+    Context ........................................................................................................................................................................... 6
+Background .................................................................................................................................................................... 10
+    Scope 3 emissions as the next frontier in greenhouse gas management ......................................... 10
+    Empowering cloud customers ............................................................................................................................ 14
+Research approach ...................................................................................................................................................... 15
+    Methodology introduction .................................................................................................................................. 15
+    Life cycle phases ...................................................................................................................................................... 16
+    Methodology process overview ......................................................................................................................... 17
+    Methodology for Microsoft Cloud Scope 3 emissions.............................................................................. 19
+        Step 1: Calculate cradle-to-gate and hardware disposition emissions for components and
+        hardware................................................................................................................................................................. 19
+        Step 2: Calculate datacenter emissions for a given month ................................................................. 20
+        Step 3: Calculate Microsoft datacenter region emissions ................................................................... 20
+    Methodology for Azure customer allocation................................................................................................ 20
+        Step 4: Calculate total customer usage of Azure cloud services ...................................................... 20
+        Step 5: Calculate Azure region-specific emission factors .................................................................... 21
+        Step 6: Calculate Microsoft 365 regional usage factors per customer ........................................... 21
+        Step 7: Calculate total customer-specific emissions .............................................................................. 21
+        Step 8: Combine data and summarize ........................................................................................................ 21
+Application...................................................................................................................................................................... 22
+    Providing climate action insights to our customers ................................................................................... 22
+Case study: Bühler........................................................................................................................................................ 28
+Appendices ..................................................................................................................................................................... 29
+    Key terms and definitions..................................................................................................................................... 29
+    Common materials included in IT equipment .............................................................................................. 30
+
+
+
+
+                                                                        A new approach for Scope 3 emissions transparency                                                           1
+Foreword
+For over two centuries and into modern times, human ingenuity and the ongoing industrial revolution
+have led to great advancements, although with significant negative impact on our world’s climate.
+Greenhouse gas emissions due to our industrious achievements have contributed to an increase in the
+earth’s temperature, such that an additional increase of 1.5 degrees Celsius could result in catastrophic
+outcomes.
+
+Responding to this rapidly unfolding crisis, governments and industries are being called to action. If public
+and private sectors can critically examine the underlying causes of climate change, intervene, and
+innovate, we will be able to help significantly reduce emissions and waste across industrial supply chains.
+In addition, the ability to scale circular economy models can lead to sustainable growth; growth that is
+decoupled from our dependency on natural resources.
+
+Microsoft has made a commitment to become carbon negative by 2030, and to remove the impact of all
+our historical emissions by 2050. 1 Because of this commitment, we are compelled to focus on Scope 3
+emissions, representing one of the largest contributors to greenhouse gas emissions, and attributed in
+great measure to processes within our supply chains.
+
+In this regard, Microsoft cloud services and infrastructure represent an area of significant importance, as
+cloud services continue to scale globally. Accurate and transparent accounting and actionable reporting of
+Scope 3 cloud emissions can be daunting, requiring insights across diverse suppliers, partners, services,
+and infrastructure, often representing varying degrees of maturity and adaptability. Such methodologies
+must assume an integrated life cycle view of supply chains, across the key areas of planning, design,
+sourcing, procurement, manufacture, distribution, usage, and circular approaches to maximizing the useful
+life of all infrastructure and materials, to encourage a shift towards sustainable closed loop models.
+
+Building upon and extending the work reported in a 2018 paper from Microsoft, “The Carbon Benefits of
+Cloud Computing,” this white paper offers insights into an innovative approach that Microsoft’s cloud
+supply chain group is using for the calculation of Scope 3 cloud emissions. Based on these
+methodologies, with data derived across our cloud supply chain, and with a view to offering our
+customers transparent insights into the emissions impact of their Microsoft Cloud usage. Note that
+Microsoft Cloud encompasses all of our Azure services, as well as M365 services, Gaming clouds, and
+Dynamics 365. Microsoft Cloud service usage, we present the inclusion of Scope 3 emissions within the
+Microsoft Emissions Impact Dashboard. 2 This calculator enables users to consistently and transparently
+view actionable cloud emissions data across relevant impact points in the value chain, across all scopes of
+emission.
+
+As sustainability insights become more embedded within value chains, integrated decision-making will
+enable significant positive environmental impacts to help stabilize the earth’s climate and restore its
+
+1
+  Brad Smith, “Microsoft will be carbon negative by 2030,” Official Microsoft Blog, 16 January 2020,
+2
+  The Microsoft Emissions Impact Dashboard was formerly known as the Microsoft Sustainability
+Calculator. Microsoft Cloud is exploring new methods for emissions reporting that Microsoft has not yet
+adopted in its corporate disclosure. The underlying methodologies and emissions findings generated
+from the calculator will differ from those reflected in Microsoft’s corporate disclosure. Future updates to
+the methodologies supporting Microsoft’s corporate disclosure will be highlighted accordingly and
+published annually.
+
+                                          A new approach for Scope 3 emissions transparency                 2
+natural balance. Microsoft is committed to making and empowering continual progress on this journey
+with our customers, partners, and communities.
+
+               Anand Narasimhan
+               General Manager of Cloud Supply Chain Sustainability Organization in Azure
+
+
+
+Executive summary
+Greenhouse gas (GHG) emissions that occur upstream and downstream of an organization’s
+core operations can be extensive, and for many sectors, make up the largest sources of
+emissions across the value chain. 3 Due to this significance, these indirect emissions are
+becoming more widely understood, and are a primary focus of sustainability and climate
+stewardship initiatives.
+
+Microsoft is on a journey to cut its own emissions by more than half by 2030, including our
+direct emissions and those of our entire supply and value chain. 4 To achieve this goal, we are
+developing tools and processes to track our progress and guide our decision-making. We are
+also developing tools to empower our customers to do the same. Through the Microsoft
+Emissions Impact Dashboard, we invite our customers to join us on this journey.
+
+As depicted in Figure 1, the value chain encompasses Microsoft Cloud computing services and
+includes upstream carbon emissions from suppliers and logistics providers to manufacture and
+deliver components and hardware for use in our datacenters. Our own core operational
+datacenter greenhouse gases are also emitted during the hardware use phase. After the
+hardware’s useful life, downstream carbon emissions are emitted by Microsoft electronic waste
+recyclers and IT asset disposition circularity partners.
+
+
+
+
+                              Figure 1: Microsoft Cloud computing value chain
+
+
+
+
+3
+  Nicole Labutong, “How can companies address their scope 3 greenhouse gas emissions?,” CDP, 13 July
+2018, https://www.cdp.net/en/articles/companies/how-can-companies-address-their-scope-3-
+greenhouse-gas-emissions
+4
+  Brad Smith, “Microsoft will be carbon negative by 2030,” Official Microsoft Blog, 16 January 2020,
+https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/
+
+                                        A new approach for Scope 3 emissions transparency             3
+Microsoft developed a new methodology to improve its estimation of its own cloud value chain
+emissions and allocates those emissions effectively to customers. The process outlined in Figure
+2, (1) models component-level GHG emissions, (2) aggregates those emissions to the datacenter
+and region levels, and (3) allocates them to customers based on their cloud usage by month and
+region. This methodology enables Microsoft to provide customers with their cloud-based
+emissions totals based on their specific hardware profiles, datacenters, and reporting month.
+
+
+
+
+                    Figure 2: Microsoft Cloud customer emissions allocation methodology
+
+
+
+
+The Microsoft Emissions Impact Dashboard is an innovative web-based user interface that allows
+our cloud customers to access the Microsoft emissions associated with their cloud usage. The
+dashboard allows segmenting customer Scope 3 emissions data by service type (Azure, M365,
+etc.), region, and timeframe and provides information on public reporting. The Microsoft
+Emissions Impact Dashboard enables Microsoft cloud customers to track their carbon emissions,
+
+
+
+
+                                        A new approach for Scope 3 emissions transparency    4
+carbon intensity scores, and estimated emissions savings compared to certain model on-
+premises solutions. 5
+
+
+
+
+              Figure 3: Microsoft Emissions Impact Dashboard (including the Microsoft 365 Preview)
+
+The virtuous cycle of accurate, transparent scope tracking and reporting holds great potential
+for positive change. Realizing that change depends on proactive, collaborative efforts by
+companies with a will to lead. This paper is one step along a positive path, which we hope will
+spur further, greater steps by our customers and partners.
+
+
+
+
+5
+ "The carbon benefits of cloud computing," Microsoft, 2020,
+https://download.microsoft.com/download/7/3/9/739BC4AD-A855-436E-961D-
+9C95EB51DAF9/Microsoft_Cloud_Carbon_Study_2018.pdf
+
+                                           A new approach for Scope 3 emissions transparency         5
+Introduction
+Context
+Exponential growth in cloud computing is revolutionizing technology to such a degree that this
+era may be regarded as the Fourth Industrial Revolution (4IR). As described by the World
+Economic Forum, 4IR will feature major technological advances in artificial intelligence, robotics,
+genomics, materials sciences, 3D printing, and more. Businesses, governments, and civic
+institutions will collect, store, and analyze data at an unprecedented scale, speed, and depth.
+Cloud computing (large-scale, shared IT infrastructure available over the internet) is the engine
+that enables these technology advancements, which in turn drive cloud uptake as businesses
+strive to reduce total cost of ownership, realize greater business agility, deliver economies of
+scale, and offer ubiquitous data and application access.
+
+This paper builds on the Microsoft report, “The carbon benefits of cloud computing,” and its
+2010 report, “Cloud Computing and Sustainability: The Environmental Benefits of Moving to the
+Cloud.” This white paper presents a Scope 3 methodology to allow customers to transparently
+estimate their procured Microsoft cloud-based datacenter emissions within their value chains. In
+the 2018 report, Microsoft detailed a methodology to quantify and compare the energy and
+carbon footprint impacts of its cloud services IT applications with on-premises solutions. Among
+other key findings, that paper found that although total energy for cloud computing is expected
+to increase, cloud computing is significantly more energy- and carbon-efficient than traditional
+on-premises datacenter solutions. Microsoft is continuing to take aggressive steps toward
+reducing energy usage and has maintained 100 percent renewable electricity (achieved partially
+through power purchase agreements and renewable energy certificates) to power its
+datacenters. Microsoft is now looking beyond its own direct operational footprint to identify
+additional reduction opportunities across our value chain. For this updated study, Microsoft
+engaged WSP USA, a global consultancy with expertise in environmental sustainability, to
+validate the modeling of customer allocation of the upstream production and downstream
+hardware disposition emissions of the Microsoft cloud infrastructure. Note that the underlying
+methodologies and emissions findings generated from the calculator will differ from those
+reflected in Microsoft’s corporate emissions disclosure. Future updates to the methodologies
+supporting Microsoft’s corporate disclosure will be highlighted accordingly and published
+annually.
+
+Though the world’s reliance on cloud computing is accelerating, the efficiencies gained by
+shifting from traditional on-premises datacenters to cloud operations is expected to keep the
+associated energy requirements essentially flat. By most estimates, in 2019, global datacenters
+consumed 200 terawatt-hours (TWh) of electricity each year, roughly 0.8 percent of the total
+electricity consumed globally. In North America alone, datacenters consume about 79 billion
+kilowatt-hours (kWh) of electricity each year—roughly 1.5 percent of the total electricity
+
+
+                                       A new approach for Scope 3 emissions transparency          6
+consumed in North America. Due to ongoing datacenter efficiency improvements, this number
+is expected to remain about the same through 2022 (while at the same time, global internet
+traffic and datacenter workload will dramatically increase) for the industry, as noted in Figure 4
+following. This number would be higher if not for the material and emissions efficiencies that
+many commercial cloud datacenters can offer over on-premises solutions. The ongoing
+exponential growth of datacenters makes realizing those efficiencies even more critical.
+
+
+
+
+        Figure 4: Global trends in internet traffic, datacenter workloads, and datacenter energy use, 2010-2022
+
+Increasing demand for computing services is inevitable, and significant cloud growth will likely
+continue for the foreseeable future. This situation provides a unique opportunity to make
+significant contributions to energy efficiency, and Microsoft has recently announced a company-
+wide commitment to become carbon negative by 2030 6—inclusive of its direct emissions and
+entire value chain. Microsoft has committed to removing by 2050 all the carbon the company
+has emitted (either directly or by electrical consumption) since it was founded in 1975. 7 Many
+Microsoft customers are making similar commitments, and Microsoft is committed to helping
+and empowering their journeys.
+
+
+
+
+6
+  Brad Smith, “Microsoft will be carbon negative by 2030,” Official Microsoft Blog, 16 January 2020,
+https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/
+7
+  Brad Smith, “Microsoft will be carbon negative by 2030,” Official Microsoft Blog, 16 January 2020,
+https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/
+
+                                              A new approach for Scope 3 emissions transparency                   7
+                         Figure 5: The Microsoft pathway to carbon negative by 2030
+
+There has been a growing focus on value chain emissions due to evolving climate science and
+the recent formation of influential industry coalitions that promote and support organizational
+target setting. The Science Based Targets Initiative (SBTi) is a collaboration between the Carbon
+Disclosure Project (CDP), the United Nations Global Compact (UNGC), World Resources Institute
+(WRI), the World Wide Fund for Nature (WWF), and others. SBTi defines and promotes best
+practices and calls on companies to set targets aligned with science to limit global warming to
+well below 2 degrees Celsius above pre-industrial levels and pursue efforts to limit warming to
+1.5 degrees Celsius. SBTi criteria require carbon accounting across a company’s value chain.
+Microsoft has established a SBTi target and is aiming to help empower cloud service customers
+to establish aggressive goals to reduce their carbon footprints.
+
+For Microsoft (and many of its cloud customers), supply chain carbon emissions are much larger
+than those from direct operations and more difficult to quantify.8 This represents a significant
+and largely unaddressed area of emissions, although a company’s lack of direct control over its
+value chain activities can make collecting transparent and accurate supplier data difficult.
+
+The private sector has enormous potential to drive environmental action. With supply chain
+emissions 5.5 times greater than operational emissions on average,9 companies that are able
+should use their purchasing power and collaborate with their supply chains to create meaningful
+impacts. However, a critical component of this collaboration is that to calculate accurate data to
+provide to their supply chains, companies must first receive accurate data from their supply
+chains. Thus, supplier engagement and access to accurate, transparent, and practical data are
+
+
+8
+  Nicole Labutong, “How can companies address their scope 3 greenhouse gas emissions?,” CDP, 13 July
+2018, https://www.cdp.net/en/articles/companies/how-can-companies-address-their-scope-3-
+greenhouse-gas-emissions
+9
+  “Global Supply Chain Report 2019,” CDP, accessed 17 March 2021,
+https://www.cdp.net/en/research/global-reports/global-supply-chain-report-2019
+
+                                         A new approach for Scope 3 emissions transparency         8
+necessary but sometimes challenging; without actionable data, organizations often have limited
+options for the data management and performance tracking needed to drive reductions.
+
+Nevertheless, every company that is serious about reducing their emissions must include supply
+chain emissions in their efforts. When one company calculates its supply chain emissions, it can
+initiate a positive feedback cycle: To accurately quantify its supply chain emissions, a company
+must collect information from its suppliers. Its suppliers must then calculate their product-
+specific operational emissions (which may also encourage them to calculate their supply chain
+emissions). As reducing value chain emissions becomes the focus, the aim is that market forces
+will reward those who are most successful in doing so. As this process unfolds, carbon emissions
+accounting will become more standardized, and companies will have more information to help
+make better, longer-term decisions. This is a virtuous cycle that helps improve business, the
+earth’s balance, and people’s lives.
+
+The current need for action, combined with the rapidly growing interest in value chain carbon
+impacts, offers large companies like Microsoft opportunities to establish supplier synergies and
+empower customers. As noted in Microsoft President Brad Smith’s blog post, 10 the Microsoft
+Scope 3 reduction commitment will enable our customers to better understand the carbon
+impacts of their business with us, discover the potential benefits of fully migrating to the
+Microsoft Cloud, and more completely and accurately report their IT service carbon footprints
+for the often hard-to-track Scope 3 emissions.
+
+
+
+
+10
+  Brad Smith, “Microsoft will be carbon negative by 2030,” Official Microsoft Blog, 16 January 2020,
+https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/
+
+                                         A new approach for Scope 3 emissions transparency             9
+Background
+Scope 3 emissions as the next frontier in greenhouse gas
+management
+The purpose of this paper is to share the steps Microsoft is taking to measure the carbon
+impacts of cloud computing infrastructure across its value chain to promote reductions and
+empower cloud customers to take similar action. 11 Microsoft is making the results of this
+methodology available for Azure and M365 customers through the Microsoft Emissions Impact
+Dashboard which is outlined later in this paper. These value chain emissions include carbon from
+both our upstream suppliers and logistics providers and downstream from electronic waste
+recyclers and IT asset disposition circularity partners. It is important to note the distinction
+between upstream and downstream, and one aim of this paper is to build and expand on
+previous efforts to improve energy and carbon efficiency from the direct operation of our
+Microsoft cloud datacenters.
+
+
+
+
+                        Figure 6: Product life cycle steps that result in Scope 3 emissions
+
+It can be helpful to discuss emissions in “carbon math” accounting terms—the basic
+mathematical concepts that are important for understanding how carbon emissions relate to an
+organization’s own footprint and those of its suppliers, customers, and peers. The Greenhouse
+Gas (GHG) Protocol12 defines carbon accounting best practices and provides standards,
+guidance, tools, and training for businesses and governments to measure and manage carbon
+
+
+
+
+11
+   Microsoft Cloud is exploring new methods for emissions reporting that Microsoft has not yet adopted
+in its corporate disclosure. The underlying methodologies and emissions findings generated from the
+calculator will differ from those reflected in Microsoft’s corporate disclosure. Future updates to the
+methodologies supporting Microsoft’s corporate disclosure will be highlighted accordingly and published
+annually.
+12
+   “Greenhouse Gas Protocol Corporate Accounting and Reporting Standard,” Greenhouse Gas Protocol,
+accessed 17 March 2021, https://ghgprotocol.org/corporate-standard
+
+
+                                           A new approach for Scope 3 emissions transparency        10
+emissions. Per GHG Protocol (GHGP) guidance, carbon emissions are generally classified into
+three categories, known as scopes:
+
+   •   Scope 1: emissions that directly result from business activities, such as stationary
+       combustion of fuels for backup power generation in cloud datacenters.
+   •   Scope 2: emissions that indirectly result from producing energy, such as exhausted from
+       an electric power plant.
+   •   Scope 3: emissions that indirectly result from all other business activities, such as those
+       associated with the upstream raw materials extraction, manufacturing, and delivery of
+       cloud-based IT asset infrastructure (such as servers) from suppliers to be used in our
+       cloud datacenters. This also includes emissions that occur from our circularity partners
+       during the recycling process and disposal for IT hardware reuse.
+
+The following illustration shows the relationship between the scopes within the value chain:
+
+
+
+
+           Figure 7: Examples of Scope 1, 2, and 3 carbon emission types in Microsoft cloud value chain
+
+For many organizations (apart from certain direct-emission heavy sectors such as manufacturing
+and energy), their Scope 3 emissions are much larger than their Scope 1 and 2 emissions. This is
+because many companies purchase goods and services, such as datacenter hardware
+equipment, manufacturing, and disposition services, from suppliers instead of engaging their
+
+
+                                           A new approach for Scope 3 emissions transparency              11
+own in-house operations (which would create more Scope 1 and 2 emissions). For example,
+while a company may not be directly involved in raw material extraction or manufacturing, it
+may be indirectly responsible for the resulting GHG emissions because their products or services
+result from those emissions. Scope 3 emissions occur both up and downstream in value chains
+and result from component and hardware production processes, cloud service datacenter
+operation, hardware disposition management, and more. Therefore Scope 3 emissions can be
+extensive— value chains account for about 40 percent of global GHG emissions. 13 In 2020, the
+entire Microsoft value chain emitted roughly 16 million metric tons of carbon. Of this total,
+about 100,000 were Scope 1 emissions, and about 4 million metric tons were Scope 2 location-
+based emissions (prior to accounting for the company’s renewable energy purchases). 14 The
+remaining 12 million metric tons were Scope 3 emissions.
+
+
+
+
+                        Figure 8: Three examples of GHG emissions by scope and sector
+
+A critical aspect to understanding emissions accounting is that the same emissions that are
+Scope 1 or 2 for one organization can be Scope 3 for another. For example, Microsoft cloud
+services (as outlined in this paper) result in Scope 1, 2, and 3 emissions for Microsoft, but the
+allocated share of these emissions all count as Scope 3 emissions for Microsoft cloud customers
+who purchase those services. The following matrix in Figure 9 illustrates these relationships.
+
+
+
+
+13
+   Nicole Labutong, “How can companies address their scope 3 greenhouse gas emissions?,” CDP, 13 July
+2018, https://www.cdp.net/en/articles/companies/how-can-companies-address-their-scope-3-
+greenhouse-gas-emissions
+14
+   Brad Smith, “Microsoft will be carbon negative by 2030,” Official Microsoft Blog, 16 January 2020,
+https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/
+
+                                         A new approach for Scope 3 emissions transparency        12
+              Figure 9: Carbon accounting scopes by stakeholder (Microsoft, partners, customers, etc.)
+
+The GHG Protocol offers an example of counting the emissions of electricity generation used for
+an electrical appliance: the electricity generator’s Scope 1 emissions are the appliance users’
+Scope 2 emissions, which are the appliance manufacturer and appliance retailers’ Scope 3
+emissions. 15 As such, each participant in this emissions microcosm has an opportunity to reduce
+their emissions share: (1) the electricity generator can use lower-carbon sources for generation,
+(2) the appliance manufacturer can increase their product’s efficiency, (3) the appliance retailer
+can feature energy-efficient appliances in their store, and (4) the appliance user can use their
+appliance more efficiently. When each participant takes their effort seriously, the result of this
+multi-focused approach is an overall emissions reduction in this one microcosm that can
+combine with others to create powerful, global change.
+
+This inter-relation between carbon scopes, suppliers, and customers puts Microsoft in a unique
+position and provides opportunities to unlock efficiencies with our cloud infrastructure suppliers
+and circularity providers, empower our cloud customers, and bridge the gaps between each.
+
+
+
+
+15
+  “Corporate Value Chain (Scope 3) Standard,” Greenhouse Gas Protocol, accessed 17 March 2021,
+https://ghgprotocol.org/standards/scope-3-standard
+
+
+                                            A new approach for Scope 3 emissions transparency            13
+Empowering cloud customers
+The Scope 3 value chain methodology outlined in this paper will enable Microsoft cloud
+customers to better understand their cloud workloads’ carbon impacts, discover the benefits of
+fully migrating to Azure and M365, and allow more complete and accurate reporting of carbon
+footprints for Scope 3 emissions. Efforts like these are of growing importance due to the
+significant number of Microsoft cloud customers that include Scope 3 emissions in their science-
+based targets and require easy access to actionable data. The urgency highlighted by recent
+climate science, such as the Intergovernmental Panel on Climate Change Sixth Assessment
+Report, has made addressing Scope 3 emissions a high priority for many companies that are
+serious about reducing their climate impacts.
+
+More and more companies are voluntarily acting to reduce carbon across their entire value
+chain and setting targets to align with limiting global carbon to a 1.5-degree Celsius future. As
+described above, the Science Based Targets initiative (SBTi) helps promote the transition to a
+low-carbon economy. Currently, over 1,000 companies are setting science-based emissions
+targets based on SBTi criteria, which (among other things) states that if Scope 3 emissions
+account for more than 40 percent of a company’s overall emissions, that company must
+establish a target to negate that impact.
+
+While managing Scope 1 and 2 emissions can be challenging, doing so for Scope 3 emissions is
+much more so because they are more difficult to account for and control. Many Microsoft
+customers find measuring and managing Scope 3 emissions difficult due to the challenges of
+collecting transparent and accurate data across their many different suppliers, providers, and
+customers, and the complexities of current methodologies for obtaining value chain data. The
+Emissions Impact Dashboard empowers customers to understand their Scope 3 emissions
+resulting from Azure and M365 usage.
+
+
+
+
+                                      A new approach for Scope 3 emissions transparency        14
+Research approach
+Methodology introduction
+Microsoft Cloud has developed a new methodology (described following), which is third-party
+verified, for quantifying the aggregated life cycle carbon impacts of individual IT asset
+components across its cloud value chain and allocating them to cloud customers’ specific usage
+per Azure service and M365 users. The verified approach has advantages over other approaches,
+such as those that use common industry-average, supplier-specific, financial-based modeling;
+advanced industry-average service; and supplier-specific service intensity. The methodology will
+help advance industry best practices for more accurate estimation of accounting for Scope 3
+emissions—as it is cloud-specific materials-based (as opposed to financial-based) and scalable
+across multiple services. The methodology is unique because it allows Microsoft to calculate its
+total cloud-specific emissions down to specific IT assets while still providing customers with
+emissions totals at the service level specific to their use. This provides more actionable Scope 3
+data and more ways to reduce emissions over time.
+
+Conventional financial modeling fails to account for procurement changes unless there is a
+direct spending change—in fact, under the financial model, spending more to achieve
+reductions can increase a company’s apparent emissions. Focusing on materials helps solve
+these problems by providing more options and levers for achieving emissions reductions. For
+example, by requiring more carbon-efficient materials in products ordered from suppliers,
+organizations can more effectively measure, manage, and reduce their Scope 3 footprints.
+Results like these have informed Microsoft Cloud Scope 3 methodology.
+
+The chart in Figure 10 compares the benefits of using the Microsoft Emissions Impact
+Dashboard with the two most widely used current methods: the financial model and product or
+service-level life cycle evaluation. The Microsoft Emissions Impact Dashboard solves scalability
+and geographic specificity challenges and performs in near-real time. The current iteration of
+the calculator is a strong starting point that will further evolve to include the latest life cycle
+evaluation methods.
+
+
+
+
+                                       A new approach for Scope 3 emissions transparency        15
+The benefits in this figure were measured using specific scenarios for the Microsoft Emissions Impact Dashboard. Results
+may vary depending on the design or configuration of these methods.
+
+                                       Figure 10: Scope 3 customer empowerment
+
+
+Life cycle phases
+To properly evaluate the life cycle impact of Microsoft datacenters, it is important to understand
+their value chain locations and specific boundary constraints for the life cycle stages that are
+evaluated in this approach. Because Microsoft operates datacenters using various types and
+quantities of IT hardware equipment (such as servers and racks), Microsoft must evaluate
+upstream supply chain hardware impacts prior to their use in Microsoft business operations.
+Because they are the first upstream point that this methodology captures, raw materials (such as
+plastics and metals) must first be extracted or reclaimed from old parts to manufacture new IT
+components such as disk drives and computer chips. After the materials extraction and
+manufacturing phase, the IT components are assembled into various IT hardware components
+(such as servers). After assembly, the finished products must be transported via multiple
+transportation modes (such as road, ocean, and air) for delivery to a Microsoft datacenter dock.
+Once unpacked, the equipment is used in Microsoft datacenter operations over their useful
+lifetime and then replaced by newer, potentially more energy-efficient equipment. Finally,
+during the downstream value chain hardware disposition phase, the equipment is recycled and
+reclaimed for reuse or re-assembly into newer parts, and the cycle begins again. When
+
+
+
+                                               A new approach for Scope 3 emissions transparency                     16
+necessary, certain items may be securely disposed of. As outlined in Figure 11, the full value
+chain contributes to this cycle’s energy use and greenhouse gas outputs.
+
+
+
+
+                     Figure 11: Value chain contributions to energy use and GHG outputs
+
+The energy consumption and emissions for the life cycle phases described previously include:
+
+   •   Raw material extraction and manufacturing: using raw materials and assembling
+       servers, networking equipment, and hard drives.
+   •   Transportation: transporting IT equipment from the manufacturer to Microsoft
+       datacenters. This will be included in future calculations, but at time of this paper’s
+       publication, transportation in supply chain information is limited.
+   •   Usage: using electricity to run the servers, networking equipment, hard drives, and
+       datacenter infrastructure (such as lighting, cooling, and power conditioning). Where
+       relevant, usage also includes energy from internet data flows.
+   •   Hardware disposition: recycling and reclaiming for reuse based on conservative
+       assumptions about recycling rates.
+
+Microsoft will refresh this model over time primarily through additional life cycle assessments
+and evaluations from manufacturing of hardware components and continual improvement of
+transportation models.
+
+
+Methodology process overview
+Microsoft Azure and M365 now quantify carbon emissions in their cloud services based on
+aggregated IT hardware emissions and allocates them equitably to customers based on their
+actual usage. Microsoft customer-specific data outputs from this methodology will be available
+to all Microsoft cloud customers via a web tool called the Microsoft Emissions Impact
+Dashboard, where the outputs can be tracked, managed, and exported to help advance a variety
+of powerful carbon reduction efforts.
+
+The flow chart in Figure 12 depicts the seven-step process included in the Microsoft Cloud
+Scope 3 methodology. These two methodologies further consolidate the seven steps:
+
+
+
+
+                                         A new approach for Scope 3 emissions transparency       17
+•   Methodology for Microsoft Cloud Scope 3 emissions: quantifying scope 3 cloud
+    emissions at the individual component and IT hardware level.
+•   Methodology for Microsoft Cloud customer allocation: connecting emissions to
+    organizationally allocated cloud customer emissions based on service-level usage.
+
+
+
+
+                       Figure 12: Scope 3 emissions allocation methodology
+
+
+
+
+                                   A new approach for Scope 3 emissions transparency    18
+Methodology for Microsoft Cloud Scope 3 emissions
+Step 1: Calculate cradle-to-gate and hardware disposition emissions for
+components and hardware
+
+
+
+
+                            Figure 13: Common components in infrastructure
+
+Microsoft previously developed and had verified an internal methodology, Material Circularity
+and Life Cycle Carbon Emission Calculator v7.3, to calculate component-level life cycle GHG
+emissions impacts of IT components such as those shown in Figure 13. Using emission factor
+outputs for components from this methodology, we can calculate GHG emissions by
+aggregating component-level emissions contained within assembled IT hardware parts. Based
+on the hardware characteristics in our portfolio, we then combine these component-level
+emissions values to determine hardware-level emissions.
+
+To quantify emissions, the process applies independently verified cradle-to-gate and hardware
+component-level life cycle evaluation emission factors to specific Microsoft datacenter hardware
+components that comprise common hardware types. Upstream cradle-to-gate emissions
+captured in these emissions factors include life cycle stages for component-level manufacturing,
+warehousing, and transportation to the Microsoft datacenter dock. Downstream hardware
+
+                                      A new approach for Scope 3 emissions transparency     19
+disposition emissions factors used for this analysis include hardware disposition, treatment, and
+disposal-transport factors for each hardware component.
+
+Step 2: Calculate datacenter emissions for a given month
+To calculate total Microsoft Cloud Scope 3 hardware emissions for a given datacenter, Microsoft
+aggregates the hardware-level life cycle emissions from Step 1 with hardware procurement
+databases for datacenter hardware. The approach uses material compositions to quantify
+individual component emissions across Microsoft datacenters and calculates GHG emissions
+from materials used in a piece of IT equipment over an assumed lifetime of six years—if the
+equipment’s actual life extends beyond that, its Scope 3 emissions for the extended time will be
+zero. If its actual life is shorter, the emissions will continue to be counted for the six-year
+estimate to ensure comprehensive accounting. This assumption is based on the average lifespan
+of cloud infrastructure materials within Microsoft datacenters.
+
+After calculating all component and hardware-level emissions relevant to a given datacenter,
+Microsoft can determine the total emissions for a specific datacenter over a given time period
+using emissions aggregation.
+
+Step 3: Calculate Microsoft datacenter region emissions
+Because Microsoft operates its datacenters with a regional model, this methodology aggregates
+emissions from individual datacenters using datacenter regional mapping.
+
+Methodology for Azure customer allocation
+Microsoft allocates IT hardware-based Azure cloud service emissions to individual cloud-based
+customers based on their Azure service usage. As outlined in the four steps following, Microsoft
+Cloud has developed a bottom-up approach for quantifying datacenter-specific emissions based
+on specific hardware types and then allocating the aggregate emissions to the individual
+customer level. This allocation approach and implementation through the Microsoft Emissions
+Impact Dashboard were independently verified to ensure consistency with the GHG Protocol.
+
+Step 4: Calculate total customer usage of Azure cloud services
+To allocate Microsoft Scope 3 hardware emissions to Azure customers, Microsoft defines usage
+as the normalized cost metric associated with infrastructure as a service (IaaS), platform as
+service (PaaS) or software as service (SaaS). The process uses metric units because it is a usage
+measurement applied to all customers and is normalized to exclude discounts and other
+variables—the process attributes the total usage to Microsoft customers over specific time
+periods. Note that total Azure customer usage includes both direct customer use and a
+proportionate amount of overhead server capacity dedicated for delivering Microsoft cloud
+services.
+
+
+
+                                      A new approach for Scope 3 emissions transparency        20
+Step 5: Calculate Azure region-specific emission factors
+Through a combination of total Azure datacenter region emissions in proportion to total Azure
+customer usage, we identify an Azure-specific emissions intensity factor for each Azure metric.
+Specifically, we divide the total Azure region emissions by total customer usage within that
+region. The result is a Microsoft region-specific emission factor per unit of customer usage for
+any given time period.
+
+Step 6: Calculate Microsoft 365 regional usage factors per customer
+In this step we calculate a Microsoft 365 ‘regional usage factor’ for each customer in each
+datacenter region based on the portion of total Microsoft 365 server resource usage that they
+are responsible for within each region. Microsoft 365 server resource usage is driven by both
+compute (e.g. active usage of features like Microsoft Teams) and storage (e.g. Exchange Online
+mailbox data). In general, the more active users and terabytes of data a customer has in a given
+region relative to other customers, the higher their regional usage factor will be.
+
+Step 7: Calculate total customer-specific emissions
+This step quantifies customer-specific emissions for Azure services and regions based on
+customer-specific normalized cost metrics for usage related to Microsoft supplier-specific
+intensity factors. To quantify customer-specific emissions, we multiply a customer’s individual
+and measured Azure usage by the Azure region-specific emissions factors in Step 5.
+
+Step 8: Combine data and summarize
+In this step, Microsoft cloud customers can use the Microsoft Emissions Impact Dashboard
+outlined later to create different aggregated views of emissions relevant to specific Azure
+services, regions, datacenters, and time boundaries.
+
+The Scope 3 GHG emissions quantification and customer allocation methodology just described
+offers Microsoft and its cloud service customers an opportunity to consistently and transparently
+track their Microsoft Cloud computing global impact further along their value chains. It also
+offers opportunities to identify strategies to manage and reduce Scope 3 GHG emissions over
+time, which will benefit and empower Microsoft, its customers, and their entire value chains.
+
+
+
+
+                                      A new approach for Scope 3 emissions transparency           21
+Application
+Providing climate action insights to our customers
+Microsoft Emissions Impact Dashboard
+The Microsoft Emissions Impact Dashboard is an innovative web-based user
+interface that allows Microsoft and its cloud customers to consistently and
+transparently track and manage their Microsoft Cloud service usage across all
+impact points in their value chains. Because suppliers, customers, investors, and
+regulators increasingly demand accurate Scope 3 emissions data for decision-
+making, a transparent, consistent, and easily accessible estimate is critical for public and external
+reporting. The calculator will also be useful for Microsoft customers that need actionable Scope
+3 emissions data to support performance tracking for organizational targets and commitments.
+Because the application reflects our Microsoft Cloud supply chain and Scope 1, 2, and 3
+emissions, customers can gain a more comprehensive view of their cloud related Scope 3
+emissions. This offers opportunities for both Microsoft and our cloud customers to collaborate
+and help unlock mutually beneficial synergies.
+
+
+
+
+                                       A new approach for Scope 3 emissions transparency         22
+Some information relates to pre-released product which may be substantially modified before it’s commercially
+released. Microsoft makes no warranties, express or implied, with respect to the information provided here.
+
+
+
+
+                                  Figure 14: Microsoft Emissions Impact Dashboard
+
+
+
+
+                                             A new approach for Scope 3 emissions transparency                  23
+Figure 15: Microsoft Emissions Impact Dashboard emissions details
+
+
+
+
+                   A new approach for Scope 3 emissions transparency   24
+Figure 16: Microsoft Emissions Impact Dashboard emissions savings
+
+
+
+
+                   A new approach for Scope 3 emissions transparency   25
+                     Figure 17: Microsoft Emissions Impact Dashboard preparation report
+
+As the previous screenshots show, the Microsoft Emissions Impact Dashboard displays Azure
+and Microsoft 365 customer Scope 3 cloud emissions data as charts, absolute values, intensity
+values, percentages, and geographical location. The dashboard offers the ability to segment
+customer Scope 3 emissions data by cloud service type, region, and timeframe and offers
+information on public reporting and Microsoft global renewable energy project initiatives.
+Future updates will allow segmentation to the instance level, which can unlock further insights
+for customers.
+
+
+
+
+                                         A new approach for Scope 3 emissions transparency    26
+The Microsoft Emissions Impact Dashboard allows for a broader, more inclusive spectrum of
+data points that enable a more accurate assessment of the energy and carbon implications of
+common services used today.
+
+By using the Microsoft Emissions Impact Dashboard, cloud customers can track their carbon
+emissions, carbon intensity scores, and emissions savings over on-premises solutions.
+
+
+
+
+                                    A new approach for Scope 3 emissions transparency       27
+Case study: Bühler
+This case study was developed prior to the November 2020 public preview of the Microsoft
+Emissions Impact Dashboard. For more recent case studies, please visit
+Microsoft.com/sustainability.
+
+The Bühler Group is a leading developer of grains and food solutions,
+consumer foods, and advanced materials that contribute to the production
+of energy-efficient vehicles and buildings. Every day, around two billion
+people enjoy food produced on Bühler equipment, and one billion people
+travel in vehicles that include parts made with Bühler machinery.
+
+Bühler has ambitious targets to become carbon neutral by 2030 and drive change across its
+customers’ entire value chains—only a cross-value chain approach will generate global scale
+impact. Scope 1 and 2 emissions are easier to track because the activities that produce them are
+internal. Scope 3 emissions are more challenging because supplier data is required. Bühler is
+extremely grateful to their supply base for providing the required data, but compiling that data
+can be a time-consuming and error-prone manual process. Using the Microsoft Emissions
+Impact Dashboard makes it possible to capture the right data in the right format at the right
+time and visualize that data in an intuitive format that facilitates actionable conclusions that
+drive real change.
+
+Bühler and Microsoft have ongoing collaborations in several areas and share a vision for
+optimizing the sustainability of their respective business operations. When Microsoft began
+early development of the calculator, Bühler was a natural partner for live testing.
+
+Bühler extensively used all features and processes of the Microsoft Emissions Impact Dashboard
+to determine the Scope 3 emissions associated with Microsoft Cloud. Bühler users describe the
+calculator as easy to use, with an intuitive dashboard that allows the quick generation of
+credible and useful data—including where their carbon footprint was highest. They found the
+inputs and processes that generate the results to be easy to understand and transparent. Bühler
+Sustainability Specialist Katharina Hilker says, "Having good quality data versus relying on rough
+estimation in Scope 3 was very helpful to our reporting process." The Microsoft Emissions
+Impact Dashboard will become even more important to Bühler as they further incorporate
+Scope 3 data into decision-making.
+
+Microsoft and Bühler are continuing their calculator collaboration. With Bühler’s valuable input,
+Microsoft will continue to advance the Microsoft Emissions Impact Dashboard to make it more
+powerful and useful in helping all companies achieve their sustainability goals.
+
+Bühler’s Digital Officer Stuart Bashford says, "If all big companies in the world worked like this,
+we’d actually have a chance to make a difference."
+
+
+                                       A new approach for Scope 3 emissions transparency          28
+Appendices
+Key terms and definitions
+Microsoft Cloud: The Microsoft Cloud encompasses Azure, Microsoft Power Platform, Dynamics
+365, Microsoft 365 and Teams, LinkedIn, GitHub, and Microsoft Security, all running on shared
+datacenter fabrics. (https://www.microsoft.com/en-us/microsoft-cloud)
+
+Amortization: a process by which a product’s total emissions are accounted for over the course
+of its lifetime as opposed to at the specific time of emission. Amortization simplifies the
+emissions accounting process and more accurately reflects a product’s emissions impact.
+
+Cradle-to-gate: the period of a product’s life from resource extraction (cradle) to the factory
+gate (that is, before it is transported to the consumer). 16
+
+Cradle-to-grave: the period of a product’s life from resource extraction (cradle) to its
+disposition (after which it is recycled or disposed of).
+
+GHG Protocol: an organization that establishes comprehensive global standardized frameworks
+to measure and manage greenhouse gas (GHG) emissions from private and public sector
+operations, value chains, and mitigation actions.
+
+Hardware disposition: recycling and reclaiming for reuse.
+
+Life cycle evaluation: a methodology for determining the environmental impacts of a
+commercial product, process, or service throughout its life. Life cycle evaluations span from raw
+material extraction and processing to final disposal and cessation of activity. The span is often
+referred to as cradle-to-grave.
+
+Material circularity: the degree to which the materials used in a product can be reused,
+repaired, refurbished, or recycled. Complete circularity means that whatever waste a product or
+process produces will become inputs for another product or process.
+
+Scope 1 emissions: direct emissions that your activities create.
+
+Scope 2 emissions: indirect emissions that result from the production of the electricity or heat
+you use.
+
+
+
+
+16
+  “Product Life Cycle Accounting and Reporting Standard,” Greenhouse Gas Protocol, September 2011,
+https://ghgprotocol.org/sites/default/files/standards/Product-Life-Cycle-Accounting-Reporting-
+Standard_041613.pdf
+
+
+                                       A new approach for Scope 3 emissions transparency          29
+Scope 3 emissions: indirect emissions from all other activities in which you are engaged. For a
+business, these Scope 3 emissions can be extensive and must be accounted for across its supply
+chain, materials in its buildings, employee business travel, and the life cycle of its products
+(including the electricity customers consume when using the products). A company’s Scope 3
+emissions are often far larger than its Scope 1 and 2 emissions combined.
+
+Supply chain: the full sequence of individuals or companies involved in the creation and sale of
+a product or service.
+
+Usage: using electricity to run servers, networking equipment, hard drives, and datacenter
+infrastructure (such as lighting, cooling, and power conditioning). Where relevant, usage also
+includes energy from internet data flows.
+
+Value chain: the full sequence of individuals or companies involved in adding value to a
+product or service.
+
+
+Common materials included in IT equipment
+These IT components are comprised of thousands of materials, in varying quantities—emissions
+calculation focuses on the 22 most common. These materials typically make up 90-95 percent of
+the IT equipment composition:
+
+
+
+
+                              Figure 18: Common materials in IT equipment
+
+
+                                       A new approach for Scope 3 emissions transparency         30
+_____________________________________
+
+DISCLAIMERS
+
+(c) 2021 Microsoft Corporation. All rights reserved.
+
+This document is for informational purposes only and it is provided “as-is.” MICROSOFT MAKES NO WARRANTIES, EXPRESS OR
+IMPLIED, WITH RESPECT TO THE INFORMATION IN THIS DOCUMENT.
+
+Information and views expressed in this document, including URL and other Internet Web site references, may change without
+notice. You bear the risk of using it. Some examples are for illustration only and are fictitious. No real association is intended or
+inferred. In addition, some information relates to pre-released product which may be substantially modified before it is commercially
+released.
+
+This document does not provide you with any legal rights to any intellectual property in any Microsoft product. You may copy and
+use this document solely for your internal, reference purposes.
+
+
+
+
+                                                       A new approach for Scope 3 emissions transparency                        31
+

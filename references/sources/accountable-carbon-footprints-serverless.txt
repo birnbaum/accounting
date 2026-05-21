@@ -1,0 +1,1554 @@
+ Accountable Carbon Footprints and Energy Profiling
+              For Serverless Functions
+                            Prateek Sharma                                                                 Alexander Fuerst
+                   Indiana University Bloomington                                                    Indiana University Bloomington
+                          prateeks@iu.edu                                                                    alfuerst@iu.edu
+ABSTRACT                                                                                   KEYWORDS
+Cloud computing is a significant and growing cause of car-                                 Cloud computing, Functions as a Service, Energy measure-
+bon emissions. Understanding the energy consumption and                                    ment, Carbon footprint, Sustainable computing
+carbon footprints of cloud applications is a fundamental
+prerequisite to raising awareness, designing sustainability                                ACM Reference Format:
+metrics, and creating targeted system optimizations. In this                               Prateek Sharma and Alexander Fuerst. 2024. Accountable Carbon
+paper, we address the challenges of providing accurate and                                 Footprints and Energy Profiling For Serverless Functions. In ACM
+                                                                                           Symposium on Cloud Computing (SoCC ’24), November 20–22, 2024,
+full-system (not just CPU) carbon footprints for serverless
+                                                                                           Redmond, WA, USA. ACM, New York, NY, USA, 20 pages. https:
+(FaaS) functions. To the best of our knowledge, this is the                                //doi.org/10.1145/3698038.3698531
+first work which develops an energy and carbon metrology
+framework for FaaS.
+   Carbon footprints require a new approach to energy profil-                              1   INTRODUCTION
+ing. We use FaaS workload properties such as locality to de-
+                                                                                           Energy and carbon are becoming key resources and opti-
+velop a simple and practical online statistical disaggregation
+                                                                                           mization targets in large scale distributed computing. Cloud
+approach. Our fine-grained per-invocation carbon footprints
+                                                                                           platforms consume a significant (> 1%) amount of global
+also include shared hardware and software emissions, and
+                                                                                           energy [52, 100], and reducing it is a vital step in IT decar-
+use insights from Shapley values to fairly account for both
+                                                                                           bonization efforts [13, 16, 18, 98]. With a growing awareness
+operational and embodied emissions. Owing to the growing
+                                                                                           and need for environmental sustainability, the energy and
+importance of carbon measurement, we develop a new rig-
+                                                                                           carbon footprint of cloud applications is increasingly serv-
+orous marginal energy based validation methodology which
+                                                                                           ing as the primary accounting and optimization metric [101],
+results in accountable, complete, and fair footprints. Over a
+                                                                                           complementing the traditional metrics such as monetary
+wide range of FaaS workloads and hardware platforms, our
+                                                                                           cost and resource utilization (e.g., CPU). This requires en-
+energy footprints have an accuracy of > 99%.
+                                                                                           ergy and carbon accounting throughout the cloud computing
+                                                                                           stack—hardware, resource allocation software, applications,
+CCS CONCEPTS                                                                               etc. However, cloud abstractions and applications are con-
+• Software and its engineering → Operating systems; •                                      tinuously evolving—making carbon observability and opti-
+Hardware → Enterprise level and data centers power                                         mization a moving target.
+issues; • Computer systems organization → Cloud com-                                          Serverless computing, or Functions as a Service (FaaS),
+puting.                                                                                    has emerged as a key cloud abstraction which is enabling
+                                                                                           rapid application development and deployment [14, 25, 92].
+                                                                                           Cloud functions are small, self-contained programs, whose
+                                                                                           entire execution is managed by the cloud provider. They have
+Permission to make digital or hard copies of all or part of this work for                  low cost, auto-scaling, and a “serverless” model where users
+personal or classroom use is granted without fee provided that copies
+                                                                                           don’t have to worry about explicit resource management.
+are not made or distributed for profit or commercial advantage and that
+copies bear this notice and the full citation on the first page. Copyrights
+                                                                                           Serverless computing is a major and growing cloud work-
+for components of this work owned by others than the author(s) must                        load [96], and serves as the resource abstraction for a wide
+be honored. Abstracting with credit is permitted. To copy otherwise, or                    range of event-driven applications (such as web and API ser-
+republish, to post on servers or to redistribute to lists, requires prior specific         vices, IoT, and ML inference), workflows [27, 77], and even
+permission and/or a fee. Request permissions from permissions@acm.org.                     throughput-intensive parallel workloads [23, 46, 47, 113].
+SoCC ’24, November 20–22, 2024, Redmond, WA, USA
+                                                                                           FaaS is also an increasingly useful abstraction for harnessing
+© 2024 Copyright held by the owner/author(s). Publication rights licensed
+to ACM.
+                                                                                           computational accelerators [40, 81, 115] and edge computing
+ACM ISBN 979-8-4007-1286-9/24/11. . . $15.00                                               resources [107]. While the performance of serverless func-
+https://doi.org/10.1145/3698038.3698531                                                    tions has received significant attention, in this paper we take
+
+
+
+
+                                                                                     522
+SoCC ’24, November 20–22, 2024, Redmond, WA, USA                                                           Prateek Sharma and Alexander Fuerst
+
+
+the first step towards quantifying their energy and carbon               and theoretically grounded carbon footprint metric, and also
+utilization and footprints.                                              leads to many open questions about fairness in embodied
+    Metrics for the carbon footprint of applications such as the         carbon accounting for the broader research community.
+Software Carbon Intensity [48] have recently been adopted                   Our third major observation is that the “ground truth” for
+as international standards [49]. These footprints consist of             application level power is crucial for validating energy and
+operational and embodied emissions, which are in turn com-               carbon footprints. However, prior work on power profiling
+puted using the application’s energy consumption and hard-               has typically relied on proxy metrics such as the total hard-
+ware utilization. In multiplexed resource sharing environ-               ware power consumption and measuring application power
+ments, application-level energy consumption is estimated                 in isolation (without multi-tenancy). To address this funda-
+using power profilers [67] such as Scaphandre [64] and Pow-              mental gap in energy metrology, we develop a new approach
+erAPI [41]. While application-level power measurement has                for empirical validation which uses the marginal energy con-
+a long history, these tools have fundamental shortcomings                tribution of different functions. The marginal contribution is
+when used to estimate carbon footprints of applications in               computed by replaying the workload trace, and measuring
+general and serverless functions in particular. They rely on             the server-level power after removing certain invocations.
+CPU power measurements (e.g., RAPL) and do not consider                  This provides the ground truth for the function’s in-situ
+system-wide energy; do not account for shared resources;                 power energy consumption, and we will release all our mar-
+do not scale well to large number of concurrent functions                ginal energy ground truth data for facilitating development
+and CPU cores; and are not sufficiently validated against                and testing of accurate energy profilers.
+an external ground truth—rendering them inaccurate and                      Finally, our fourth contribution is the integration of energy
+fragile. Given the rising importance and ubiquity of carbon              into the FaaS control plane, for which we use Iluvatar [50].
+footprints for evaluating and optimizing cloud software sus-             Our system is written in about 6,000 lines of Rust and Python
+tainability, we believe that a new approach to address the               and is open sourced along with more than 100 workload
+above shortcomings is required.                                          traces, all profiling features, power measurements, and ground
+    In this paper, we develop the techniques for in-situ ac-             truth data1 . To the best of our knowledge, this is the first
+countable carbon (and energy) footprints of serverless func-             work to provide carbon and energy accounting for serverless
+tions across four major contributions. First, we leverage the            functions, and we make the following contributions:
+workload locality prevalent in FaaS to develop a statistical             (1) Our energy profiling combines direct and model-based
+disaggregation technique which provides accurate estimates               disaggregation to provide accurate and complete energy foot-
+of fine-grained full-system energy consumption of functions              prints for functions. We provide a simple and practical tech-
+running on a server. Our energy profiler seeks to provide a              nique for online and full-system energy estimates.
+complete footprint, including the energy consumed by shared              (2) We provide fair attribution of the operational and embod-
+hardware and software resources such as the FaaS control                 ied carbon emissions for functions, by leveraging Shapley
+plane (such as OpenWhisk [7]). We develop a simple and                   values.
+practical energy profiler capable of using a mix of stock hard-          (3) We have extensively evaluated the internal and external
+ware and CPU power instrumentation capabilities (such as                 validity of the energy footprints on multiple FaaS workloads
+plug-level power meters and RAPL [118]), and works across                on three different hardware platforms. Our energy footprints
+a range of edge and server devices. By adapting a Kalman                 are accurate to within 99% of the marginal energy ground
+filter inspired approach, we are able to provide online energy           truth.
+estimates without offline pre-training, which allows it to be
+used in diverse heterogeneous cloud environments.                        2 BACKGROUND
+    Our second insight is that for serverless functions, and             2.1 Functions as a Service (FaaS)
+other distributed applications, the energy and carbon foot-
+print is diffused across many local and remote software and              FaaS allows users to register small snippets of function code
+hardware components. For instance, the FaaS control plane                that get executed in response to some trigger (such as an
+which performs all the containerization and orchestration of             HTTP request, message queue event, etc.) [8–10, 92]. Func-
+function invocations can itself be a significant energy con-             tions are executed inside virtual execution environments
+sumer. We thus develop fair energy and carbon attribution                such as lightweight hardware virtual machines [15] or OS
+methods for estimating the fair-share of a function’s contri-            containers. Cloud functions are “pay for what you use”, and
+bution to the energy consumption of shared software and                  their cost is a combination of their maximum memory alloca-
+hardware. We provide the operational and embodied carbon                 tion and their execution duration [8]. The goal of our work
+footprint of functions using the conceptual framework of                 is to additionally enable energy and carbon based pricing.
+Shapley values [39, 110]. This approach provides a practical             1 https://github.com/COS-IN/faasmeter-socc-artifact
+
+
+
+
+                                                                   523
+Accountable Carbon Footprints and Energy Profiling For Serverless Functions                                   SoCC ’24, November 20–22, 2024, Redmond, WA, USA
+
+
+FaaS control planes (such as OpenWhisk [7]) handle all
+                                                                                                Server Sys          Desk Sys
+aspects of function execution. They manage the cluster of                                       Server RAPL         Desk RAPL
+servers to run functions on, and implement function sched-                         200                                                               Function Invocations
+                                                                                                                                    5                PowerAPI Estimate
+uling, load-balancing, resource monitoring, function status
+                                                                                   150                                                                                        40
+                                                                                                                                    4
+tracking, storing function results, logging, etc. Similar to
+
+
+
+
+                                                                                                                                                                                  Power (Watts)
+                                                                                                                                                                              30
+
+
+
+
+                                                                               Watts
+operating systems, they are an important shared resource                                                                            3
+                                                                                   100
+
+
+
+
+                                                                                                                                Count
+                                                                                                                                    2                                         20
+for functions. Current research and production FaaS con-
+                                                                                       50                                                                                     10
+trol planes are energy-oblivious, and do not incorporate any                                                                        1
+
+energy management functionality.                                                                                                    0                                         0
+                                                                                        0
+                                                                                            0       20       40     60
+
+
+
+
+                                                                                                                                        350
+
+
+
+                                                                                                                                              360
+
+
+
+                                                                                                                                                    370
+
+
+
+                                                                                                                                                           380
+
+
+
+                                                                                                                                                                    390
+
+
+
+                                                                                                                                                                            400
+Workloads. Functions are a common abstraction for access-                                                Time (s)                                    Time (s)
+ing cloud resources, and are being used for diverse applica-
+                                                                               (a) System and CPU power is(b) Predicted function footprint
+tions such as web-services, ML inference and training, data                    noisy and coarse-grained.  with PowerAPI [84] does not cor-
+analysis, parallel and scientific computing, etc [14, 25, 27, 77,                                         relate with use (i.e., function invo-
+92]. This results in high workload diversity in all dimensions:                                           cations).
+the CPU, memory requirements, and inter-arrival-times in
+                                                                              Figure 1: Function power signatures cannot be captured
+public clouds such as Azure are heavy tailed [96]. For exam-
+                                                                              reliably by existing power profiling methods.
+ple, the inter-arrival times of functions in Azure can range
+from 0.01 s–1 day, and their execution times can range from
+0.1 s to 100 s. This also translates to diverse function energy
+footprints. Functions are also popular in edge computing [2],
+resulting in heterogeneous execution environments.                            continues to be dominated by CPU-power, but even the ac-
+                                                                              curacy and fidelity of CPU power monitoring remains low,
+2.2     Energy in Cloud Computing                                             with large jitter and temporal errors [17, 67, 71, 86].
+Energy as a first-class resource for operating systems is
+a long-standing problem and vision [21, 43, 44, 116, 117].
+Power virtualization entails accurate process or application                  2.3           Carbon Footprints
+level energy measurement [99], and fair attribution of shared                 Owing to their significant and growing contribution, the
+energy consumers such as the OS [54, 55, 58].                                 carbon emissions of cloud platforms and energy intensive
+Measurement and observability into energy usage of appli-                     applications such as AI has been in the spotlight in recent
+cations is the first step towards power virtualization, and is in-            research [100, 112] and elsewhere [31]. The carbon footprint
+creasingly important for environmentally sustainable cloud                    of an application is the total emissions associated with its
+systems design and implementation. Major public clouds                        execution, and these footprints can help quantify, highlight,
+are now offering carbon footprint tools for certain cloud                     and optimize the sustainability of computing applications
+applications [4, 5, 11]. Given this trend, fine-grained energy                under different execution scenarios.
+footprints of serverless applications will be essential for de-                  The complete carbon footprint of an application, such as
+veloping energy-aware cloud applications.                                     the recent ISO standard SCI (Software Carbon Intensity)
+   Resource multiplexing is the main challenge for accurate                   comprises of two parts, the operational (𝑂) and the embodied
+measurement of the power/energy footprint of applications.                    emissions (𝑀), and is defined as: SCI = 𝑂+𝑀
+                                                                                                                        𝑅 , where 𝑅 is the
+Energy is a shared, global resource, and can often only be                    functional unit of work (such as a function invocation).
+measured at a coarse granularity both in space and time.                         The operational emissions is the net energy consump-
+Hardware capabilities such as RAPL [71, 118], can provide                     tion multiplied by the carbon intensity of the energy source
+CPU energy (and in some cases, DRAM [36]). “Software                          (typically the grid) expressed in grams CO2 per kWh. The
+power meters” such as powertop and others [29, 37, 41, 42,                    grid carbon intensity depends on the mix of energy sources
+72, 84, 94, 106, 120], use statistical models to attribute total              and has significant spatio-temporal dynamics [80]. The sec-
+CPU power to processes based on resource use (such as CPU                     ond part of the footprint, embodied emissions, reflects the
+performance counters). Modern hardware still only has rudi-                   environmental cost of the computing hardware itself, and
+mentary support for power measurement. Component-level                        comprises the emissions due to manufacturing, transporta-
+power (such as for network cards) is usually unavailable.                     tion, and in some cases recycling and disposal. Recent work
+Full-system power can be obtained using server BMCs (base-                    has highlighted the importance and significance of embod-
+board management controllers), battery controllers in mobile                  ied emissions, which may be as large as 20% of the total
+devices, external plug-level power meters, or special server                  lifetime emissions for servers and more than 80% for mobile
+hardware [53, 75]. Power measurement and modeling thus                        phones [59].
+
+
+
+
+                                                                        524
+SoCC ’24, November 20–22, 2024, Redmond, WA, USA                                                                                                                                                              Prateek Sharma and Alexander Fuerst
+
+                                                          Individual                                     Control Plane          Idle         Threads-1                             Threads-4          Threads-8
+      Energy per invocation (J)
+
+
+
+
+                                                                       Energy per invocation (J)
+
+
+
+
+                                                                                                                                              Energy per invocation (J)
+
+
+
+
+                                                                                                                                                                                                         Energy per invocation (J)
+                                                                                                                                                                    6
+                            80                                                               1000                                                                                                                              150
+                            60                                                                     750                                                              4
+   1.0                                                                                                                                                                                                                         100
+                            40                                                                     500
+                                                                                                                                                                    2                                                                50
+   0.8 20                                                                                          250
+
+                                  0                                                                  0                                                              0                                                                 0
+                                       dd   AES   gzip   json                                            image ml_train video   cnn                                        dd   AES   gzip     json                                       image ml_train video   cnn
+   0.6
+                                      (a) Server-Small                                                    (b) Server-Large                                                (c) Desktop-Small                                               (d) Desktop-Large
+   0.4
+Figure 2: Function energy per invocation, measured in isolation. Server load and concurrency levels significantly
+impact
+   0.2 the footprints, making this an unreliable method for energy measurement.
+
+3 0.0CHALLENGES
+     0.0 0.2 0.4 0.6
+                     AND
+                       0.8
+                           GOALS
+                            1.0
+                                                                                                                                               illustrated in Figure 1a, which shows system and CPU power
+The high-level goal is to infuse energy and carbon accounting                                                                                  when a single compute-intensive ML training function is run
+and control into serverless computing. We accomplish this                                                                                      in a loop. The “Server” power is measured through the IPMI
+by developing a new energy profiling methodology which                                                                                         and inbuilt chassis-level power sensor, and the “Desk(top)”
+provides accurate, complete, and fairly attributed carbon foot-                                                                                uses a plug-level power meter for full-system power. There
+prints for functions. In the rest of this section, we discuss                                                                                  is a maximum of one active invocation at a given time, and
+the key drawbacks and challenges with existing techniques                                                                                      each “dip” in power corresponds to the gap between invoca-
+to achieve these three requirements.                                                                                                           tions. The system power on the server has poor resolution
+                                                                                                                                               and has large jumps. There are also large synchronization
+3.1                               Power Profiling Methods                                                                                      differences between the system and RAPL power on both
+                                                                                                                                               platforms. On the desktop with a more accurate power-meter,
+The power consumption of an application is a key input for
+                                                                                                                                               the resolution is higher and the function signatures are more
+computing its carbon footprint. However, existing power
+                                                                                                                                               discernible, but the system power’s time-diffusion problem
+profiling methods are both fundamentally and practically ill-
+                                                                                                                                               persists even in this best-case and unrealistic scenario of se-
+suited to provide fine-grained function-level measurement.
+                                                                                                                                               rial invocations. These issues are amplified in FaaS servers
+We can divide these methods into two broad classes:
+                                                                                                                                               running large numbers of small concurrent functions.
+3.1.1 Direct Attribution. In this approach, the hardware
+power sensors are read periodically, and the power consumed                                                                                    3.1.2 Model-based Power Estimation. Power models of the
+in the sampling interval is attributed to the software com-                                                                                    application and hardware [29, 94] are commonly used in
+ponents (such as processes and functions) running during                                                                                       energy measurement. For example, power can be modeled
+that interval. It is used by popular tools like Scaphandre [64],                                                                               as a function of CPU utilization, which can be estimated
+which rely on high-frequency CPU power measurements                                                                                            with hardware performance counters such as instructions re-
+using RAPL. The fundamental challenge is attributing a sin-                                                                                    tired, cache misses, etc. For longer-lived entities like VMs, so-
+gle power reading to a large number of concurrently exe-                                                                                       phisticated ML models can be customized to the application
+cuting components (such as multiple processes). For this                                                                                       behavior [56]. Compared to power, performance measure-
+power disaggregation, the total power is often evenly dis-                                                                                     ment can be done with high fidelity, using the wide variety
+tributed [20, 83]. High sampling rates and accurate hardware                                                                                   of fine-grained metrics are provided by the hardware and
+power sensors are vital: smaller sampling intervals (few mil-                                                                                  virtualized by the OS. Once a power model for the server
+liseconds) contain fewer concurrently running components,                                                                                      (and workload) is built, it can be used to infer the power
+which makes the disaggregation feasible. Thus the direct                                                                                       consumption of individual software components based on
+attribution approach uses RAPL sensors which can be read                                                                                       their resource consumption.
+with high-frequency (100s of Hz). The overhead of power                                                                                           Existing profilers are not cognizant of function boundaries
+profiling is also a concern with direct attribution: our evalu-                                                                                and execution lifecycle. For example, FaaS control planes
+ation shows that the popular Scaphandre tool can increase                                                                                      employ keep-alive techniques [51] to reduce the cold-start
+CPU and energy consumption by more than 5%.                                                                                                    overheads, and keep the container resident in memory be-
+   Compared to CPU power sensors, system-level energy can                                                                                      tween invocations. The container only consumes CPU re-
+only be reliably obtained at low frequency, resolution, ac-                                                                                    sources when the function is invoked, which results in a
+curacy, and has temporal skew. FaaS workloads compounds                                                                                        highly non-stationary resource consumption behavior. Exist-
+the fundamental challenges and these measurement errors.                                                                                       ing power models work well for stationary workloads, but
+Functions can be very short lived (<1 s), and FaaS servers                                                                                     highly “bursty” and concurrent FaaS workloads results in
+run hundreds of functions concurrently. These issues are                                                                                       inferior fidelity. To illustrate, the output of state of the art
+
+
+
+
+                                                                                                                                       525
+Accountable Carbon Footprints and Energy Profiling For Serverless Functions                   SoCC ’24, November 20–22, 2024, Redmond, WA, USA
+
+
+process-based accounting tool, PowerAPI [41] is shown in                      functions imposes significant work on the control plane,
+Figure 1b. The server is running multiple concurrent invoca-                  which also increases their energy footprint [97]. The time
+tions of a single function, representing the easiest disaggre-                spent by OpenWhisk for a single (warm) invocation can be
+gation case. The PowerAPI energy estimate of the function’s                   up to 600 milliseconds per invocation [50]. This is separate
+containers and the number of “active” function invocations                    from the actual function execution time (i.e., the “function
+are shown in the figure. When the function is not running,                    context”), and is a significant fraction of the total time (and
+we should expect its container’s power to be zero. How-                       hence resource and energy) consumption of the function.
+ever, we can see that the predicted energy is not correlated                     The control plane interposes on many aspects of function
+with the number of function invocations, and has temporal                     execution asynchronously (such as dealing with the OS vir-
+skew—making accurate energy footprints difficult to obtain.                   tualization layer, caching container state, etc.). This results
+                                                                              in a fuzzy boundary between the function execution and the
+3.2     Validation                                                            control plane, and exacerbates the challenges in system-level
+                                                                              energy measurement described previously. The boundary is
+Empirical validation of power profiling poses many funda-
+                                                                              also fuzzy in time: since the function’s initialized sandboxed
+mental and practical challenges. We find that prior work on
+                                                                              is usually kept warm in memory [51], this results in a func-
+power profiling does not adequately compare against the
+                                                                              tion’s memory-energy footprint outlasting the function exe-
+“ground truth”, resulting in uncertain validity of the measure-
+                                                                              cution. The control plane’s eviction and container life-cycle
+ments. The predominant metric for evaluating the accuracy
+                                                                              management operations also consume CPU resources and
+of power profilers is difference between the measured power
+                                                                              energy. The potentially large footprint of shared resources
+and the total predicted power of all applications (used in [67]).
+                                                                              such as the control plane raises new challenges in fair attri-
+This metric, which we shall call the total power error, does not
+                                                                              bution: How should we measure and divide the control plane
+capture the accuracy of the power footprints of the individual
+                                                                              energy among the functions?
+applications, and is decoupled from any ground truth.
+                                                                                 Due to these major challenges, existing energy profilers
+   Individual power footprints are sometimes validated using
+                                                                              are thus unable to provide the necessary input for carbon
+isolated measurements. The different applications are run
+                                                                              footprinting. This is illustrated in illustrated in Figure 3
+individually, and the total system power can be attributed to
+                                                                              which shows the operational and embodied components
+the application as the “ground truth” power consumption. A
+                                                                              of our carbon footprints on desktop and server hardware.
+major drawback of this approach is that is not “online”, and
+                                                                              For this figure, we assume hardware lifetimes of 5 years and
+does not capture the function’s energy footprint under real-
+                                                                              the 2024 average U.S emissions intensity of 386 g CO2 per
+istic loads. To illustrate this, the energy footprints (energy
+                                                                              kWh. The server and desktop embodied emissions are 471
+consumed by a function per invocation) for such isolated
+                                                                              kg and 175 kg respectively and obtained from the manufac-
+measurements are shown in Figure 2. We show the average
+                                                                              turer [33, 34]. The function’s “shared” individual footprint
+energy per invocation over a 10 minute period where the
+                                                                              comprises of the control plane and the server’s idle power
+same function is invoked in a closed-loop. The hardware
+                                                                              (multiplied by the grid carbon intensity), which can be sig-
+power consumption is highly dependent on the system load
+                                                                              nificant for larger servers.
+and the power states, and thus increasing the system load
+                                                                                 The popular Scaphandre profiler only captures the CPU
+by running more concurrent functions affects the footprints.
+                                                                              power, and provides incomplete and inaccurate footprints
+In the figure, we run 1, 4, and 8 concurrent invocations of
+                                                                              (and fails for the disk-intensive dd function). Experimental
+each function, and we can see that the footprints reduce with
+                                                                              details and further discussion for this figure are presented
+load, as the shared and idle power is amortized across indi-
+                                                                              later in Section 7.2.
+vidual invocations. Measuring energy in isolation is thus not
+suitable for validating function-level profiling. We therefore                4   ENERGY PROFILING DESIGN
+need a new validation methodology with additional metrics
+                                                                              We develop a simple and practical approach to energy mea-
+and ground truth.
+                                                                              surement based on the requirements and challenges identi-
+                                                                              fied in the previous section. In this section we focus on the
+3.3     Shared Components                                                     energy footprint, but our footprints are multi-dimensional
+Measuring the energy of function invocations alone is in-                     and provide the necessary input to computing the carbon
+sufficient and does not provide complete accounting. The                      footprints, which is described in Section 5. The high level
+FaaS control plane also performs many actions on behalf of                    flow is shown in Figure 4, and this section focuses on the
+the functions and is a major shared resource with its own                     energy profiling component. Our insight is that a “residence
+energy footprint, which must be carefully attributed to the                   time” instead of a traditional utilization based modeling ap-
+individual functions. The sandboxing and management of                        proach can provide complete and accurate footprints.
+
+
+
+
+                                                                        526
+SoCC ’24, November 20–22, 2024, Redmond, WA, USA                                                                           Prateek Sharma and Alexander Fuerst
+
+
+               5        Oper. Indiv     Embodied   Scaphandre
+                                                                                   Full Footprint      = Individual +          Shared                         Control Plane
+                        Oper. Shared                                                                                                            Shapley
+                                                                                                                                              Fair Division
+               4                                                                                                                                              Idle/Hardware
+                                                                                           Kalman
+                                                                                           Filtering        CPU power          Statistical
+               3
+           g CO2
+
+
+
+                                                                               Fn Carbon                    models (e.g.    disaggregation
+                                                                                                            PowerAPI)      (Coarse-grained)                    Embodied
+               2                                                                       Time
+
+               1
+
+
+               0
+                                                                         Figure 4: Carbon footprints are a combination of the
+                   dd             img      aes      cnn
+                                                                         function’s individual and shared energy and embodied
+Figure 3: Our carbon footprints consist of the func-                     emissions.
+tion’s individual and shared operational emissions, and
+hardware embodied emissions. Existing power profil-                      4.1     Statistical Power Disaggregation
+ers like Scaphandre provide incomplete footprints. The
+                                                                         We use the repeated invocation of functions for statistical
+hatched bars on the right for each function are foot-
+                                                                         power disaggregation among functions and shared resources
+prints on a much larger server.
+                                                                         such as the FaaS control plane. The key idea is time-based
+                                                                         attribution: the total system power at various points in time
+   It is a server-level system which integrates with mon-                can be attributed among all the functions that are executing
+itoring infrastructure and the FaaS control plane such as                in a time period of 𝛿. We then collect 𝑁 such sequential sam-
+OpenWhisk or Iluvatar [50] (see Figure 4). Robustness to                 ples (each over a small 𝛿 interval) for the various power and
+measurement noise and workload dynamics is our key de-                   workload metrics. 𝑀 is the total number of unique functions
+sign requirement and influences our power modeling. We use               running on the server. The power measurement (𝑊 ) can
+three broad categories of input: hardware power measure-                 be system-wide power, CPU power, or the “rest” of system
+ments; OS and hardware level metrics (such as process-level              power which is total system power minus the CPU power.
+CPU utilization and CPU performance counters); and a trace                  The key parameter for disaggregation is the “function con-
+of function executions (start and end time of each invoca-               tribution to power”, which is the matrix 𝐶 with 𝑀 columns
+tion). The availability and resolution of input metrics can be           and 𝑁 rows. We use function running times as proxy for the
+highly non-uniform (i.e., some hardware sensors may not                  contribution: 𝐶 [ 𝑗] is the total amount of time the function 𝑗
+be available on all platforms). We are thus flexible about               was running during the interval. Another useful parameter
+input data availability, and can work with a small subset of             is the number of invocations or activations of each func-
+coarse-grained metrics if necessary.                                     tion in the interval, stored in matrix 𝐴. The total number of
+   Our power modeling is deliberately simple to be general-              functions the server runs, 𝑀, is large, and the number of ac-
+izable and robust, and we prefer explainable linear models               tive functions with non-zero entries in 𝐴 and 𝐶 is small. We
+to more complex “black box” models such as deep neural                   use simple linear regression for estimating the per-function
+networks. We combine both the direct attribution and model-              power consumption 𝑋 :
+based techniques, and leverage temporal locality of repeated                                              𝑋 Full = min 𝐶𝑋 − 𝑊                                                 (1)
+function invocations for statistical disaggregation. We pro-                                                               𝑋
+vide complete energy accounting of system-wide power by
+                                                                         This is the simplest case which does not consider control
+using Shapley value principles of fair division. This provides
+                                                                         plane or idle power, and the power values (𝑋 ) obtained are
+a wide spectrum of per-function energy footprints with dif-
+                                                                         referred to as the full power. The per-invocation energy, 𝐽
+ferent shared-energy contributions, which are suitable for
+                                                                         in the interval is obtained by multiplying the power with
+different tasks pertaining to energy accounting and pricing,
+                                                                         the average function latency 𝜏: 𝐽full = 𝑋 full𝜏. In some cases,
+capping and control, etc. Figure 2 illustrates this energy spec-
+                                                                         subtracting the idle server power provides more meaningful
+trum: the function’s total energy profile comprises of its
+                                                                         footprints: 𝑋 No Idle = min𝑋 𝐶𝑋 − (𝑊 − 𝑊idle ).
+“individual” contribution due to function execution, as well
+                                                                            The choice of the measurement interval 𝛿 has important
+as its share of the control plane energy and the idle energy
+                                                                         tradeoffs. At small intervals (𝛿 ∼ 10ms), only a few functions
+of the server.
+                                                                         are active, which makes 𝐶 sparse. In the extreme case, only
+   Our power profiling has two major components. The input
+                                                                         one function is active, and all system power can be attrib-
+power and workload measurements are disaggregated using
+                                                                         uted to it without any further disaggregation. However, in
+the statistical model (Section 4.1), which we augment with
+                                                                         practice, the noise in system-level power measurement in-
+a CPU power model (Section 4.3) when RAPL is available
+                                                                         creases with the sampling frequency and increases the error.
+to provide a finer-grained power profile. The footprints are
+                                                                         Conversely, larger 𝛿 values yield lower variance in power
+continuously updated based on a FaaS-tailored Kalman filter
+                                                                         measurements, but denser contributions matrices, which
+approach (Section 4.2).
+
+
+
+
+                                                                   527
+Accountable Carbon Footprints and Energy Profiling For Serverless Functions                      SoCC ’24, November 20–22, 2024, Redmond, WA, USA
+
+
+increases errors in the linear regression solution. We use                      (also referred to as the “innovation” in standard Kalman
+𝛿 = 1second by default.                                                         filtering). 𝐾 is the Kalman gain, which is the main compo-
+   For heterogeneous hardware such as GPUs, the hardware                        nent influencing how the innovation is distributed among
+energy consumption is separately disaggregated only among                       functions and how footprints evolve. Our intuition is that up-
+functions using the accelerator. Because these accelerators                     dates to function footprints should be based on two factors:
+provide a lower degree of statistical multiplexing, the disag-                  i) the number of invocations in the interval (𝐴), and ii) their
+gregation is simpler.                                                           historical latency variance (𝜎 (𝑇 )). For instance, functions
+Shared Principals. As described in the previous section, the                    not executed in the interval should see no changes in their
+FaaS control planes can also be a significant energy consumer,                  footprint. The latency variance is a factor because our foot-
+along with other shared principals like the OS. We augment                      prints are proportional to function latency (𝐶), and functions
+the above statistical disaggregation to also include these                      with higher latency variance should receive a smaller update.
+shared principals as additional columns in the contributions                    The latency variance is cumulative and also updated in each
+matrix 𝐶.                                                                       step (not shown in the algorithm), and 𝛾 is the third tunable
+   Shared principals like the control plane and OS are al-                      parameter.
+ways running, so unlike functions, we cannot simply use                             The Kalman gain consists of the overall change in the
+running-time as their “contribution”. Instead, we use their                     state of the system and the measurement noise 𝑟 , which is the
+CPU utilization as an indicator of energy use. For the control                  error in hardware power measurement due to high-frequency
+plane, we measure the CPU% of all its processes. Multiply-                      sampling. Note that hardware power measurement is coarse-
+ing this CPU% by the time-interval 𝛿 gives the fraction of                      grained [71], so a high sampling frequency leads to stale
+time the control plane was running. However, this underesti-                    measurements, which contribute to the measurement noise.
+mates the control plane overhead, since function executions                     Thus based on the sampling tradeoffs, the measurement noise
+don’t necessarily consume 100% CPU. We thus normalize                           is set proportional to 1/𝛿.
+the control plane’s contribution by the system-wide CPU:                            The process noise (𝑃) is updated after the Kalman step, and
+                         control plane CPU%                                     reflects how much the workload (i.e., the state of the system)
+                 𝑐𝑐𝑝 =                      ∗𝛿                      (2)         has changed. We use the relative invocation frequencies (𝐴𝑖 )
+                         system-wide CPU%
+                                                                                of the function in the new time period and compare it to
+This yields 𝑥 cp , the control plane power, which is then di-                   the historic frequencies to determine workload similarity
+vided among all functions using the Shapley value fair share                    (used to set 𝐾 in the algorithm in Figure 5). The intuition is
+principles described later in this section. We can similarly                    that if the workload changes significantly, then the historical
+account for other shared components like the OS, by using                       power estimates have less weight.
+the kernel’s CPU-time and applying similar normalization.                           For new functions without any estimates, we set 𝛼 = 0, 𝛽 =
+4.2     Kalman-Filter Guided Online Profiling                                   1, and 𝐾 = 0. The initial estimates 𝑋 0 are obtained using
+We continuously update the function power estimates 𝑋                           statistical disaggregation on a large initial time-step (𝑁 Init ∼
+based on new measurements. For simple online footprints,                        2minutes). Optionally, estimates from previous profiling runs
+various techniques such as online least squares regression                      or other servers in the cluster can also be used as the initial
+and exponentially weighted moving averages can be used.                         value. The subsequent Kalman steps are performed over the
+Our insight is that the Kalman filter framework [82, 109]                       time-step 𝑁𝐾 in the range of 1−2 minutes. The same sparsity
+provides intuitive online estimates which are robust to mea-                    tradeoffs apply: smaller time-steps result in more sparsity
+surement noise and FaaS workload dynamics. For example,                         and frequent updates, but are impacted more by latency
+we can capture the change in function input, running time,                      variance and measurement noise.
+and system load—all of which can affect the per-invocation                          Using the above Kalman-filter approach which incorpo-
+footprint.                                                                      rates noise and workload dynamics significantly improves
+   The high-level intuition is to combine the previous es-                      the accuracy and stability of the footprints, which is illus-
+timates 𝑋𝑖 −1 with the new measurements 𝐶𝑖 ,𝑊𝑖 , and also                       trated in Figure 6. The figure shows the energy per invoca-
+account for the changes or variance in the new measure-                         tions of four functions over time. The “memoryless” policy
+ments (i.e., the process and measurement noise). The outline                    does not keep past history and runs a new power profiling
+of our Kalman filtering algorithm is presented in Figure 5.                     step every time-step (which is one minute in duration)—
+The filtered estimate is then given by:                                         resulting in high jitter. By contrast, the “cumulative” policy
+                                                                                uses all the past history to run the statistical disaggregation.
+                     𝑋ˆ𝑖 = 𝛼 𝑋ˆ𝑖 −1 + 𝛽𝑈𝑖 + 𝐾𝑍𝑖 ,                   (3)         While this results in stable footprints, it does not adjust to
+where 𝛼, 𝛽 are tunable parameters. 𝑍𝑖 is the error we get if                    changing function workload, and yields different footprints
+we use the previous estimate with the new measurements                          compared to the Kalman-filter approach—highlighting the
+
+
+
+
+                                                                          528
+     SoCC ’24, November 20–22, 2024, Redmond, WA, USA                                                Prateek Sharma and Alexander Fuerst
+
+
+ 1   𝜎 (𝑇 ) : v a r i a n c e o f f u n c t i o n l a t e n c i e s           5   FAIR ENERGY AND CARBON
+ 2   𝐴𝑖 : num f n i n v o c a t i o n s d u r i n g i n t e r v a l 𝑖
+ 3   𝑟 ∝ 1/𝑑𝑒𝑙𝑡𝑎
+                                                                                  ATTRIBUTION
+ 4                                                                    Once the function-level power estimates (e.g., 𝑋 Combined ) are
+ 5   def Kalman − s t e p ( 𝑋𝑖 −1 , 𝐶𝑖 ,𝑊𝑖 , 𝑃𝑖 −1 ) :                computed over some interval of time (𝑁 ), we can use them
+ 6     𝑈𝑖 = min𝑋 (𝐶𝑖 𝑋 − 𝑊𝑖 )
+                                                                      to compute different energy and carbon footprints.
+ 7     𝑍𝑖 = 𝑊𝑖 − 𝐶𝑖 𝑋ˆ𝑖 −1
+ 8     𝑃 = 𝛼𝑃𝑖 −1 + 𝛾𝜎 (𝑇 )
+                                                                      Individual Footprint. In the simplest case, the function’s
+ 9     𝐾 = 𝑃𝐴𝑇𝑖 /𝐴𝑖 𝑃𝐴𝑇𝑖 + 𝑟                                          average individual energy consumption is computed: 𝐽Indiv =
+10     𝑃𝑖 −1 = (1 − 𝐾𝐴𝑖 )𝑃                                            𝑋 No Idle𝜏, where 𝜏 is the average function latency in the in-
+11     return 𝑋ˆ𝑖 = 𝛼 𝑋ˆ𝑖 −1 + 𝛽𝑈𝑖 + 𝐾𝑍𝑖                              terval. Note that 𝑋 is dependent on the function code, and in
+                                                                      practice does not vary significantly since popular functions
+     Figure 5: Kalman filter-inspired approach for updating           such as ML inference and multimedia processing are fairly
+     function per-invocation power 𝑋 over time.                       deterministic [57]. Of course, the execution time 𝜏 can vary
+                                                                      based on the input size and resource contention—we analyze
+                                                                      its effect on the energy in Section 7.
+                                                                      Shapley Footprint. The above individual footprint does
+                                                                      not take into account the power consumed by the shared
+                                                                      resources such as the control plane and server hardware.
+     importance of online adjustments. A more thorough evalu-         Complete footprints require that we fairly dividing the en-
+     ation of the accuracy of the footprints is presented later in    ergy (and carbon footprint) of these shared resources, for
+     Section 7.                                                       which we use Shapley value principles [110] and techniques.
+                                                                      The Shapley value of each function would be it’s “true” en-
+     4.3 CPU Power Modeling                                           ergy footprint, and satisfy many desirable properties, and can
+     The statistical disaggregation technique described above         be considered the gold-standard of energy attribution [39]
+     has many advantages: it is simple, and requires only coarse      in multi-tenant environments. Shapley values are also being
+     grained power and latency measurements. We combine this          used for interpretability of machine learning models [102],
+     phenomenological approach with more a causal CPU power           by attributing the importance of model features.
+     model for increased accuracy. We build on the plethora of           Unfortunately, computing Shapley values requires sam-
+     CPU power models [29] and use hardware performance coun-         pling an exponential number of energy readings that cover
+     ters to map function CPU usage to power consumption. A           all the permutations of function invocations (i.e., entries of
+     CPU model 𝜃 CPU is built and used to predict the function’s      the 𝐶 matrix), and the true marginal energies for all function
+     CPU-only power 𝑋 CPU over each time-step.                        combinations, which we have no way of obtaining accurately.
+        𝑋 CPU = 𝜃 CPU (𝑆), where 𝑆 is a vector comprising of the      Exact Shapley values are thus infeasible and impractical, es-
+     function’s performance counters, normalized by the system-       pecially considering measurement noise and under an online
+     wide counters. Our approach is similar to PowerAPI and           setting. Instead, we approximate the Shapley values by satis-
+     SmartWatts [41], and uses the standard performance coun-         fying its four properties in a best effort manner:
+     ters: UNHALTED_CORE_CYCLES, UNHALTED_REFERENCE_CYCLES, (1) Efficiency: the sum of all function footprints should add
+     LLC_MISSES, and INSTRUCTION_RETIRED. We use perf to              up to the total system-level energy. We try to achieve this
+     obtain the function-container counters and aggregate the         by minimizing net error in the Kalman filter.
+     values for multiple concurrent containers of the same func-      (2) Null-player property requires functions not executing to
+     tion. The model 𝜃 CPU is trained using SVR with a linear kernel  have 0 energy, which we get by construction of our 𝐶 matrix.
+     during initial operation [95]. This model is stable as long as   (3) Symmetry: identical functions (both in their code and
+     the function execution footprint (CPU work done and IPC)         invocation frequency) should have the same footprints.
+     is stationary across invocations. We continuously monitor        (4) Linearity: the total shared-resource energy attributed
+     the model error (difference between observed CPU power           to a function should be the sum of the individual shared
+     and the sum of all predicted function powers), and retrain       resources.
+     the model if error exceeds a set threshold (default of 5%).         Based on these principles, we divide the shared idle and
+        We can combine the CPU power and rest of the system           control plane energy among the functions. Idle power is a
+     power estimates. The rest of the system power is obtained us-    “static” shared resource, and it must be evenly among all func-
+     ing the statistical disaggregation (and Kalman Filter): 𝑋 Rest = tions (proof omitted, but follows similarly from [66] which
+     min𝑋 (𝐶𝑋 −𝑊Rest ), where 𝑊Rest = 𝑊Sys −𝑊CPU . When RAPL          applies Shapley values to datacenter power). On the other
+     is available, the default is this combined mode, 𝑋 Combined =    hand, the control plane energy is “dynamic” and depends on
+     𝑋 CPU + 𝑋 Rest .
+
+
+
+
+                                                                        529
+Accountable Carbon Footprints and Energy Profiling For Serverless Functions                                                           SoCC ’24, November 20–22, 2024, Redmond, WA, USA
+
+
+
+                                                                               json             ml_train         video      image
+                                                            kalman                                         memoryless                             cumulative
+                                         100                                          100                                           100
+                  Per-invocation Energy (J)
+                                              80                                       80                                           80
+
+                                              60                                       60                                           60
+
+                                              40                                       40                                           40
+
+                                              20                                       20                                           20
+
+                                              0                                         0                                            0
+                                                   0   5   10   15   20   25                0        5     10    15   20   25             0   5   10   15      20   25
+                                                                                                           Time-Steps
+
+Figure 6: Change ine energy footprints over time. The Kalman-filter approach is able to adjust to changing workload
+and system dynamics.
+
+its use (i.e., how many functions are invoked), and it must be                                                   where 𝑘 is the carbon intensity of the electricity source, and
+divided proportionally among functions on a per-invocation                                                       𝑒 is the embodied emission “rate” during the period. The total
+basis. The efficiency and linearity properties require that we                                                   embodied cost of the server is E, which must be paid over
+add the individual and static and dynamic energy shares to                                                       the lifetime L of the server (typically 5 years). The embodied
+obtain the total energy for each function:                                                                       rate 𝑒 is then 𝑒 = E𝑁   L , where 𝑁 is our original measurement
+                                                                                                                 interval (typically 1 minute).
+           𝐽Shap = 𝐽Indiv + 𝐽Shared = 𝐽Indiv + 𝜙 cp + 𝜙 idle,                                        (4)            Note that the embodied fraction is based on whether a
+where 𝜙 cp, 𝜙 idle are the shares of control plane and idle energy                                               function runs on the server or not (during the time interval),
+
+                                      
+respectively. 𝐽Indiv is obtained by discounting the idle power,                                                  irrespective of the number of invocations. Thus, all “active”
+i.e., using 𝑋 No Idle . 𝜙 cp = 𝐽cp𝐴𝑖 / (𝐴), where 𝐴𝑖 is the number                                               functions have equal embodied contribution. Since the server
+of invocations of function 𝑖, and 𝐴 is the vector of 𝐴𝑖 . We                                                     is a static fixed cost, Shapley valuation dictates that it be
+divide the control plane energy proportional to function                                                         evenly shared among the active functions and irrespective
+invocation frequency (over the time interval). 𝜙 idle = 𝐽idle /𝑀,                                                of how much of the server they use.
+where 𝑀 is the number of unique active functions in the                                                             This subtle difference has important ramifications on the
+interval, which is the number of non-zero entries in 𝐴. The                                                      footprints and incentives for providers and users to optimize
+function footprints are then the per-invocation energy, which                                                    carbon. First, it strongly favors locality of execution and load
+is 𝐽shap /𝐴.                                                                                                     balancing policies which run functions on the same server
+   The Shapley footprint gives applications a full and com-                                                      to reduce cold-starts. With the embodied carbon accounting,
+plete picture of their energy consumption. Since the energy                                                      there is even more incentive to retain locality. “Popular” func-
+footprints are linear combinations of the individual, dynamic,                                                   tions with higher invocation frequencies naturally have a
+and static shared power, they can be combined in different                                                       higher total operational footprint anyways, and thus this ap-
+ways depending on the intended use-case. For example, when                                                       proach reduces their embodied burden. Finally, our proposed
+developers are optimizing the energy footprint of their func-                                                    carbon accounting scheme also imposes different incentives
+tions, only the direct and individual energy (without any                                                        on the function developers. If a larger function is split into
+control plane or idle overheads) is suitable.                                                                    multiple (say two) smaller functions, then each smaller func-
+   Finally, our energy footprints are also designed to explore                                                   tion invocation is required to pay the embodied “tax” and
+the limits of a simple model and system-level power mea-                                                         also double the dynamic control plane cost. This also incen-
+surements. If device-level (such as disks and NICs) power                                                        tivizes locality and performance, since it reduces additional
+can be instrumented (which it cannot in current commodity                                                        networking and sandboxing latency as well.
+hardware), then their power can be similarly disaggregated                                                       Comparison with SCI. We can also derive and adapt the
+using our techniques. While currently we use aggregate GPU                                                       Software Carbon Intensity [48] metric in the context of FaaS.
+power, specialized power models for GPUs [63, 70] can also                                                       The SCI can be simplified as : CSCI = 𝑘 𝐽Full + 𝑒𝑟 , where 𝑟 is
+be used, similar to how we use RAPL-based models. Without                                                        the resource usage fraction of the function. For function 𝑖,
+any specialized models, fine-grained per-device footprints                                                       𝑟𝑖 =  𝐴𝑖 𝜏𝐴𝑖 𝑖 𝜏𝑖 . Compared to our Shapley value formulation,
+                                                                                                                        𝑖<𝑀
+can also be considered to be the “dynamic” shared power                                                          the main difference in the SCI metric is that it considers em-
+and be part of the Shapley footprints.                                                                           bodied emissions as a usage-based cost, whereas we believe
+Carbon Footprints are computed by combining the energy                                                           that embodied emissions are more appropriately viewed as
+footprints with the operational and embodied emissions:                                                          static sunk costs. CSCI ≈ 𝐽Server (𝑘 + 𝑒)𝑟 , where 𝐽Server is the
+                                                                                                                 empirically measured server energy. Finally, we note that
+                                               CShap = 𝑘 𝐽Shap + 𝑒/𝑀,                                (5)
+
+
+
+
+                                                                                                           530
+SoCC ’24, November 20–22, 2024, Redmond, WA, USA                                                                             Prateek Sharma and Alexander Fuerst
+
+
+“fairness issues” in carbon accounting and pricing (such as                                                                           Raw
+
+
+
+
+                                                                                   System minus CPU Power
+                                                                                                            200                       Time-Corrected
+who pays for past embodied emissions) continues to be a
+highly globally vexing and subjective issue [30, 74], which                                                 150
+
+is well outside our scope.                                                                                  100
+
+
+                                                                                                             50
+5.1    Limitations
+Some of the limitations of our energy profiling approach are                                                      14 12:25     14 12:30      14 12:35
+                                                                                                                              Time
+a result of our focus on simple and validatable footprints.
+Our focus is also on individual functions. For multi-function          Figure 7: System-level power can be synchronized us-
+applications and workflows, the footprints are approximated            ing CPU power as a reference signal, reducing the er-
+as the aggregation (sum) of the component functions. This              rors due to lag.
+will not account for the shared networking and storage costs,
+since we only consider server-level power. At a high-level,
+we can view networking and distributed storage as shared re-
+sources, and use our fair division techniques to disaggregate
+their energy consumption among all the functions. Finer-
+grained profiling will require additional storage and network-
+ing power models along with distributed tracing to track               independent of the FaaS framework, but the tighter latency
+function resource usage. Nevertheless, networking and stor-            bounds of Iluvatar aids in a more rigorous validation.
+age are not power proportional and network elements like                  Different full-system power sources are supported. For
+switches can have a fairly “static” power consumption, which           servers equipped with chassis-level current and power sen-
+will again require fair division. While these more “complete”          sors, we use IPMI to query the BMC (baseboard management
+footprints can be obtained by applying our proposed tech-              controllers). We also support external plug-level power me-
+niques, they are harder to validate against ground-truth, and          ters, and query their power via serial or telnet interfaces.
+are part of our future work.                                           Many low-power edge devices also provide system-level
+   Our simple power models are complementary to finer-                 power. For example, the Nvidia Jetson Orin AGX has current
+grained deep neural network models trained on more hard-               and power sensors which we query using tegrastats. Finally,
+ware performance counters and function inputs. Because                 for laptops and other battery powered devices, the battery
+of our linear models, we do not need offline training, and             charge controller can provide the energy discharge, which
+have better generalizability across hardware platforms and             we can obtain via ACPI interfaces, and obtain the power
+workloads. Moreover, larger models do not address the main             consumption. We use the perf tool for both the system-wide
+challenges identified in the previous section such as shared           RAPL and per-function RAPL and per-function CPU perfor-
+resources and diffused energy consumption.                             mance counters.
+                                                                       Power De-noising and Synchronization. We filter and
+6     IMPLEMENTATION AND VALIDATION                                    synchronize the raw power signals before using them for
+      METHODS                                                          disaggregation. “External” power using external plug-level
+Our energy profiler and carbon footprint estimation tech-              power meters and even BMC/IPMI can have a time-skew in
+niques are implemented in the open source Iluvatar FaaS                their measurement and reporting path. Synchronizing the
+control plane. The energy footprints are made available to             system-power is crucial—otherwise energy is attributed to
+the control plane for internal power capping and control. Our          previous/future functions, reducing the footprint accuracy.
+changes are implemented in Python and Rust in around 6,000             We correct the temporal skew (i.e., lag) by correlating (in
+lines of code. We chose Iluvatar because it provides low la-           time) the power signal with some other reference.
+tency function invocations and has reduced jitter. Prior work             For instance, we have observed that IPMI power has sig-
+has shown that popular FaaS frameworks like OpenWhisk                  nificant lag, when compared to the RAPL power which is
+can add 100s of milliseconds of latency even for warm invo-            much more “real-time”. This can be observed from Figure 7
+cations [50]. Time-based energy attribution is a major com-            which shows the difference between system-level and CPU
+ponent of our power model, and OpenWhisk’s own power                   power. The workload is a CPU dominant application (ML
+consumption adds significant noise to the energy footprints.           training), and the server has no other major dynamic power-
+Validating footprints in such excessively noisy conditions             consuming devices (no GPU etc.). Thus we should expect
+was also a challenge (larger number of trials needed to obtain         this difference to be constant. However, we see that the raw
+a reasonable confidence interval of the marginal energies).            difference shows significant variance, which we attribute to
+At a conceptual and implementation level, our techniques are           the measurement lag in the IPMI power-sensor.
+
+
+
+
+                                                                 531
+Accountable Carbon Footprints and Energy Profiling For Serverless Functions                    SoCC ’24, November 20–22, 2024, Redmond, WA, USA
+
+
+  We find and fix this lag using simple signal-shifting meth-                   Metric                        Definition
+ods [88]. We find the time-offset 𝑠 which minimizes the chi-                    Individual-Difference         |𝐽 − 𝐽 ∗ |/𝐽 ∗
+square difference between the power signal, 𝑊 and the ref-                      Cosine-Similarity             𝐽 · 𝐽 ∗ /||𝐽 ||||𝐽 ∗ ||
+erence signal 𝑅, after normalizing by the average:                              Total-Error                   𝐸 [ |𝑊 (𝑡) − 𝑊ˆ (𝑡)|/𝑊 (𝑡) ]
+                                          2                                   Latency-normalized-Variance 𝜎 (𝐽 )/𝜎 (𝑇 )
+                           𝑊 (𝑡 + 𝑠) 𝑅(𝑡)
+               𝑠 ∗ = min            −                     (6)                 Table 1: External and internal validity metrics. 𝐽 and
+                      𝑠       𝑊¯        𝑅¯
+                                                                              𝑊ˆ are profiler outputs, 𝐽 ∗ is ground truth, and 𝑇 is
+This can be solved using general optimization solvers such as                 function latency.
+limited-memory BFGS [89], after setting bounds on 𝑠 of a few
+seconds. The difference in the power and reference signal
+after time-skew correction is also shown in Figure 7, and we
+can see a significant reduction in the variance (i.e., the noise).
+We compute this skew both during an initialization phase,                     frequency). Measuring the function energy footprints “in
+and periodically, to capture any drift. The reference signal is               isolation” is a simpler and alternative technique, where a
+CPU power by default—other reliable load metrics like CPU                     single function is run without any other function, and per-
+instruction and cycle counters are the fallback synchronizing                 invocation energy is obtained from the total system energy.
+inputs.                                                                       But because of the different power states, the per-function
+6.1     Validation Methods and Metrics                                        energy footprints obtained through this conventional and
+                                                                              simpler method have a very high range, dependent on the
+We develop and use a range of metrics for energy and carbon
+                                                                              system load. Figure 2 shows the energy per invocation with
+footprints. Given an energy footprint, we can compute the
+                                                                              the isolated measurement technique when different num-
+operational and the total carbon footprint. Our metrics are
+                                                                              bers of the same function are executed concurrently, and we
+also applicable to carbon footprints, but we focus on energy
+                                                                              can see significant differences (more than 10×) in footprints
+for simplicity.
+                                                                              based on the load.
+   Our methodology and metrics required for validating these
+                                                                              Validation Metrics. Table 1 lists our external and internal
+footprints fall into two broad classes. Through external vali-
+                                                                              validation metrics. For external validity, we define and com-
+dation, we compare the energy footprints with other reliable
+                                                                              pute different distance metrics between the energy profiler
+energy measurement methods, and develop the primary ac-
+                                                                              output vector (𝐽 ) and some reference ground-truth 𝐽 ∗ (e.g.,
+curacy metrics. On the other hand, the internal validity looks
+                                                                              marginal energy footprints). The first metric provides the
+at the consistency of energy footprints with respect to each
+                                                                              per-function individual difference to the ground truth. Since
+other, or other system utilization and performance metrics.
+                                                                              the marginal per-invocation energy is obtained by running
+   External validity for energy disaggregation is challenging:
+                                                                              a separate, smaller workload, it may not always reflect the
+we want to estimate the function’s energy contribution in a
+                                                                              “live” online energy. These are primarily due to differences
+long and dynamic workload. Our primary benchmark and
+                                                                              in system power consumption and efficiency, and under-
+“ground truth” for external validity is the marginal energy,
+                                                                              lying hardware control. Deviations from the marginal can
+which we compute by running two nearly identical workload
+                                                                              also arise because of different attribution policies for idle
+traces, and subtracting their total energy consumption. A
+                                                                              and other shared energy. To achieve “complete” energy ac-
+workload trace (T ) is characterized by the set of functions
+                                                                              counting, the footprints may be elevated for all functions.
+(S), their IAT CDFs, and the total duration. Even using ex-
+                                                                              To account for these issues, we use the cosine similarity be-
+tremely coarse-grained power measurements, we can obtain
+                                                                              tween the energy footprints, to capture the ratios of energy
+J (T ), the total energy consumption of running the work-
+                                                                              footprints among the different functions. Higher cosine sim-
+load trace on a server. The marginal energy of a function 𝑓
+                                                                              ilarity (closer to 1) indicates that a closer footprint match.
+is obtained by running a new trace T (S − 𝑓 ) which does
+                                                                              Cosine similarity with the marginal energies is our primary
+not contain the function, and is given by:
+                                                                              external validation metric.
+                     J (T (S)) − J (T (S − 𝑓 ))                                  The second category of metrics are for internal validity.
+            M𝑓 =                                    .        (7)
+                  number of invocations of f in S                             The conventional and popular metric for energy profilers
+The marginal energy is thus the increase in total energy                      captures the “completeness” of accounting, by computing
+consumption caused by the function. Note that it does not                     the difference over time, between the observed (𝑊 (𝑡)) and
+account for the idle server energy, since it is present in both               predicted total power (𝑊ˆ (𝑡)). Optimizing solely for this total
+the traces.                                                                   error can be at the expense of the error in energy footprints.
+   This marginal energy validation is essential, since energy                 This total power error is thus of secondary importance to us,
+is highly sensitive to the system power states (such as CPU                   and is controllable via our Kalman filter parameters: higher
+
+
+
+
+                                                                        532
+SoCC ’24, November 20–22, 2024, Redmond, WA, USA                                                        Prateek Sharma and Alexander Fuerst
+
+                                                                         Name     Latency (s) Description
+values of 𝛽 in Figure 5 reduce the total error but result in
+                                                                         dd              0.7 Read and write local storage.
+higher variance in footprints.                                           image           1.5 Performs several transformations on an image.
+  Our primary internal validation metric is the variance in              video           7.8 Download and grayscale a small video.
+                                                                         AES             1.4 Encrypt and decrypt payload multiple times.
+the energy footprints, normalized to the variance in latency.            json           0.25 Download, parse, and serialize a json blob.
+This helps use evaluate the precision and feasibility of our             CNN             1.3 Inference on a TensorFlow model (CPU and GPU).
+footprints for energy pricing. Currently, cloud functions are            ml_train        5.1 Train a regression model on a 20 MB dataset
+
+priced based on their execution time (i.e., latency), and thus         Table 2: Super-set of functions used in our empirical
+the latency variance serves as the baseline for comparison.            energy and carbon analysis. Latency is average warm
+                                                                       running time on the desktop.
+
+7   EXPERIMENTAL EVALUATION
+Our evaluation is centered around two main questions, i)
+How accurately can we obtain full-system energy profiles
+of functions, and ii) What are the characteristics of energy           FaaS workloads are generated using different combina-
+and carbon footprints? We empirically evaluate these foot-             tions of functions and inter arrival time (IAT) distributions.
+prints on more than 100 workload traces (including marginal            We use different sizes and types of functions from function-
+energy traces) using seven external and internal validity              bench [73]—their characteristics are described in Table 2.
+metrics. These workload and measurement traces and asso-               Recall from Equation 1 that the main variables determining
+ciated ground truths are made publicly available [3], to help          the power profiles (𝑋𝑖 ) are the latencies and popularities of
+build better energy profiling models and accelerate empirical          each function which make up its energy contribution (𝐶𝑖 ).
+sustainability research.                                               We test energy disaggregation with different combinations
+Measurement Platforms. We use three different types of                 (subsets) of functions in each trace. Our evaluation covers
+hardware platforms:                                                    a large multi-dimensional space of function-subsets, inter-
+(1) Server: Supermicro X11DPT-PS board with 2 48-core Intel            arrival-times, hardware platforms, and metrics. We cover a
+Xeon Platinum 8160 CPUs and 1TB of RAM, running Ubuntu                 sparse subset of this evaluation space, and use different types
+20.04. It idles at 95 Watts.                                           of workloads to show the versatility and generalizability of
+(2) Desktop: Dell Optiplex with 12th Gen Intel i5-12500 run-           our approach. Since different metrics are analyzed using dif-
+ning Ubuntu 20.04.5. It has idle power of 15W. Power is being          ferent traces, we also summarize the key metrics across all
+measured using an external SpecPower-approved power-                   traces towards the end of this section.
+meter (Instek GPM-8310) every 0.25 seconds through the                    The arrival-rates are either determined by: i) the tradi-
+meter’s telnet/SCPI interface.                                         tional exponential distribution, or ii) sampled from the Azure
+(3) Edge: Nvidia Jetson Orin AGX [12]. Power is measured               trace [96], or iii) non-stationary bursty arrivals. For the Azure
+using inbuilt current sensors (via tegrastat) and also vali-           sampling, we use a combination of random function sam-
+dated with an external power meter. We run a combination               pling and scaling the IATs to be suitable on a single server.
+of CPU and GPU functions on this edge device.                          We use Iluvatar’s load generator [50] for generating the work-
+   The grid carbon intensity (grams CO2 per kWh) varies                load traces, which have arrival times for each function. We
+significantly by time and location [80], and we assume the             use a sufficient keep-alive cache [51] to ensure > 99% warm
+constant US average grid carbon intensity of 386 g CO2 per             starts, and all the latency and energy footprints we report are
+kWh. Similarly, the embodied footprint also varies based               for warm starts. Cold-starts are tagged by the FaaS control
+on hardware type and the carbon accounting methodology.                plane, and we can obtain separate cold and warm energy
+For our analysis, the embodied emissions of the server and             fingerprints if necessary.
+desktop are 471 kg and 175 kg respectively [32, 35], and all              We use the Kalman filter with 𝛼 = 0.8, 𝛽 = 0.2, 𝛾 = 0.1,
+devices are assumed to have a five year lifespan. Instead of           with an initial window of 100 seconds, and subsequent in-
+varying and controlling the above carbon parameters, we fix            tervals of 60 seconds. Our empirical analysis has not found
+them, and in some of our evaluation results, we omit them              the profiler output to be particularly sensitive to these pa-
+and focus on the energy footprints. This reduces the number            rameters. We compare against Scaphandre [64], a popular
+of variables in the experiment design, and also helps reduce           process-level CPU-only power profiler which uses the direct
+the uncertainty, since many of the carbon parameters can               disaggregation approach. We have implemented additional
+have a very high variance [22, 76]. For carbon footprints,             post-processing for Scaphandre to turn the process-level
+we will largely focus on the operational footprint, since the          power output to per-function-invocation metrics, by corre-
+embodied component can be significant in both magnitude                lating the host process id with the function (Iluvatar runs
+and variance, and can thus obscure the energy validation.              functions in containerd containers by default).
+
+
+
+
+                                                                 533
+Accountable Carbon Footprints and Energy Profiling For Serverless Functions                                                                                                                                                               SoCC ’24, November 20–22, 2024, Redmond, WA, USA
+
+
+                                                                                                                                     Ground Truth                                 Combined Disaggregation
+                                                                                                                                     Shared                                       Shared                                                               Pure Disaggregation
+                                                                                                                                     CPU                                          CPU                                                                  Scaphandre
+                                                                     Desktop                                                                                                Server                                                                                            Jetson
+                         40                                                                                                          50                                                                                    .9            80
+Energy per Invoc. (Joules)
+
+
+
+
+                                                                                                           .0                                                                                                            46 46.0                                                                     .8
+                                                                                                         37              .9                                                                                                                                                                        73
+                                                                                                                       34
+                                                                                                                                                                                                                                         70
+                                                                                                                                     40                                                                                                                                                                           60
+                                                                                                                                                                                                                                                                                                                    .3
+                         30                                                                                     27
+                                                                                                                  .9                                                                                                                     60                                                   .6
+                                                                                                                                                                                                                                                                                            51
+                                                                                   .3                                                30                                                       28
+                                                                                                                                                                                                .8
+                                                                                                                                                                                                       .6         28
+                                                                                                                                                                                                                    .4                   50                                            .7
+                                                            .4                   21       .1 .1                                 .8                                      .1                           26                                                                              40
+                                                                                        20 20                                 19                                                                                                                                                                             .2
+                         20          .0
+                                                          19                                                                                                          24 23.0                                                            40                                   36
+                                                                                                                                                                                                                                                                                .0                         38
+                                  16                               .1 .4                                                                                                                                                                                          .8     .9
+                                                                 15 15                                                               20                                               17
+                                                                                                                                                                                         .6
+                                                                                                                                                                                                                                         30       .0
+                                                                                                                                                                                                                                                                29     29
+                                                                                                    .8                                                           .6                                                                             24
+                                                                                                  10                                              .0 5         12
+                         10                                                8.6                                                                  11 10.                                                                                   20
+                                          6.7 7
+                                               .2
+                                                                                                                                     10   7.9
+
+                                                                                                                                                                                2.5                         3.4                    2.3
+                                                                                                                                                                                                                                         10              8.1
+
+                                                    0.0                                                                                                  0.0
+                             0                                                                                                       0                                                                                                    0
+                                 dd                  image                       AES                     cnn                              dd              image                       AES                         cnn                          dd              image          AES           cnn           cnn_gpu
+
+
+Figure 8: Energy-per-invocation for a four-function trace. Marginal energy serves as ground-truth. Our energy
+footprints with combined and pure disaggregation are accurate across all three hardware platforms. Scaphandre [64]
+provides inaccurate footprints, especially for non-CPU-intensive functions (dd), and requires x86 RAPL counters
+(not available on Jetson).
+
+ Platform Full Disagg. Combined Disagg. Scaphandre                                                                                                                                                   This is because the marginal footprints are affected by the
+ Desktop 0.985          0.984               0.910                                                                                                                                                    CPU power states and power non-linearities. On the lower-
+ Server    0.998        0.998               0.623                                                                                                                                                    utilization server with a large number of CPU cores (48),
+ Jetson    0.992        N/A                 N/A                                                                                                                                                      because of the latency in switching to lower power states,
+Table 3: The high cosine similarity of footprints indi-                                                                                                                                              the additional fourth function can utilize the residual time
+cates high accuracy with respect to ground truth.                                                                                                                                                    of the higher power states. This results in the reported mar-
+                                                                                                                                                                                                     ginal footprints to be lower, as seen in the figure. Conversely,
+                                                                                                                                                                                                     the desktop is at high utilization, and running the fourth
+7.1                              Energy Profiler External Validity                                                                                                                                   function consistently puts the CPUs into a higher frequency
+We focus the first part of our evaluation on one heteroge-                                                                                                                                           state, which results in larger footprints since power is pro-
+neous trace with four functions, with the goal to understand                                                                                                                                         portional to the square of the frequency. Thus, the specific
+the accuracy and robustness of the energy profiling method.                                                                                                                                          power and workload characteristics in our marginal energy
+The function IATs are scaled for the three hardware plat-                                                                                                                                            calculation contribute to the perceived discrepancy in the
+forms, such that the desktop and Jetson are at 80% utiliza-                                                                                                                                          Individual-Difference metric in Figure 8. Finally, we note
+tion, and the server is at 40%. The per-invocation individual                                                                                                                                        that the consistent over or under prediction is also naturally
+energy footprints (𝐽Indiv ) for each function are shown in Fig-                                                                                                                                      corrected by our Shapley footprints: the total power con-
+ure 8. We compare against the marginal energy as the ground                                                                                                                                          sumption error is less than 10% on average (discussed in next
+truth baseline, and also show the results of Scaphandre [64].                                                                                                                                        subsection in Figure 10).
+We evaluate two different profiler configurations. In the com-                                                                                                                                          We emphasize that individually comparing the energy es-
+bined mode, the CPU power is measured separately and                                                                                                                                                 timates of different functions in Figure 8 provides an incom-
+added to the rest of the system power using statistical disag-                                                                                                                                       plete analysis of the profiler capabilities. For the individual
+gregation. In the pure disaggregation mode, only the coarse                                                                                                                                          energy footprints, how proportional the estimates are rela-
+grained statistical disaggregation is used on the full-system                                                                                                                                        tive to the marginal energy is more important. Our cosine
+power. In both cases, we subtract the idle hardware power,                                                                                                                                           similarity metric captures this proportionality, and is shown
+and thus compute the 𝑋 No idle described in Section 4.                                                                                                                                               for this workload in Table 3. Using cosine similarity corrects
+   On the desktop, both these approaches are within 1–40%                                                                                                                                            for the consistent over or under prediction, and we see that our
+of the marginal energy (the Individual-Difference metric                                                                                                                                             corrected individual energy footprints are within 98.4% and
+in Table 1). Scaphandre measures only CPU power, and is                                                                                                                                              99.8% of the ground truth.
+unable to attribute energy the disk-intensive dd function,                                                                                                                                              Note that invocations of the same function can have dif-
+and has a 100-130% difference vs. marginal for the rest of the                                                                                                                                       ferent arguments, which naturally leads to variance in the
+functions on the desktop.                                                                                                                                                                            energy footprints and is the primary source of error, since
+   While marginal energy provides good ground truth, it may                                                                                                                                          our model uses function latency as the key feature. However,
+be consistently higher or lower than our profiler estimates.                                                                                                                                         we are robust to such latency variance, as seen in Figure 9a,
+In Figure 8 the marginal energy of all desktop functions is                                                                                                                                          which shows a lack of any significant correlation. On the
+higher, and all server functions is lower than our estimates.                                                                                                                                        server with 40% load, the coefficient of variation of latency
+
+
+
+
+                                                                                                                                                                                      534
+SoCC ’24, November 20–22, 2024, Redmond, WA, USA                                                                                                  Prateek Sharma and Alexander Fuerst
+
+
+                                                                                                                    of the earlier four-function trace (dd, image, AES, CNN) is
+                                 Desktop       cnn        image
+                                 Server        dd         AES
+                                                                                                                    included in Figure 11 and 13.
+                     80                                                                                             Full carbon footprint. The per-function operational car-
+% Individual-Difference
+
+
+
+
+                                                                               100
+                     60
+                                                                                                                    bon footprint (using the Shapley value approach) over a 15
+                                                                                75
+
+
+
+
+                                                                  Energy (J)
+                     40
+                                                                                                                    minute interval is shown earlier in Figure 3. Because the
+                                                                                                   image
+                                                                                50
+                                                                                                   json             server is under-utilized and has a high idle power (95 vs. 15
+                     20
+                                                                                25                 ml_train
+                                                                                                   video
+                                                                                                                    W), the shared operational emissions for all functions are
+                          0
+                           0.0        0.2       0.4       0.6                    0                                  close to 8x higher. The operational carbon footprint using
+                                            σ(T) / E[T]                              Function ID
+                                                                                                                    Scaphandre power estimates misses the I/O-bound dd com-
+(a) Function latency variance is uncor-(b) Energy of identical func-                                                pletely, and significantly underpredicts the other functions
+related with energy footprint error. tions can be clustered.
+                                                                                                                    by an order of magnitude. This highlights the importance of
+Figure 9: Energy footprints are robust to latency and                                                               complete full-system footprints, since shared hardware and
+hence the function input variation. Similar functions                                                               software components can be a large source of emissions. These
+can be clustered based on their energy use.                                                                         footprints can be used by both FaaS users and operators to
+                                                                                                                    quantify emissions. We now evaluate the feasibility to use
+is low, but the high idle energy results in the larger offset                                                       them in addition to traditional resource based accounting
+vs. marginal. The desktop has a 80% load and higher latency                                                         and pricing.
+variance, but is closer to the marginal energy as a result. Thus,                                                   Symmetry, a Shapley value property, requires that identical
+even with variation in latency due to differences in function                                                       functions have similar footprints. We run a large number (20)
+input, contention, etc., we provide accurate energy footprints.                                                     of different functions, with each function belonging to the
+   On the Jetson platform, we do not have access to a CPU                                                           one of four classes (image, json, ml_train, video). This
+power model—but the pure disaggregation approach still                                                              is different from the previous set of functions, and shows the
+provides a high 99.2% cosine similarity. We are also able to                                                        generalizability and ability to handle very small (json) and
+measure the GPU function’s footprint—highlighting its ef-                                                           large functions (ml_train, video). From the profiler’s per-
+fectiveness on heterogeneous platforms without specialized                                                          spective, these are 20 different functions, and their footprints
+power measurement instrumentation. Scaphandre uses the                                                              are shown in Figure 9b. We can see that the functions can
+x86 RAPL counters, and is unable to work on the ARM Jet-                                                            be clustered based on their energy footprints, i.e., the func-
+son platform. Its process-level direct attribution is unable to                                                     tions running image processing have similar per-invocation
+account for all the CPU power on the x86 server, and has                                                            energy, thus exhibiting the symmetry property.
+an error of 10 × −23×. Moreover, it has a high profiler over-                                                          Next, we look at the Total-Error from Table 1, which
+head due to periodically scanning process info via procfs:                                                          measures the difference in measured and the estimated total
+its CPU consumption on the server is more than 5%, causing                                                          energy/carbon footprint (which is the aggregation of indi-
+a 15 Watt (30%) increase in power consumption. For com-                                                             vidual estimated footprints). This is also the efficiency prop-
+parison, the combined CPU consumption of our profiler and                                                           erty of Shapley values: we want all the energy and carbon
+Iluvatar is 3%. Scaphandre’s high error on the server is also                                                       accounted for. The (operational) carbon footprint of the func-
+due to its high profiling overhead: the high latency of syn-                                                        tions from the previous workload used in Figure 8 is shown
+chronously reading and disaggregating procfs information                                                            in Figure 10a. The figure shows the CO2 per invocation of
+for more than 1000 processes (corresponding to function                                                             the functions over time, and also illustrates the smoothing
+active and kept-alive containers) results in highly stale RAPL                                                      behavior of the Kalman filter.
+readings (several seconds) and inaccurate disaggregation.                                                              Note that the actual footprint of a function also depends on
+   Using noisy system-level power is one of our system’s main                                                       the number of its invocations. We show this in the stacked-
+features, and these results illustrate its robustness and accuracy.                                                 plots in Figure 10, which also illustrates a common use-case
+It provides more than an order of magnitude improvement in                                                          for profiling tools for identifying “top” carbon producers and
+accuracy compared to existing process- and CPU-based tools,                                                         their relative contributions. Figure 10b shows the carbon
+and is effective even on heterogeneous hardware.                                                                    contribution of four functions in a “bursty” workload on
+                                                                                                                    the desktop, which also incorporates our largest function
+7.2                              Energy and Carbon Footprints                                                       video. We can see that the Kalman filter is able to track
+Having looked at the Individual-Error and the Cosine-Similarity                                                     the dynamics of the workload, since the sum of all function
+metrics, we now present the evaluation of other metrics and                                                         contributions closely matches the empirical operational CO2
+properties. To illustrate generalizability, in some cases we                                                        emissions.
+show results on different workload traces from the one pre-                                                            Another challenging workload is when the functions are
+sented in the previous subsection. The remaining evaluation                                                         dynamically introduced into the workload, and the “active
+
+
+
+
+                                                                                                              535
+Accountable Carbon Footprints and Energy Profiling For Serverless Functions                                                                                                                 SoCC ’24, November 20–22, 2024, Redmond, WA, USA
+
+
+
+                                                      image                     dd          AES               CNN                             image       AES            dd        System                  cnn       gzip           ml_train        video
+                                                       0.006                                                                                  video                                                        dd        image          AES             System
+                                         g CO2/invocation
+
+
+
+                                                                                                                                0.64
+                                                                                                                                                                                                   0.64
+                                                       0.004
+
+
+
+
+                                                                                                                        g CO2/min
+                                                                                                                                0.48                                                               0.48
+
+
+
+
+                                                                                                                                                                                            gCO2/min
+                                                                                                                                0.32                                                               0.32
+                                                       0.002
+                                                                                                                                0.16                                                               0.16
+
+                                                       0.000                                                                        0                                                                  0
+                                                                    0       2          4       6         8       10                       0           5   10        15        20      25                   0     5     10       15     20      25   30
+                                                                                      Time (mins)                                                          Time (mins)                                                       Time (mins)
+
+
+                                 (a) CO2 footprints of functions over time.                                                             (b) Bursty function invocations.                                   (c) New functions being added.
+
+Figure 10: The misprediction of total carbon footprint is small, even for dynamic and non-stationary workloads.
+
+                                                   20                                                                                                            co-located function in Figure 12. These functions are very
+                                                                                                                                                                 different: dd is short and disk-intensive, whereas ml_train
+                                                   15
+                                  Total-Error %
+
+
+
+
+                                                                                                                                                                 is long and cpu-intensive. Inspite of these differences, the
+                                                   10
+                                                                                                                                                                 marginal energy in the two cases are nearly identical, and
+                                                                                                                                                                 differs by at most 5%. The footprints are also similar, and
+                                                            5                                                                                                    vary by roughly 5–10% between the two cases. The lack
+                                                                                                                                                                 of significant noisy neighbor effect reduces the variance in
+                                                            0
+                                                                0   4       8        12   16 20 24               28       32            36                       energy footprints.
+                                                                                          Trace ID                                                                  For carbon-pricing, we want the footprints to be “stable”
+                                                                                                                                                                 and have low variance. Figure 13 (right) shows the coefficient
+Figure 11: The Total-Error captures how much of the                                                                                                              of variation (𝐶𝑜𝑉 = 𝜎 (𝐽 )/𝐸 [𝐽 ]) for more than 50 workloads.
+total server energy/carbon footprint is over or under-                                                                                                           The CoV depends on the measurement noise of the underly-
+estimated, and is less than 20% across a range of work-                                                                                                          ing hardware platform and the workload, and is the precision.
+loads.                                                                                                                                                           Here, we focus on the energy variance, so that we can ignore
+                                                                                                                                                                 the high operational carbon variance. The CoV is less than
+ Energy per invocation (J)
+
+
+
+
+                                                                                                                                                                 0.3 on all three platforms for 60% of the traces, indicating
+                        60                                                                                                              Measured                 feasibility of using energy footprints as an accounting and
+                                                                                                                                        dd
+                        40                                                                                                              ml_train                 pricing measure. As noted before, the desktop energy vari-
+                                                                                                                                                                 ance is higher because its workloads are run at near-100%
+                        20                                                                                                              Ground Truth
+                                                                                                                                        dd                       load.
+                                                                                                                                        ml_train                    Finally, we look at the latency-normalized-variance
+                             0
+                                         AES                            video          image        dd       ml_train
+                                                                                                                                                                 metric from Table 1. This metric is another proxy for the
+Figure 12: The three functions are co-located either                                                                                                             stability of the carbon pricing, since it compares against
+with dd or ml_train. This choice has negligible impact                                                                                                           variance in currently used running-time based prices. Fig-
+on both the estimated footprints and ground-truth.                                                                                                               ure 13 (left) shows the CDF of the average normalized en-
+                                                                                                                                                                 ergy variance across all functions, for more than 50 workload
+set” is dynamic. The total carbon breakdown of this workload                                                                                                     traces across the three platforms. This ratio is less than 40 for
+is shown in Figure 10c, where we also see low Total-Error.                                                                                                       more than 90% of the desktop and server workloads. Note
+As mentioned in Section 6.1, minimizing Total-Error is not                                                                                                       that Iluvatar provides extremely low variance in latency
+our primary objective, since it can often reduce the accuracy                                                                                                    which is 50 × −100× lower than OpenWhisk [50]. The vari-
+(cosine similarity and other external validation metrics). Our                                                                                                   ance in latency and pricing is also significant in public FaaS
+Total-Error across 35 workloads (with different functions                                                                                                        clouds [91, 104]. Thus, if were to use our footprints with
+and IATs) on the three hardware platforms is shown in Fig-                                                                                                       the more widely used OpenWhisk, we achieve a latency-
+ure 11. Because of the Kalman filter and continuous footprint                                                                                                    normalized-variance ratio of close to 1, indicating that the
+refinement, we see that the Total-Error is small, and less than                                                                                                  variance in energy price would be similar to the current vari-
+10% for more than 50% of the tested workload configurations.                                                                                                     ance in latency-based pricing. Thus, our energy footprints
+Noisy neighbors: are function energy footprints impacted by                                                                                                      have high precision (i.e., low variance) and can be used for
+co-located functions? To answer this, we run functions with                                                                                                      carbon-based pricing.
+different “neighbors”. Three functions (image, AES, and
+video) are run together either with dd or ml_train as the
+
+
+
+
+                                                                                                                                                          536
+SoCC ’24, November 20–22, 2024, Redmond, WA, USA                                                                               Prateek Sharma and Alexander Fuerst
+
+                           Desktop            Server              Jetson
+                                                                                           Due to hardware heterogeneity, we use a purely software
+      1.00                                    1.00
+                                                                                           approach for controlling system-wide power, and focus on
+      0.75                                    0.75                                         empirical energy footprints of individual functions.
+                                                                                           Fair Attribution. The problem of fairly sharing the en-
+CDF
+
+
+
+
+                                        CDF
+      0.50                                    0.50
+                                                                                           ergy consumption of shared resources occurs in many envi-
+      0.25                                    0.25                                         ronments such as VM hosting [66, 68] and datacenter cool-
+      0.00                                    0.00                                         ing [69, 108]. Shapley values [105] provide many desirable
+             0   40    80 120 160 200                0.0   0.4     0.8 1.2     1.6         properties such as linearity and envy-freeness, and have also
+                      σ(J) / σ(T)                                σ(J) / E[J]
+                                                                                           been used for energy accounting of mobile applications [39].
+Figure 13: Variance of energy footprints is low, making                                    Mobile and embedded computing [45] faces similar en-
+carbon-based pricing feasible.                                                             ergy measurement challenges. Disentangling shared OS and
+                                                                                           hardware energy consumption for applications has been
+8      RELATED WORK                                                                        done through tracing requests across various contexts and
+Our work is inspired and motivated by the quest to make                                    carefully attributing async tasks [24, 85, 87, 114]. Along with
+energy as the first-class resource [44] in many environments.                              the uncertainty of the control plane, the highly dynamic
+Sustainable Computing. The challenge of reducing the                                       and non-stationary nature of function workloads, and high
+carbon footprint of cloud systems and applications has led to                              degree of multiplexing makes such tracing challenging for
+“carbon-first” system designs [18, 79, 101]. The operational                               FaaS.
+carbon footprint is computed by multiplying the energy con-                                9      CONCLUSION
+sumption and the grid carbon intensity [6, 80], which has led
+                                                                                           Given the increasing importance of sustainability, our pri-
+to new energy tracking tools [28], but CPU power profiling
+                                                                                           mary goal is to initiate a deeper investigation of energy
+continues to dominate. [65] introduces fine-grained NUMA-
+                                                                                           metrology—especially full-system power measurements and
+aware CPU energy measurement for individual applications.
+                                                                                           their external validation. Our approach allows easy com-
+Tools for tracking the carbon footprint of AI applications
+                                                                                           putation of carbon footprints. Using statistical disaggrega-
+mostly focus on large ML training batch jobs without multi-
+                                                                                           tion, Kalman filtering, and Shapley value principles, we pro-
+tenancy [19, 62]. The emissions due to AI training and infer-
+                                                                                           vide full-spectrum carbon footprints with over 99% accuracy.
+ence is significant [111, 112], but our work focuses on the
+                                                                                           Serverless workloads permit the use of marginal energy con-
+broader class of FaaS based applications.
+                                                                                           sumption for each function, which we use to develop new ex-
+Carbon Footprints. The server-level operational and em-
+                                                                                           ternal validation metrics. This provides complete, validated,
+bodied carbon footprints can be used for scheduling [61],
+                                                                                           and full-system energy and carbon footprints for serverless
+load balancing [26, 79], and other resource management
+                                                                                           functions, paving the way for carbon-based cloud pricing.
+operations in distributed computing. Tools like CloudCar-
+                                                                                           Acknowledgements. Abdul Rehman helped develop the
+bon [1] also provide these VM-level estimates for public
+                                                                                           power measurement and experimentation infrastructure.
+cloud VMs [38]. Disaggregating these for finer-grained ap-
+                                                                                           This paper has greatly benefited from the comments and feed-
+plications is much more challenging as we have shown, and
+                                                                                           back from our shephered Dmitrii Ustiugov, and the anony-
+our footprints are also applicable to other multiplexed sce-
+                                                                                           mous conference reviewers. This work is supported in part by
+narios. Tools like carbond [93] can also be integrated into
+                                                                                           an NSF CAREER award CNS-2340722 and NSF grant OAC-
+our framework for updating the operational grid intensity
+                                                                                           2112606. Any opinions, findings, and conclusions or rec-
+in real-time for more accurate operational carbon footprints.
+                                                                                           ommendations expressed in this material are those of the
+For embodied emissions, tools like ACT [59, 60] can provide
+                                                                                           author(s) and do not necessarily reflect the views of the Na-
+the hardware’s footprint based on its individual components
+                                                                                           tional Science Foundation.
+(CPU type, storage and memory capacity, etc.). Carbon ac-
+counting at the grid level can also be tricky, with double                                 REFERENCES
+counting due to power purchase agreements (PPAs) leading
+                                                                                               [1] Cloud Carbon Footprint - An open source tool to measure and analyze
+to incorrect estimates [78].                                                                       cloud carbon emissions. https://www.cloudcarbonfootprint.org/.
+Energy Control. In the context of FaaS, [90] presents DAG                                      [2] Cloudflare workers.       https://blog.cloudflare.com/introducing-
+scheduling for functions with a purely CPU-model based                                             cloudflare-workers/.
+approach, but without any empirical power measurement or                                       [3] Data and code for faasmeter. https://github.com/COS-IN/faasmeter-
+validation. DVFaaS [103] implements PID control for CPU                                            socc-artifact.
+                                                                                               [4] Google cloud carbon Footprint. https://cloud.google.com/carbon-
+frequency for minimizing latency QoS violations for function                                       footprint.
+chains. More generally, a combination of hardware and soft-                                    [5] Microsoft Sustainability Calculator helps enterprises an-
+ware techniques for energy capping can be effective [119].                                         alyze the carbon emissions of their IT infrastructure.
+
+
+
+
+                                                                                     537
+Accountable Carbon Footprints and Energy Profiling For Serverless Functions                             SoCC ’24, November 20–22, 2024, Redmond, WA, USA
+
+
+      https://azure.microsoft.com/en-us/blog/microsoft-sustainability-                [25] Castro, P., Ishakian, V., Muthusamy, V., and Slominski, A. The
+      calculator-helps-enterprises-analyze-the-carbon-emissions-of-                        rise of serverless computing. Communications of the ACM 62, 12
+      their-it-infrastructure/.                                                            (2019), 44–54.
+  [6] Watttime – The Power to Choose Clean Energy. https://www.                       [26] Chadha, M., Subramanian, T., Arima, E., Gerndt, M., Schulz,
+      watttime.org/.                                                                       M., and Abboud, O. GreenCourier: Carbon-Aware Scheduling for
+  [7] Apache OpenWhisk: Open Source Serverless Cloud Platform. https:                      Serverless Functions. In Proceedings of the 9th International Workshop
+      //openwhisk.apache.org/, 2020.                                                       on Serverless Computing (Bologna Italy, Dec. 2023), ACM, pp. 18–23.
+  [8] AWS Lambda. https://aws.amazon.com/lambda/, 2020.                               [27] Chard, R., Babuji, Y., Li, Z., Skluzacek, T., Woodard, A., Blaiszik,
+  [9] Azure Functions.         https://azure.microsoft.com/en-us/services/                 B., Foster, I., and Chard, K. Funcx: A federated function serving
+      functions/, 2020.                                                                    fabric for science. In Proceedings of the 29th International Symposium
+ [10] Google Cloud Functions. https://cloud.google.com/functions, 2020.                    on High-Performance Parallel and Distributed Computing (New York,
+ [11] Customer Carbon Footprint Tool | AWS News Blog. https://aws.                         NY, USA, 2020), HPDC 20, Association for Computing Machinery,
+      amazon.com/blogs/aws/new-customer-carbon-footprint-tool/, Mar.                       pp. 65–76.
+      2022. Section: Announcements.                                                   [28] CNCF. Kepler: Kubernetes Efficient Power Level Exporter. https:
+ [12] Jetson AGX Orin Developer Kit User Guide.                        https:              //sustainable-computing.io/.
+      //developer.nvidia.com/embedded/learn/jetson-agx-orin-devkit-                   [29] Colmant, M., Rouvoy, R., Kurpicz, M., Sobe, A., Felber, P., and
+      user-guide/index.html, Mar. 2022.                                                    Seinturier, L. The next 700 CPU power models. Journal of Systems
+ [13] Acun, B., Lee, B., Kazhamiaka, F., Maeng, K., Chakkaravarthy,                        and Software 144 (Oct. 2018), 382–396.
+      M., Gupta, U., Brooks, D., and Wu, C.-J. Carbon Explorer: A Holis-              [30] Cramton, P., MacKay, D. J., Ockenfels, A., and Stoft, S. Global
+      tic Approach for Designing Carbon Aware Datacenters, May 2022.                       carbon pricing: the path to climate cooperation. The MIT Press, 2017.
+      arXiv:2201.10036 [cs, eess].                                                    [31] Crawford, K. Generative AI’s environmental costs are soaring — and
+ [14] Adzic, G., and Chatley, R. Serverless computing: economic and                        mostly secret. Nature 626, 8000 (Feb. 2024), 693–693. Bandiera_abtest:
+      architectural impact. In Proceedings of the 2017 11th Joint Meeting on               a Cg_type: World View Publisher: Nature Publishing Group Sub-
+      Foundations of Software Engineering (2017), pp. 884–889.                             ject_term: Machine learning, Computer science, Technology, Policy.
+ [15] Agache, A., Brooker, M., Iordache, A., Liguori, A., Neugebauer, R.,             [32] Dell. Dell Desktop Carbon Footprint. https://i.dell.com/sites/
+      Piwonka, P., and Popa, D.-M. Firecracker: Lightweight virtualization                 content/corporate/corp-comm/en/Documents/dell-desktop-carbon-
+      for serverless applications. In 17th USENIX Symposium on Networked                   footprint-whitepaper.pdf.
+      Systems Design and Implementation (NSDI 20) (2020), pp. 419–434.                [33] Dell. Dell server carbon footprint. https://i.dell.com/sites/content/
+ [16] Agarwal, A., Sun, J., Noghabi, S., Iyengar, S., Badam, A., Chandra,                  corporate/corp-comm/en/documents/dell-server-carbon-footprint-
+      R., Seshan, S., and Kalyanaraman, S. Redesigning Data Centers for                    whitepaper.pdf.
+      Renewable Energy. HotNets (2021), 8.                                            [34] Dell. Dell server carbon footprint. https://i.dell.com/sites/
+ [17] Anand, V., Xie, Z., Stolet, M., De Viti, R., Davidson, T., Karim-                    content/corporate/corp-comm/en/Documents/dell-desktop-carbon-
+      ipour, R., Alzayat, S., and Mace, J. The Odd One Out: Energy is                      footprint-whitepaper.pdf.
+      not like Other Metrics. HotCarbon 2022: 1st Workshop on Sustainable             [35] Dell. Dell Server Carbon Footprint. https://i.dell.com/sites/content/
+      Computer Systems Design and Implementation (July 2022).                              corporate/corp-comm/en/documents/dell-server-carbon-footprint-
+ [18] Anderson, T., Belay, A., Chowdhury, M., Cidon, A., and Zhang,                        whitepaper.pdf.
+      I. Treehouse: A Case For Carbon-Aware Datacenter Software.                      [36] Desrochers, S., Paradis, C., and Weaver, V. M. A Validation of
+      arXiv:2201.02120 [cs] (Jan. 2022). arXiv: 2201.02120.                                DRAM RAPL Power Measurements. In Proceedings of the Second
+ [19] Anthony, L. F. W., Kanding, B., and Selvan, R. Carbontracker:                        International Symposium on Memory Systems (Alexandria VA USA,
+      Tracking and Predicting the Carbon Footprint of Training Deep                        Oct. 2016), ACM, pp. 455–470.
+      Learning Models. ICML Workshop on Challenges in Deploying and                   [37] Do, T., Rawshdeh, S., and Shi, W. pTop: A Process-level Power
+      monitoring Machine Learning Systems (July 2020). arXiv:2007.03051                    Profiling Tool. HotPower (2009), 5.
+      [cs, eess, stat].                                                               [38] Dodge, J., Prewitt, T., Tachet des Combes, R., Odmark, E.,
+ [20] Babakol, T., Canino, A., Mahmoud, K., Saxena, R., and Liu, Y. D.                     Schwartz, R., Strubell, E., Luccioni, A. S., Smith, N. A., DeCario,
+      Calm energy accounting for multithreaded Java applications. In                       N., and Buchanan, W. Measuring the Carbon Intensity of AI in
+      Proceedings of the 28th ACM Joint Meeting on European Software En-                   Cloud Instances. In 2022 ACM Conference on Fairness, Accountabil-
+      gineering Conference and Symposium on the Foundations of Software                    ity, and Transparency (Seoul Republic of Korea, June 2022), ACM,
+      Engineering (Virtual Event USA, Nov. 2020), ACM, pp. 976–988.                        pp. 1877–1894.
+ [21] Bellosa, F. The benefits of event: driven energy accounting in power-           [39] Dong, M., Lan, T., and Zhong, L. Rethink energy accounting with
+      sensitive systems. In Proceedings of the 9th workshop on ACM SIGOPS                  cooperative game theory. In Proceedings of the 20th annual interna-
+      European workshop: beyond the PC: new challenges for the operating                   tional conference on Mobile computing and networking (Maui Hawaii
+      system (2000), pp. 37–42.                                                            USA, Sept. 2014), ACM, pp. 531–542.
+ [22] Bhagavathula, A., Han, L., and Gupta, U. Understanding the Im-                  [40] Du, D., Liu, Q., Jiang, X., Xia, Y., Zang, B., and Chen, H. Serverless
+      plications of Uncertainty in Embodied Carbon Models for Sustainable                  computing on heterogeneous computers. In Proceedings of the 27th
+      Computing. HotCarbon (2024).                                                         ACM International Conference on Architectural Support for Program-
+ [23] Carreira, J., Fonseca, P., Tumanov, A., Zhang, A., and Katz, R.                      ming Languages and Operating Systems (Lausanne Switzerland, Feb.
+      Cirrus: a Serverless Framework for End-to-end ML Workflows. In                       2022), ACM, pp. 797–813.
+      Proceedings of the ACM Symposium on Cloud Computing - SoCC ’19                  [41] Fieni, G., Rouvoy, R., and Seinturier, L.                  SmartWatts:
+      (Santa Cruz, CA, USA, 2019), ACM Press, pp. 13–24.                                   Self-Calibrating Software-Defined Power Meter for Containers.
+ [24] Carroll, A., and Heiser, G. An analysis of power consumption in a                    arXiv:2001.02505 [cs] (Jan. 2020). arXiv: 2001.02505.
+      smartphone. In 2010 USENIX Annual Technical Conference (USENIX                  [42] Fieni, G., Rouvoy, R., and Seiturier, L. SelfWatts: On-the-fly Se-
+      ATC 10) (2010).                                                                      lection of Performance Events to Optimize Software-defined Power
+
+
+
+
+                                                                                538
+SoCC ’24, November 20–22, 2024, Redmond, WA, USA                                                                         Prateek Sharma and Alexander Fuerst
+
+
+      Meters. In 2021 IEEE/ACM 21st International Symposium on Cluster,                  Conference (Porto Portugal, Apr. 2018), ACM, pp. 1–15.
+      Cloud and Internet Computing (CCGrid) (Melbourne, Australia, May              [59] Gupta, U., Elgamal, M., Hills, G., Wei, G.-Y., Lee, H.-H. S., Brooks,
+      2021), IEEE, pp. 324–333.                                                          D., and Wu, C.-J. ACT: designing sustainable computer systems
+ [43] Flinn, J., and Satyanarayanan, M. Energy-aware adaptation for                      with an architectural carbon modeling tool. In Proceedings of the 49th
+      mobile applications. ACM SIGOPS Operating Systems Review (1999),                   Annual International Symposium on Computer Architecture (New York
+      16.                                                                                New York, June 2022), ACM, pp. 784–799.
+ [44] Flinn, J., and Satyanarayanan, M. PowerScope: a tool for profiling            [60] Gupta, U., Kim, Y. G., Lee, S., Tse, J., Lee, H.-H. S., Wei, G.-Y., Brooks,
+      the energy usage of mobile applications. In Proceedings WMCSA’99.                  D., and Wu, C.-J. Chasing Carbon: The Elusive Environmental Foot-
+      Second IEEE Workshop on Mobile Computing Systems and Applications                  print of Computing, Oct. 2020. arXiv:2011.02839 [cs].
+      (Feb. 1999), pp. 2–10.                                                        [61] Hanafy, W. A., Liang, Q., Bashir, N., Irwin, D., and Shenoy, P.
+ [45] Fonseca, R., Dutta, P., Levis, P., and Stoica, I. Quanto: Tracking                 Carbonscaler: Leveraging cloud workload elasticity for optimizing
+      Energy in Networked Embedded Systems. OSDI (2008), 16.                             carbon-efficiency. Proceedings of the ACM on Measurement and Anal-
+ [46] Fouladi, S., Romero, F., Iter, D., Li, Q., and Chatterjee, S. From                 ysis of Computing Systems 7, 3 (2023), 1–28.
+      Laptop to Lambda: Outsourcing Everyday Jobs to Thousands of Tran-             [62] Henderson, P., Hu, J., Romoff, J., Brunskill, E., Jurafsky, D., and
+      sient Functional Containers. USENIX Annual Technical Conference                    Pineau, J. Towards the Systematic Reporting of the Energy and
+      (2019), 15.                                                                        Carbon Footprints of Machine Learning. Journal of Machine Learning
+ [47] Fouladi, S., Wahby, R. S., Shacklett, B., Balasubramaniam, K. V.,                  Research 21 (2020), 1–43.
+      Zeng, W., Bhalerao, R., Sivaraman, A., Porter, G., and Winstein,              [63] Hong, S., and Kim, H. An integrated GPU power and performance
+      K. Encoding, fast and slow: Low-latency video processing using                     model. In Proceedings of the 37th annual international symposium
+      thousands of tiny threads. In 14th USENIX Symposium on Networked                   on Computer architecture (New York, NY, USA, June 2010), ISCA ’10,
+      Systems Design and Implementation (NSDI 17) (2017), pp. 363–376.                   Association for Computing Machinery, pp. 280–289.
+ [48] Foundation, G. S. Software Carbon Intensity (SCI) Specification.              [64] Hubblo. Scaphandre. https://github.com/hubblo-org/scaphandre,
+      https://sci.greensoftware.foundation/.                                             July 2023.
+ [49] Foundation, G. S. SCI Specification Achieves ISO Standard                     [65] Hè, H., Friedman, M., and Rekatsinas, T. EnergAt: Fine-Grained
+      Status. https://greensoftware.foundation/articles/sci-specification-               Energy Attribution for Multi-Tenancy. HotCarbon (2023).
+      achieves-iso-standard-status, Apr. 2024.                                      [66] Islam, M. A., and Ren, S. A new perspective on energy accounting
+ [50] Fuerst, A., Rehman, A., and Sharma, P. Ilúvatar: A fast control plane              in {Multi-Tenant} data centers. In USENIX Workshop on Cool Topics
+      for serverless computing. In Proceedings of the 32nd International                 on Sustainable Data Centers (CoolDC 16) (2016).
+      Symposium on High-Performance Parallel and Distributed Computing              [67] Jay, M., Ostapenco, V., Lefevre, L., Trystram, D., Orgerie, A.-C.,
+      (June 2023), HPDC ’23, Association for Computing Machinery.                        and Fichel, B. An experimental comparison of software-based power
+ [51] Fuerst, A., and Sharma, P. Faascache: Keeping serverless computing                 meters: focus on CPU and GPU. In 2023 IEEE/ACM 23rd International
+      alive with greedy-dual caching. In Proceedings of the 26th ACM                     Symposium on Cluster, Cloud and Internet Computing (CCGrid) (May
+      International Conference on Architectural Support for Programming                  2023), pp. 106–118.
+      Languages and Operating Systems (New York, NY, USA, 2021), ASPLOS             [68] Jiang, W., Liu, F., Tang, G., Wu, K., and Jin, H. Virtual Machine
+      2021, Association for Computing Machinery, pp. 386–400.                            Power Accounting with Shapley Value. In 2017 IEEE 37th International
+ [52] Garcia, C. Data Center Energy Use - AKCP Monitoring. https://www.                  Conference on Distributed Computing Systems (ICDCS) (Atlanta, GA,
+      akcp.com/blog/the-real-amount-of-energy-a-data-center-use/, July                   USA, June 2017), IEEE, pp. 1683–1693.
+      2023.                                                                         [69] Jiang, W., Ren, S., Liu, F., and Jin, H. Non-IT Energy Accounting
+ [53] Ge, R., Feng, X., Song, S., Chang, H.-C., Li, D., and Cameron, K. W.               in Virtualized Datacenter. In 2018 IEEE 38th International Conference
+      PowerPack: Energy Profiling and Analysis of High-Performance Sys-                  on Distributed Computing Systems (ICDCS) (Vienna, July 2018), IEEE,
+      tems and Applications. IEEE Transactions on Parallel and Distributed               pp. 300–310.
+      Systems 21, 5 (May 2010), 658–671. Conference Name: IEEE Transac-             [70] Kandiah, V., Peverelle, S., Khairy, M., Pan, J., Manjunath, A.,
+      tions on Parallel and Distributed Systems.                                         Rogers, T. G., Aamodt, T. M., and Hardavellas, N. AccelWattch:
+ [54] Ghanei, F., Tipnis, P., Marcus, K., Dantu, K., Ko, S., and Ziarek, L.              A Power Modeling Framework for Modern GPUs. In MICRO-54: 54th
+      OS-based Resource Accounting for Asynchronous Resource Use in                      Annual IEEE/ACM International Symposium on Microarchitecture (New
+      Mobile Systems. In Proceedings of the 2016 International Symposium                 York, NY, USA, Oct. 2021), MICRO ’21, Association for Computing
+      on Low Power Electronics and Design (San Francisco Airport CA USA,                 Machinery, pp. 738–753.
+      Aug. 2016), ACM, pp. 296–301.                                                 [71] Khan, K. N., Hirki, M., Niemi, T., Nurminen, J. K., and Ou, Z. RAPL
+ [55] Ghanei, F., Tipnis, P., Marcus, K., Dantu, K., Ko, S. Y., and Ziarek,              in Action: Experiences in Using RAPL for Power Measurements. ACM
+      L. OS-Based Energy Accounting for Asynchronous Resources in IoT                    Transactions on Modeling and Performance Evaluation of Computing
+      Devices. IEEE Internet of Things Journal 6, 3 (June 2019), 5841–5852.              Systems 3, 2 (June 2018), 1–26.
+      Conference Name: IEEE Internet of Things Journal.                             [72] Khan, K. N., Nyback, F., Ou, Z., Nurminen, J. K., Niemi, T., Eulisse,
+ [56] Guan, X., Bashir, N., Irwin, D., and Shenoy, P. WattScope: Non-                    G., Elmer, P., and Abdurachmanov, D. Energy Profiling Using
+      intrusive application-level power disaggregation in datacenters. Per-              IgProf. In 2015 15th IEEE/ACM International Symposium on Clus-
+      formance Evaluation 162 (Nov. 2023), 102369.                                       ter, Cloud and Grid Computing (Shenzhen, China, May 2015), IEEE,
+ [57] Gujarati, A., Karimi, R., Alzayat, S., Hao, W., Kaufmann, A., Vig-                 pp. 1115–1118.
+      fusson, Y., and Mace, J. Serving {DNNs} like clockwork: Perfor-               [73] Kim, J., and Lee, K. FunctionBench: A Suite of Workloads for Server-
+      mance predictability from the bottom up. In 14th USENIX Symposium                  less Cloud Function Service. In 2019 IEEE 12th International Confer-
+      on Operating Systems Design and Implementation (OSDI 20) (2020),                   ence on Cloud Computing (CLOUD) (July 2019), pp. 502–504. ISSN:
+      pp. 443–462.                                                                       2159-6182.
+ [58] Guo, L., Xu, T., Xu, M., Liu, X., and Lin, F. X. Power sandbox:               [74] Klenert, D., Mattauch, L., Combet, E., Edenhofer, O., Hepburn,
+      power awareness redefined. In Proceedings of the Thirteenth EuroSys                C., Rafaty, R., and Stern, N. Making carbon pricing work for
+
+
+
+
+                                                                              539
+Accountable Carbon Footprints and Energy Profiling For Serverless Functions                                SoCC ’24, November 20–22, 2024, Redmond, WA, USA
+
+
+      citizens. Nature Climate Change 8, 8 (2018), 669–677.                                  Serverless Platforms. In Proceedings of the 1st Workshop on SErverless
+ [75] Lee, S., Kim, H., Park, S., Kim, S., Choe, H., and Yoon, S. CloudSocket:               Systems, Applications and MEthodologies (Rome Italy, May 2023), ACM,
+      Fine-Grained Power Sensing System for Datacenters. IEEE Access 6                       pp. 27–33.
+      (2018), 49601–49610. Conference Name: IEEE Access.                                [92] Schleier-Smith, J., Sreekanti, V., Khandelwal, A., Carreira, J.,
+ [76] Li, A., Liu, S., and Ding, Y. Uncertainty-Aware Decarbonization for                    Yadwadkar, N. J., Popa, R. A., Gonzalez, J. E., Stoica, I., and Pat-
+      Datacenters. HotCarbon (2024).                                                         terson, D. A. What serverless computing is and should become:
+ [77] Mahgoub, A., Yi, E. B., Shankar, K., Minocha, E., Elnikety, S.,                        The next phase of cloud computing. Commun. ACM 64, 5 (Apr. 2021),
+      Bagchi, S., and Chaterji, S. WISEFUSE: Workload Characterization                       76–84.
+      and DAG Transformation for Serverless Workflows. Proceedings of                   [93] Schmidt, A., Stock, G., Ohs, R., Gerhorst, L., Herzog, B., and
+      the ACM on Measurement and Analysis of Computing Systems 6, 2                          Hönig, T. carbond: An Operating-System Daemon for Carbon Aware-
+      (May 2022), 1–28.                                                                      ness.
+ [78] Maji, D., Bashir, N., Irwin, D., Shenoy, P., and Sitaraman, R. K.                 [94] Schmitt, N., Iffländer, L., Bauer, A., and Kounev, S. Online Power
+      Untangling Carbon-free Energy Attribution and Carbon Intensity                         Consumption Estimation for Functions in Cloud Applications. In
+      Estimation for Carbon-aware Computing, Feb. 2024. arXiv:2308.06680                     2019 IEEE International Conference on Autonomic Computing (ICAC)
+      [cs].                                                                                  (June 2019), pp. 63–72. ISSN: 2474-0756.
+ [79] Maji, D., Pfaff, B., P R, V., Sreenivasan, R., Firoiu, V., Iyer, S.,              [95] Scikit-learn. Support vector regression. https://scikit-learn/stable/
+      Josephson, C., Pan, Z., and Sitaraman, R. K. Bringing Carbon                           modules/generated/sklearn.svm.SVR.html.
+      Awareness to Multi-cloud Application Delivery. In Proceedings of                  [96] Shahrad, M., Fonseca, R., Goiri, , Chaudhry, G., Batum, P., Cooke,
+      the 2nd Workshop on Sustainable Computer Systems (jul 2023), ACM,                      J., Laureano, E., Tresness, C., Russinovich, M., and Bianchini, R.
+      pp. 1–6.                                                                               Serverless in the Wild: Characterizing and Optimizing the Serverless
+ [80] Maji, D., Shenoy, P., and Sitaraman, R. K. Carboncast: multi-day                       Workload at a Large Cloud Provider. In 2020 USENIX annual technical
+      forecasting of grid carbon intensity. In Proceedings of the 9th ACM                    conference (USENIX ATC 20) (2020), pp. 205–218.
+      International Conference on Systems for Energy-Efficient Buildings,               [97] Sharma, P. Challenges and opportunities in sustainable serverless
+      Cities, and Transportation (2022), pp. 198–207.                                        computing. HotCarbon 2022: 1st Workshop on Sustainable Computer
+ [81] Maschi, F., Korolija, D., and Alonso, G. Serverless FPGA: Work-                        Systems Design and Implementation (July 2022).
+      In-Progress. In Proceedings of the 1st Workshop on SErverless Systems,            [98] Sharma, P., Pegus, P. I., Irwin, D., Shenoy, P., Goodhue, J., and
+      Applications and MEthodologies (Rome Italy, May 2023), ACM, pp. 1–4.                   Culbert, J. Design and operational analysis of a green data center.
+ [82] Meinhold, R. J., and Singpurwalla, N. D. Understanding the                             IEEE Internet Computing 21, 4 (2017), 16–24.
+      Kalman filter. The American Statistician 37, 2 (1983), 123–127.                   [99] Shen, K., Shriraman, A., Dwarkadas, S., Zhang, X., and Chen, Z.
+ [83] Mukhanov, L., Petoumenos, P., Wang, Z., Parasyris, N.,                                 Power containers: an OS facility for fine-grained power and energy
+      Nikolopoulos, D. S., De Supinski, B. R., and Leather, H. ALEA: A                       management on multicore servers. ASPLOS (2013), 12.
+      Fine-Grained Energy Profiling Tool. ACM Transactions on Architecture             [100] Siddik, M. A. B., Shehabi, A., and Marston, L. The environmental
+      and Code Optimization 14, 1 (Apr. 2017), 1–25.                                         footprint of data centers in the united states. Environmental Research
+ [84] Noureddine, A., Rouvoy, R., and Seinturier, L. A review of energy                      Letters 16, 6 (may 2021), 064017.
+      measurement approaches. ACM SIGOPS Operating Systems Review                      [101] Souza, A., Bashir, N., Murillo, J., Hanafy, W., Liang, Q., Irwin, D.,
+      47, 3 (2013), 42–49.                                                                   and Shenoy, P. Ecovisor: A virtual energy system for carbon-efficient
+ [85] Oliner, A. J., Iyer, A. P., Stoica, I., Lagerspetz, E., and Tarkoma,                   applications. In Proceedings of the 28th ACM International Conference
+      S. Carat: Collaborative energy diagnosis for mobile devices. In                        on Architectural Support for Programming Languages and Operating
+      Proceedings of the 11th ACM conference on embedded networked sensor                    Systems, Volume 2 (2023), pp. 252–265.
+      systems (2013), pp. 1–14.                                                        [102] Sundararajan, M., and Najmi, A. The many shapley values for
+ [86] Ournani, Z., Belgaid, M. C., Rouvoy, R., Rust, P., Penhoat, J., and                    model explanation. In International conference on machine learning
+      Seinturier, L. Taming energy consumption variations in systems                         (2020), PMLR, pp. 9269–9278.
+      benchmarking. In Proceedings of the ACM/SPEC International Confer-               [103] Tzenetopoulos, A., Masouros, D., Soudris, D., and Xydis, S. DV-
+      ence on Performance Engineering (2020), pp. 36–47.                                     FaaS: Leveraging DVFS for FaaS workflows. IEEE Computer Architec-
+ [87] Pathak, A., Hu, Y. C., and Zhang, M. Where is the energy spent                         ture Letters (2023), 1–4.
+      inside my app? fine grained energy accounting on smartphones with                [104] Ustiugov, D., Amariucai, T., and Grot, B. Analyzing Tail Latency
+      eprof. In Proceedings of the 7th ACM european conference on Computer                   in Serverless Clouds with STeLLAR. In 2021 IEEE International Sym-
+      Systems (2012), pp. 29–42.                                                             posium on Workload Characterization (IISWC) (Storrs, CT, USA, Nov.
+ [88] Pearson, K. A., Griffith, C. A., Zellem, R. T., Koskinen, T. T., and                   2021), IEEE, pp. 51–62.
+      Roudier, G. M. Ground-based spectroscopy of the exoplanet xo-2b                  [105] Vergara, E. J., Nadjm-Tehrani, S., and Asplund, M. Sharing the
+      using a systematic wavelength calibration. The Astronomical Journal                    Cost of Lunch: Energy Apportionment Policies. In Proceedings of the
+      157, 1 (2019), 21.                                                                     11th ACM Symposium on QoS and Security for Wireless and Mobile
+ [89] Pedregosa, F., Varoqaux, G., Gramfort, A., Michel, V., Thirion,                        Networks (Cancun Mexico, Nov. 2015), ACM, pp. 91–97.
+      B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg,               [106] Wagner, L., Mayer, M., Marino, A., Soldani Nezhad, A., Zwaan, H.,
+      V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot,                   and Malavolta, I. On the Energy Consumption and Performance of
+      M., and Duchesnay, E. Scikit-learn: Machine learning in Python.                        WebAssembly Binaries across Programming Languages and Runtimes
+      Journal of Machine Learning Research 12 (2011), 2825–2830.                             in IoT. In Proceedings of the 27th International Conference on Evaluation
+ [90] Rastegar, S. H., Shafiei, H., and Khonsari, A. EneX: An Energy-                        and Assessment in Software Engineering (Oulu Finland, June 2023),
+      Aware Execution Scheduler for Serverless Computing. IEEE Transac-                      ACM, pp. 72–82.
+      tions on Industrial Informatics (2023), 1–13.                                    [107] Wang, B., Ali-Eldin, A., and Shenoy, P. Lass: Running latency sen-
+ [91] Schirmer, T., Japke, N., Greten, S., Pfandzelter, T., and Bermbach,                    sitive serverless computations at the edge. In Proceedings of the 30th
+      D. The Night Shift: Understanding Performance Variability of Cloud                     international symposium on high-performance parallel and distributed
+
+
+
+
+                                                                                 540
+SoCC ’24, November 20–22, 2024, Redmond, WA, USA                                                                            Prateek Sharma and Alexander Fuerst
+
+
+      computing (2021), pp. 239–251.                                                         IEEE Transactions on Computers (2021).
+[108] Wang, R., Van Le, D., Tan, R., Wong, Y.-W., and Wen, Y. Real-Time                [114] Yoon, C., Kim, D., Jung, W., Kang, C., and Cha, H. AppScope:
+      Cooling Power Attribution for Co-Located Data Center Rooms with                        Application Energy Metering Framework for Android Smartphones
+      Distinct Temperatures. In Proceedings of the 7th ACM International                     using Kernel Activity Monitoring. USENIX ATC (2012), 14.
+      Conference on Systems for Energy-Efficient Buildings, Cities, and Trans-         [115] Yu, M., Wang, A., Chen, D., Yu, H., Luo, X., Li, Z., Wang, W., Chen, R.,
+      portation (Virtual Event Japan, Nov. 2020), ACM, pp. 190–199.                          Nie, D., and Yang, H. FaaSwap: SLO-Aware, GPU-Efficient Serverless
+[109] Welch, G., Bishop, G., et al. An introduction to the Kalman filter.                    Inference via Model Swapping, June 2023. arXiv:2306.03622 [cs].
+      Chapel Hill, NC, USA, 1995.                                                      [116] Zeng, H., Ellis, C. S., Lebeck, A. R., and Vahdat, A. ECOSystem:
+[110] Winter, E. The shapley value. Handbook of game theory with eco-                        Managing Energy as a First Class Operating System Resource. ASP-
+      nomic applications 3 (2002), 2025–2054.                                                LOS (2002), 10.
+[111] Wu, C.-J., Acun, B., Raghavendra, R., and Hazelwood, K. Beyond                   [117] Zeng, H., Ellis, C. S., Lebeck, A. R., and Vahdat, A. Currentcy: A
+      Efficiency: Scaling AI Sustainably. IEEE Micro (2024), 1–8.                            Unifying Abstraction for Expressing Energy Management Policies.
+[112] Wu, C.-J., Raghavendra, R., Gupta, U., Acun, B., Ardalani, N.,                         USENIX ATC (2003), 14.
+      Maeng, K., Chang, G., Behram, F. A., Huang, J., Bai, C., Gschwind,               [118] Zhang, H., and Hoffmann, H. A Quantitative Evaluation of the
+      M., Gupta, A., Ott, M., Melnikov, A., Candido, S., Brooks, D.,                         RAPL Power Control System. Feedback computing (2015), 6.
+      Chauhan, G., Lee, B., Lee, H.-H. S., Akyildiz, B., Balandat, M.,                 [119] Zhang, H., and Hoffmann, H. Maximizing Performance Under
+      Spisak, J., Jain, R., Rabbat, M., and Hazelwood, K. Sustainable                        a Power Cap: A Comparison of Hardware, Software, and Hybrid
+      AI: Environmental Implications, Challenges and Opportunities. Pro-                     Techniques. ASPLOS (2016), 15.
+      ceedings of the 5th MLSys Conference, Santa Clara, CA, USA (2022),               [120] Zhang, X., Shen, Z., Xia, B., Liu, Z., and Li, Y. Estimating Power
+      19.                                                                                    Consumption of Containers and Virtual Machines in Data Centers. In
+[113] Xu, F., Qin, Y., Chen, L., Zhou, Z., and Liu, F. 𝜆-dnn : Achieving                     2020 IEEE International Conference on Cluster Computing (CLUSTER)
+      predictable distributed dnn training with serverless architectures.                    (Sept. 2020), pp. 288–293. ISSN: 2168-9253.
+
+
+
+
+                                                                                 541
+

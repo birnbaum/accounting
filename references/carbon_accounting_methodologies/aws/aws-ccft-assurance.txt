@@ -1,0 +1,137 @@
+INDEPENDENT VALIDATION OPINION DECLARATION
+
+
+To: The Stakeholders of Amazon Web Services, Inc.
+
+Introduction and objectives of work
+Apex Companies, LLC (Apex) was engaged to conduct an independent validation of Amazon
+Web Services, Inc.’s (AWS) customer carbon footprint methodology, a model developed by
+Amazon to quantify customer-specific greenhouse gas (GHG) emissions associated with the
+use of AWS cloud services. This declaration applies to the related information included within
+the scope of work described below.
+
+Scope of work
+The scope of our work was limited to review of select Scope 3 GHG emissions data generation
+and the validation of the methodology developed by AWS for calculating and allocating
+greenhouse gas emissions associated with customers’ use of AWS services, as described in
+the AWS customer carbon footprint methodology document released in October 2025 (model
+version 3.0). Verification of Amazon’s Scope 1, Scope 2, and Scope 3 emissions outside of our
+platform validation from which customer emissions are allocated was not included in our scope
+of work.
+
+Criteria against which validation was conducted:
+The information reported by AWS’ carbon footprint tools needs to be read and understood
+together with the following standards:
+    •   World Resources Institute (WRI)/World Business Council for Sustainable Development
+        (WBCSD) Greenhouse Gas (GHG) Protocol Corporate Accounting and Reporting
+        Standard
+    •   WRI/WBCSD GHG Protocol Scope 2 Guidance
+    •   WRI/WBCSD Greenhouse Gas Protocol Corporate Value Chain (Scope 3) Accounting
+        and Reporting Standard
+    •   ISO 14064-1:2018 – Greenhouse gases – Part 1: Specification with guidance at the
+        organizational level for quantification and reporting of greenhouse gas emissions and
+        removals
+AWS based its calculation methodology on the principles and allocation methods described in
+these standards.
+
+Reporting Boundary
+    ▪   AWS’ Scope 1 and Scope 2 GHG emissions arising from activities that directly support
+        the provision of cloud services for AWS’ customers.1
+    ▪   Select AWS Scope 3 GHG emissions arising from activities that directly support the
+        provision of cloud services for AWS’ customers.
+             o   Category 2, Capital Goods
+             o   Category 3, Fuel and Energy-Related Activities
+             o   Category 4, Upstream Transportation and Distribution
+    ▪   Exclusions:
+             o   Scope 1
+
+
+1 The reported Scope 1 emissions include HCFC-22, a hydrochlorofluorocarbon, which is not reportable
+
+under the GHGP. The GHGP requires that emissions from HCFCs and other non-Kyoto Protocol gases
+be reported separately from the scopes.
+                                                                                           Page 2
+
+
+                     ▪   Emissions associated with fuel combustion in fleet vehicles.
+                     ▪   Emissions associated with AWS warehouses and manufacturing
+                         facilities, offices, and sites that are run in customer facilities (Amazon
+                         Cloud Extension, Embedded Points of Presence, Outpost sites).
+            o   Scope 2
+                   ▪ Emissions associated with operations in facilities beyond data
+                       centers, such as AWS warehouses and manufacturing facilities,
+                       offices, and sites run in customer facilities
+
+            o   All Other Scope 3 GHG emissions
+Level of Assurance and Qualifications
+    •   Level of Assurance: Limited
+    •   This validation used a materiality threshold of ±5% for aggregate errors in sampled
+        data.
+
+Responsibilities
+
+The preparation and presentation of the data reported by Amazon is the sole responsibility of
+Amazon.
+
+Apex was not involved in the determination of the reported data. Our responsibilities were to:
+
+    ▪   Provide limited assurance about whether the methodology, data generation, and
+        calculations employed by the customer carbon footprint model have been performed in
+        accordance with the Reporting Criteria; and,
+
+    ▪   Form an independent conclusion based on the assurance procedures performed and
+        evidence obtained.
+
+Reference Standard
+We performed our work in accordance with ISO 14064-3:2019 - Greenhouse gases -- Part 3:
+Specification with guidance for the validation and verification of greenhouse gas assertions.
+
+Summary of work performed
+ As part of Apex’s validation, the following activities were undertaken:
+1. Interviews with relevant personnel responsible for development of the AWS customer
+   carbon footprint calculation model;
+2. Review of the data collection and consolidation processes used to compile the reported
+   information, including assessing assumptions made, and the data scope and reporting
+   boundaries; and,
+3. Review of Amazon’s data and information systems used for collection, aggregation,
+   analysis and review of the reported information.
+
+Conclusion
+On the basis of our methodology and the activities described above:
+    ▪   Nothing has come to our attention to indicate that the methodology employed by
+        Amazon for their carbon footprint tools is not fairly calculating and reporting client-
+        specific Scope 1, 2, and select Scope 3 emissions associated with AWS cloud services
+        in all material respects.
+                                                                                           Page 3
+
+
+Statement of Independence, Impartiality and Competence
+Apex is an independent professional services company that specialises in environmental,
+health, safety and social accountability with over 30 years history. Its assurance team has
+extensive experience in conducting verification over environmental, social, ethical and health
+and safety information, systems and processes.
+Apex has implemented a Code of Ethics across the business to maintain high ethical standards
+among staff in their day-to-day business activities. We are particularly vigilant in the prevention
+of conflicts of interest. No member of the assurance team has a business relationship with
+Amazon, AWS, its Directors or Managers beyond that required of this assignment. We have
+conducted this verification independently, and there has been no conflict of interest.
+The verification team has extensive experience in conducting assurance over environmental,
+social, ethical and health and safety information, systems and processes, has over 20 years
+combined experience in this field and an excellent understanding of Apex’s standard
+methodology for the verification of GHG-related data.
+
+Attestation:
+
+
+
+
+Trevor A. Donaghu,                                 Mary E. Armstrong-Friberg,
+Lead Verifier                                      Technical Reviewer
+ESG Director                                       ESG Senior Program Manager
+
+
+
+                 Apex Companies, LLC
+                 Pleasant Hill, California
+                 October 3rd, 2025
+

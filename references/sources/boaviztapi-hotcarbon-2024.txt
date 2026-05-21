@@ -1,0 +1,525 @@
+                             BoaviztAPI: A Bottom-Up Model to Assess
+                           the Environmental Impacts of Cloud Services
+                  Thibault Simon                                              David Ekchajzer                                 Adrien Berthelot
+          Orange Labs, Univ. Lille, Inria,                          Hubblo, Université Paris-Saclay,                  ENS de Lyon, OCTO Technology,
+           CNRS, UMR 9189 CRIStAL                                     Univ. Evry, IMT-BS, LITEM,                                   Inria
+                 Rennes, France                                       Evry-Courcouronne, France                                Lyon, France
+             thibault.simon@inria.fr                               david.ekchajzer@universite-paris-                   adrien.berthelot@ens-lyon.fr
+                                                                               saclay.fr
+
+                    Eric Fourboul                                               Samuel Rince                                   Romain Rouvoy
+                  Hubblo, Boavizta                                              Alygne, Boavizta                              Univ. Lille, Inria,
+                 Montpellier, France                                              Paris, France                           CNRS, UMR 9189 CRIStAL
+                  eric@hubblo.org                                               samuel@sento.re                                 Lille, France
+                                                                                                                         romain.rouvoy@univ-lille.fr
+
+ABSTRACT                                                                                    KEYWORDS
+Awareness surrounding the environmental impacts of the digi-                                Cloud, Environmental Impact, Life Cycle Assessment, Bottom-up,
+tal industry has led numerous professionals to incorporate these                            Multicriteria, Open-data
+considerations into their work. However, the conceptualization of
+environmental impacts has often been narrowed to the scope of                               ACM Reference Format:
+carbon footprint. This limitation can be attributed to various tech-                        Thibault Simon, David Ekchajzer, Adrien Berthelot, Eric Fourboul, Samuel
+nical and data accessibility constraints, hindering a comprehensive                         Rince, and Romain Rouvoy. 2024. BoaviztAPI: A Bottom-Up Model to Assess
+evaluation, including a multi-criteria analysis over the entire life                        the Environmental Impacts of Cloud Services. In Proceedings of 3rd Workshop
+                                                                                            on Sustainable Computer Systems (HotCarbon’24). ACM, New York, NY, USA,
+cycle of digital technologies.
+                                                                                            7 pages.
+   In response to these limitations, we introduce a comprehen-
+sive bottom-up evaluation method suitable for servers and cloud
+instances, employing a life cycle thinking approach. We start by
+modeling the life cycle impacts of a server based on its hardware                           1    INTRODUCTION
+configuration. Then, we aggregate these with the impacts of its                             Six out of the nine planetary boundaries introduced by Rockstrom
+technical and physical environment to define the impacts of a cloud                         have been exceeded [1]. Regarding the climate change boundary,
+platform. We finally model the impacts of a cloud instance as a                             Freitag et al. [2] estimate that in 2020 between 2.1% and 3.9% of
+portion of the cloud platform.                                                              worldwide greenhouse gas emissions could be attributed to the
+   The proposed approach has been implemented as an open-source                             digital sector. Furthermore, the sector also contributes to the over-
+toolkit and published as an API. This initiative aims to provide de-                        shooting of other planetary boundaries, as shown for Europe in [3].
+velopers and researchers with a tool for conducting environmental                           The hosting infrastructure is estimated to contribute between 18
+evaluations of their infrastructure based on open data and open                             and 45% to the sector’s carbon footprint [2, 4–6]. As data centers
+methodologies, enhancing their ability to explore the environmen-                           experience substantial growth [7], their associated environmental
+tal materiality of ICT products, services, and infrastructures.                             impacts are likely to increase, further hindering the path toward
+                                                                                            the sector’s sustainability. This trend is especially pronounced for
+                                                                                            cloud infrastructures: according to CISCO, the global cloud data
+CCS CONCEPTS                                                                                centers traffic has been growing at a 25% compound annual growth
+• General and reference → Evaluation; • Hardware → Impact                                   rate (CAGR) between 2016 and 2021 [8].
+on the environment; • Social and professional topics → Sus-                                    In this context, major cloud providers, such as AWS [9], Azure [10],
+tainability; • Information systems → Data centers.                                          and GCP [11], have introduced tools enabling customers to assess
+                                                                                            the carbon footprint associated with their cloud usage. However,
+                                                                                            the underlying methodologies adopted by these actors have not
+                                                                                            been subjected to rigorous transparency procedures, which presents
+                                                                                            a significant threat to ensuring the consistency of results between
+Permission to make digital or hard copies of part or all of this work for personal or       tools. This lack of transparency results in inconsistencies that hin-
+classroom use is granted without fee provided that copies are not made or distributed
+for profit or commercial advantage and that copies bear this notice and the full citation   der the comparability of results, stemming from variations in the
+on the first page. Copyrights for third-party components of this work must be honored.      scope considered and allocation methods employed.
+For all other uses, contact the owner/author(s).
+                                                                                               Table 1 summarizes the key differences between the three major
+HotCarbon’24, July 9, 2024, Santa Cruz, CA
+© 2024 Copyright held by the owner/author(s).                                               cloud providers carbon assessment methodologies. One can observe
+                                                                                            that some parameters—denoted as (✓)—are only partially accounted
+HotCarbon’24, July 9, 2024, Santa Cruz, CA                     Thibault Simon, David Ekchajzer, Adrien Berthelot, Eric Fourboul, Samuel Rince, and Romain Rouvoy
+
+
+                                                               This               The ICT sector must contribute to the path toward sustainable
+                                Azure        GCP   AWS   CCF
+                                                               paper           development actively. This entails not only monitoring and miti-
+ Lifecycle phase                                                               gating environmental footprints across various impact categories,
+ Resource extraction                                                           but also considering different life cycle phases rather than focusing
+                                   ✓         ✓      ✗    ✓        ✓            solely on energy consumption. Developing a comprehensive un-
+ & manufacturing
+ Distribution                      ?         ?     ?      ✓      (✓)           derstanding of the environmental implications of cloud computing
+ Usage                             ✓         ✓     ✓      ✓       ✓            equipment and services, including servers and instances, is essential
+ End of life                       ✓         ✗     ✗     (✓)      ✗            for informed decision-making. However, there is still a lack of open
+ Included resources                                                            standards to facilitate comparable and verifiable results that are
+ Buildings                         ✗         ✓     ✗      ✗       ✓            provider-agnostic. In light of such limitations, this paper proposes a
+ IT equipments                     ✓         ✓     ✓     (✓)     (✓)           bottom-up approach for the modeling of the environmental impacts
+ Technical & building                                                          of cloud infrastructures, implemented as an open-source API.1
+                                   ✓         ✓      ?     ✗       ✓
+ environment
+ Employee commuting                ✗         ✓      ✗     ✗       ✗            2     METHODOLOGICAL BACKGROUND
+ Coolant leaks                     ?         ✗      ?     ✗       ✗            Based on the following principles, this paper presents an approach
+ Impact of IP traffic              ✓         ✗      ?     ✗       ✗            that could be used to meet the above-mentioned requirements.
+ Fossil fuel energy
+                                    ?        ✓     ✓      ✗       ✗                Attributional Life Cycle Assessment (A-LCA). Defined by the ISO
+ source on site
+ Unallocated resources                                                         14044 [20], LCA is a method both employed in the industrial and
+                                   ✓         ✓      ?     ✗       ✗            academic context [21, 22]. It is used to estimate the potential en-
+ (IDLE)
+ Third-party services                                                          vironmental impacts of a product, a process, a project, or, in our
+                                   ✓         ✓      ?     ✗       ✗            context, a service. The methodology presented in this paper follows
+ (overhead)
+ Electricity method                                                            its main principles:
+
+ T&D lost                ?     ✗      ?     (✓)    (✓)                               • The most important phases of the life cycle of servers and
+ Manufacture of                                                                        cloud services are considered: raw material acquisition, man-
+                         ?     ✓      ?      ?      ✓                                  ufacturing (both are included in what is called embodied
+ energy infrastructures
+ Location-based         (✓)    ✓      ✗     (✓)     ✓                                  impacts in the rest of the paper) and usage. It should be
+ Market-based            ✓     ✓      ✓     (✓)     ✗                                  noted that distribution to end-users and end-of-life impacts
+                                                                                       are excluded, as data on e-waste collection and recycling
+Table 1: GHG emissions accounting perimeter of cloud ser-
+                                                                                       rates are scarce [3, 23].
+vices
+                                                                                     • A multi-criteria approach is followed, providing impact fac-
+                                                                                       tors for three environmental impact categories, as defined
+                                                                                       by [24] :
+                                                                                       – Abiotic Resource Depletion of minerals and metals (ADP),
+                                                                                         which assesses the use of minerals and fossil raw materials.
+for, or using non-standardized approaches. Others, such as third-                        This indicator is a model for assessing the contribution of
+party services, can be accounted for in some tools but not in others.                     mineral and metal extraction to their progressive scarcity,
+   To address these limitations, the open source project Cloud Car-                       using antimony grams equivalent as a metric [25].
+bon Footprint (CCF) [12] introduced a provider-agnostic approach.                      – Primary Energy (PE), which includes all energy, direct and
+However, its calculation remains constrained by several factors.                          indirect, used in any phase of the life cycle. This repre-
+For the resource extraction & manufacturing phase, impacts are                            sents the total cumulative energy demand of the assessed
+systematically estimated based on the Dell R740 Life Cycle Assess-                        system [26].
+ment [13], regardless of the hardware components used. Power is                        – Global Warming Potential (GWP), which evaluates the ef-
+modeled based on benchmarks that measure power at the machine                             fects on global warming. This well-known indicator is
+level [14] , which CCF associates with cloud instances based on CPU                       also a model linking greenhouse gas emissions to global
+architecture. Not only does the CPU architecture not seem to be a                        warming. It is expressed in grams of 𝐶𝑂 2 equivalent [27].
+good proxy for estimating the power consumption of a CPU, but
+even less so for the whole machine. For example, a storage server’s                Modeling approaches. As illustrated in Figure 1, the environmen-
+primary source of power consumption is typically the hard drives.              tal impacts of a cloud platform are mostly modeled using a bottom-up
+A more specific model for each component seems to be required.                 approach, whereby the impacts of each resource required to fulfill
+   All of these methodologies to assess the environmental impact of            the service it provides are aggregated. Unlike a top-down approach,
+cloud infrastructures only address the carbon footprint dimension.             this allows the proportion of the contribution of each resource to
+However, these infrastructures also have important environmental               the global impacts to be identified. The impacts of the technical
+impacts on other dimensions, such as metal extraction [3, 15, 16].             and building environment are allocated on the cloud platform using
+This carbon tunnel vision [17] obscures environmental issues that              a top-down approach.
+could become critical and potentially leaves the door open to dele-
+terious transfer [18, 19] from one environmental impact to another.            1 https://github.com/Boavizta/boaviztapi
+BoaviztAPI: A Bottom-Up Model to Assess the Environmental Impacts of Cloud Services                                          HotCarbon’24, July 9, 2024, Santa Cruz, CA
+
+
+                                                      Top-​down                       Consequently, their impacts directly depend on both their die size
+                      Cloud         Cloud              Bottom-​up
+                    instance      instance
+                                                                                      and the engraving technology employed.
+                                                                                        For CPUs, the die size in 𝑚𝑚 2 is multiplied by the corresponding
+                                                                                                      𝑑𝑖𝑒 with a base impact I𝑏𝑎𝑠𝑒 (containing packaging,
+                                                                                      impact factor F𝑐𝑝𝑢                      𝑐𝑝𝑢
+                            Cloud
+                           platform
+                                                                                      heatsink socket, and transportation) to obtain an environmental
+                                                                                      impact factor per hour of usage:
+                                                                                                                                𝑑𝑖𝑒 + I𝑏𝑎𝑠𝑒
+                                                                                                                     𝑑𝑖𝑒𝑐𝑝𝑢 × F𝑐𝑝𝑢
+                                                Technical and                                                𝑒                         𝑐𝑝𝑢
+                     Server           Server                                                               F𝑐𝑝𝑢 =                                    (1)
+                                                  building                                                                 D
+                                                environment
+                                                                                         For both of these impact constants, we propose default values
+                  Components    Components
+                                                                                      developed in Table 2 over the three considered impact categories
+                                                                                      in Table 2, based on a 14 nm engraving process.
+Figure 1: Modeling approach used to estimate the environ-                                We retrieve CPU die sizes from the TechPowerUp CPU specs
+mental impacts of a cloud platform and instances                                      database [30]. Crowd-sourced characteristics for more than 1750
+                                                                                      CPU models are available within the API.2
+                                                                                         Using Equation 1 for two CPU units with a die size of 6.94 𝑐𝑚 2 ,
+  Open data. This methodology leverages openly accessible data to                     the non-amortized embodied carbon footprint is estimated at 45.62
+ensure that the results are transparent, reproducible, and verifiable.                kg𝐶𝑂 2 e, while it accounts for approximately 46.76 kg𝐶𝑂 2 e.
+Two types of open data are used:                                                      3.1.2 NAND memory. The impact factors per hour of both SSD
+      • Market & technical data: characteristics of components,                       and RAM sticks are obtained with the Equation 2, albeit utilizing
+        devices, and cloud instances available on the market.                         distinct impact factors for their respective density and capacity.
+      • Impact factors: which convert physical quantities into envi-
+                                                                                                                       𝑐𝑎𝑝𝑎𝑐𝑖𝑡 𝑦    𝑑𝑖𝑒       𝑏𝑎𝑠𝑒
+                                                                                                                        𝑑𝑒𝑛𝑠𝑖𝑡 𝑦 × F𝑁 𝐴𝑁 𝐷 + I𝑁 𝐴𝑁 𝐷
+        ronmental impacts. Those factors are extracted from publicly
+                                                                                                              𝑒
+        available life cycle assessments.                                             ∀𝑁 𝐴𝑁 𝐷 ∈ {𝑠𝑠𝑑, 𝑟𝑎𝑚} : F𝑁 𝐴𝑁 𝐷 =
+                                                                                                                                     D
+                                                                                                                                                                   (2)
+3     SERVER MODEL
+                                                                                         For the twelve 32GB sticks using a density of 1.79 𝐺𝐵/𝑚𝑚 2
+Following a bottom-up approach (cf. Figure 1), the assessment of the
+                                                                                      from [31], we obtain 534.60 kg𝐶𝑂 2 e using Equation 2, while the
+environmental impacts of cloud instances starts with a component-
+                                                                                      Dell LCA reports 553.33 kg𝐶𝑂 2 e.
+level assessment of servers. Their impacts are then aggregated
+                                                                                         The server combines multiple SSD disks. Considering a density
+and integrated with the technical and building environment to
+                                                                                      of 19 𝐺𝐵/𝑐𝑚 2 extracted from [32], we obtain 52.65 kg𝐶𝑂 2 e for the
+constitute a cloud platform, which is subsequently allocated into
+                                                                                      400 GB disk with Equation 2, and 3, 607.77 kg𝐶𝑂 2 e for the 8 3.84 TB
+individual cloud instances. In this section, we define the foundational
+                                                                                      ones, versus 64.1 kg𝐶𝑂 2 e and 3, 373.5 kg𝐶𝑂 2 e for the R740, respec-
+layer of the model—the estimation of a server’s environmental
+                                                                                      tively. More up-to-date crawled SSD densities are available within
+impact—and further validate it against the LCA of a Dell R740 [13].
+                                                                                      our model.3
+While similar bottom-up methods already exist [28], our approach
+aims to deliver: a more detailed and comprehensive calculation of                     3.1.3 Others. Apart from CPU, memory, and storage, other com-
+the embodied footprint, multi-criteria impacts, and a calculation of                  ponents are required for a server which we categorized as others.
+the usage impact specific to our use case.                                                The Power Supply Unit (PSU)’s embodied impact is estimated
+   Variables denoted as F represent impact factors, encapsulating                                                                  𝑒 and the R740 PSU
+                                                                                      at 72.71 kg𝐶𝑂 2 e using the impact factor F𝑝𝑠𝑢
+environmental impacts associated with a specific quantity for any                     weight of 2, 992 kg [13]. The rest of the component’s impact factor
+given impact criteria defined in Section 2—i.e., ADP, PE, and GWP.                    is static in our approach and computed as follows:
+These impact factors are, thus, expressed in units of impact, such                                          𝑒
+                                                                                                           I𝑚𝑜𝑡ℎ𝑒𝑟𝑏𝑜𝑎𝑟𝑑    𝑒 + I𝑒
+                                                                                                                        + I𝑝𝑠𝑢                𝑒
+                                                                                                                                          + I𝑐𝑎𝑠𝑖𝑛𝑔
+as kg𝐶𝑂 2 e, per quantity, such as Wh of electricity. Variables des-                            𝑒                               𝑎𝑠𝑠𝑒𝑚𝑏𝑙 𝑦
+                                                                                              F𝑜𝑡ℎ𝑒𝑟𝑠 =                                                (3)
+ignated as I are environmental impacts, expressed solely in the                                                             D
+impact unit.                                                                             By using the open source factors provided in Table 2, the remain-
+                                                                                      ing server’s components account for 295.49 kg𝐶𝑂 2 e, compared to
+3.1     Embodied impact of a physical server                                          207.07 kg𝐶𝑂 2 e reported in the R740 LCA.
+The impact assessment relies on the life cycle modeling of hard-                      3.1.4 Total. The total embodied impact factor of a server per hour
+ware components, encompassing their most important phases: raw                        of usage is finally calculated as the sum of its components’ impacts
+material acquisition, and manufacturing, collectively termed as em-                   as follows:
+bodied impacts (cf. Section 2). In all subsequent equations, embodied                                𝑒          𝑒      𝑒      𝑒          𝑒
+impact factors F 𝑒 are amortized over the life cycle expectancy D                                  F𝑠𝑒𝑟 𝑣𝑒𝑟 = F𝑐𝑝𝑢 + F𝑟𝑎𝑚 + F𝑠𝑡𝑜𝑟𝑎𝑔𝑒 + F𝑜𝑡ℎ𝑒𝑟𝑠                     (4)
+(in hours) to obtain the embodied impact for an hour of usage.                        2 https://github.com/Boavizta/boaviztapi/blob/main/boaviztapi/data/crowdsourcing/
+                                                                                      cpu_specs.csv
+3.1.1 CPU. For most electronic components, the primary source                         3 https://github.com/Boavizta/boaviztapi/blob/main/boaviztapi/data/crowdsourcing/
+of impacts lies in the process of engraving semi-conductors [29].                     ssd_manufacture.csv
+HotCarbon’24, July 9, 2024, Santa Cruz, CA                     Thibault Simon, David Ekchajzer, Adrien Berthelot, Eric Fourboul, Samuel Rince, and Romain Rouvoy
+
+
+
+                         100                                                            Constant            Impact      Value          Unit
+                                  RAM
+                                  CPU                                                                       GWP         1.97           kg𝐶𝑂 2 e/mm2
+                                  SSD                                                     𝑑𝑖𝑒
+                                                                                        F𝑐𝑝𝑢
+                         80       Others
+                                                                                                            ADP         5.87e−07       kgSbeq/mm2
+                                                                                                            PE          2.65e+01       MJ/mm2
+             Share (%)
+
+
+                                                                                                            GWP         9.14           kg𝐶𝑂 2 e
+                         60                                                               𝑏𝑎𝑠𝑒
+                                                                                        I𝑐𝑝𝑢                ADP         2.04e−02       kgSbeq
+                                                                                                            PE          156.43         MJ
+                         40
+                                                                                                            GWP         2.20           kg𝐶𝑂 2 e/cm2
+                                                                                        F𝑁𝑑𝑖𝑒               ADP         6.30e−05       kgSbeq/cm2
+                         20                                                                𝐴𝑁 𝐷
+                                                                                                            PE          2.73e+01       MJ/cm2
+                                                                                                            GWP         5.22           kg𝐶𝑂 2 e
+                          0
+                               ADP           GWP        PE                                𝑏𝑎𝑠𝑒
+                                                                                        I𝑟𝑎𝑚                ADP         1.69e−03       kgSbeq
+                                      Impact category                                                       PE          74.00          MJ
+Figure 2: Bottom-up modeling of the manufacturing envi-                                                     GWP         6.34           kg𝐶𝑂 2 e
+                                                                                          𝑏𝑎𝑠𝑒
+                                                                                        I𝑠𝑠𝑑                ADP         5.63e−04       kgSbeq
+ronmental impacts of a Dell R740 defined in [13] using our
+approach                                                                                                    PE          73.98          MJ
+                                                                                                            GWP         3.11e+01       kg𝐶𝑂 2 e
+                                                                                          𝑒
+                                                                                        Iℎ𝑑𝑑                ADP         2.50e−04       kgSbeq
+    This results in a total life cycle value—i.e. non-amortized—of                                          PE          2.76e+02       MJ
+4, 536.13 kg𝐶𝑂 2 e against a 4, 244.76 kg𝐶𝑂 2 e baseline reported in                                        GWP         2.43e+01       kg𝐶𝑂 2 e/kg
+                                                                                          𝑒
+                                                                                        F𝑝𝑠𝑢                ADP         8.30e−03       kgSbeq/kg
+the Dell R740 LCA [13]. However, without transparent factors,
+modeling methodology, and allocation choices provided, this 6.42%                                           PE          3.52e+02       MJ/kg
+variation cannot be further detailed, emphasizing the need for open                                   GWP      6.61e+01 kg𝐶𝑂 2 e
+methodologies.                                                                           𝑒
+                                                                                        I𝑚𝑜𝑡ℎ𝑒𝑟𝑏𝑜𝑎𝑟𝑑  ADP      3.69e−03 kgSbeq
+    The comprehensive evaluation of environmental impacts across                                      PE       8.36e+02 MJ
+various categories is depicted in Figure 2, emphasizing the necessity                                 GWP      6.68       kg𝐶𝑂 2 e
+of adopting holistic methodologies in impact assessments to achieve                       𝑒
+                                                                                        I𝑎𝑠𝑠𝑒𝑚𝑏𝑙 𝑦    ADP      1.41e−06 kgSbeq
+thorough evaluations of ICT impacts. These impacts vary across                                        PE       6.86e+01 MJ
+different impact categories, highlighting the need to avoid carbon-                                   GWP      1.50e+02 kg𝐶𝑂 2 e
+centric perspectives to reveal potential shifts in impact distribution                    𝑒
+                                                                                        I𝑟𝑎𝑐𝑘         ADP      2.02e−02 kgSbeq
+among various categories.                                                                             PE       2.20e+03 MJ
+                                                                                        Table 2: Impact constants, extracted from [31]
+3.2     Usage impact of a physical server
+The total energy consumption of a server E𝑠𝑒𝑟 𝑣𝑒𝑟 , in Wh, is calcu-
+lated as the sum of its components (𝐶) power consumption P, in
+W, over a given duration T , in hours:                                            The parameters 𝑎, 𝑏, 𝑐, and 𝑑 are determined for a logarithmic
+                                 ∑︁                                            regression model fitted on sample data (𝑤, P𝑐𝑝𝑢 ) collected from em-
+                      E𝑠𝑒𝑟 𝑣𝑒𝑟 =    (P𝑐 × T )                    (5)           pirical measurements. We selected a logarithmic regression model
+                                           𝑐 ∈𝐶                                based on the power consumption curves of CPUs for AWS cloud
+                                                                               instances as described in the work of [33]. Here, we propose an-
+   To obtain the associated environmental impact factor for one                other way to determine them inspired from [34], using the Thermal
+                 𝑢
+hour of usage F𝑠𝑒𝑟 𝑣𝑒𝑟 , this consumption is multiplied by the impact          Design Power (TDP) value of a given CPU and a generic power
+factor F𝑒𝑚 representing the electricity mix—i.e., the environmental            consumption profile derived from [33] that expresses the power
+impacts associated to the production and transport of energy.                  draw as a ratio of the TDP. By fitting a power consumption profile
+   However, contrarily to embodied impacts, the power drawn by                 P𝑐𝑝𝑢 using power measurements sampled at 0%, 10%, 50% and 100%
+components is not static: it depends on the workload executed.                 workloads, which correspond to TDP ratios of 0.12, 0.32, 0.75, and
+While it can be physically measured, such measurements are often               1.02, respectively, we can describe the workload as a continuous
+not available, especially in cloud instances. As such, we propose an           variable, enhancing the estimation of CPU power draw. Further
+alternative approach to estimate the component’s power draw for                details on the modeling of components’ power consumption can
+a given workload.                                                              be found in the project’s documentation.4
+3.2.1 CPU power. For a given CPU workload 𝑤 ∈ [0%, 100%]                       3.2.2 NAND memory power. While the power consumption of
+which represents the ratio of time the CPU is actively processing              SSD and RAM also depends on their workloads, defining such
+tasks to the total time observed—expressed as a percentage—the                 workload can be tedious, particularly for SSDs. Furthermore, we
+power consumption P𝑐𝑝𝑢 is estimated using:                                     mostly observed consistent power consumption profiles and thus
+                         P𝑐𝑝𝑢 (𝑤) = 𝑎 × log(𝑏 × (𝑤 + 𝑐)) + 𝑑        (6)        4 https://doc.api.boavizta.org/Explanations/components/cpu/
+BoaviztAPI: A Bottom-Up Model to Assess the Environmental Impacts of Cloud Services                                           HotCarbon’24, July 9, 2024, Santa Cruz, CA
+
+
+used constant power consumption values for both idle and active                                                                                         CPU
+states.                                                                                                                                                 RAM
+                                                                                         Embodied                                                       SSD
+   For a given model, the TechPowerUp SSD specs database [35] can                      19.5 kgCO2e 2.231.88 6.69       7.87                             Others
+be used to estimate the idle and active (averaged) power consump-                                                                                       Environment
+tion values. For RAM banks, we use the averaged values from [33]:
+0.19 𝑊 /𝐺𝐵 and 0.54 𝑊 /𝐺𝐵 in idle and active states, respectively.
+By default, RAM banks are constantly considered in an active state.
+                                                                                             Usage           18.15            3.71   7.58           14.77
+                                                                                       44.3 kgCO2e
+3.2.3 Power of other components. The power consumption of the
+rest of the server is considered as overhead and thus set as a factor
+𝑓 of the sum of CPU, RAM, and SSD energy consumption. This ratio
+is an average that counts in the power consumption of the moth-                       Figure 3: GWP impact of a cloud instance hosted in France
+erboard, fans, and PSU(s). Its power draw is estimated as follows,                    with 4 vCPUs, 8 GB of vRAM and 80 GB of SSD storage used
+with a factor value by default at 𝑓 = 0.2:                                            for a year, calculated using Equation 10
+               P𝑜𝑡ℎ𝑒𝑟 (𝑤) = 𝑓 × (P𝑐𝑝𝑢 + P𝑟𝑎𝑚 + P𝑠𝑠𝑑 )                       (7)
+                                                                                      4.2     Embodied & usage impacts of a Cloud
+   Note that we do not include graphic or AI accelerators (GPUs,
+TPUs, etc.) in this study, their power consumption must be modeled                            instance
+separately and will be addressed in future work.                                      A cloud instance is modeled as a part of a cloud platform. Its impacts
+                                                                                      encompass both a share of the technical and building environment
+4     CLOUD MODEL                                                                     impacts, I𝑒𝑛𝑣 , and a share of each of the servers’ components im-
+                                                                                      pact factor F𝑟 . This share is computed for each component using
+According to Figure 1, the subsequent stage of the modeling process                                                             𝑢 over the total available
+                                                                                      the quantity assigned to the instance Q𝑟𝑒𝑠
+is to analyze the impacts of cloud platforms, which will be used in                                                  𝑢 . Such quantity Q materializes as
+                                                                                      resources on the platform Q𝑟𝑒𝑠
+the assessment of cloud instances.
+                                                                                      vCPUs for CPUs and GBs for RAM and disks. For the others re-
+                                                                                      sources, which are not explicitly assigned to a cloud instance—i.e.
+4.1     Embodied & usage impacts of a cloud                                           motherboard, PSU, assembly, and casing (cf. Equation 3)—we have
+        platform                                                                      chosen an allocation based on vCPU, although this may depend on
+We define a cloud platform as the aggregation of a cluster of servers                 the type of cloud instance.
+and their technical and building environment required to provide                                                       ∑︁        Q𝑟𝑢 (𝑖𝑛𝑠𝑡𝑎𝑛𝑐𝑒) × F𝑟
+cloud services. A cloud platform offers a pool of resources assigned                     F𝑖𝑛𝑠𝑡 = I𝑒𝑛𝑣 (E𝑖𝑛𝑠𝑡 ) +                                        (10)
+                                                                                                                                   Q𝑟𝑢 (𝑝𝑙𝑎𝑡 𝑓 𝑜𝑟𝑚)
+to cloud services: vCPU, vRAM, storage, and shared resources—                                         𝑟 ∈ {𝑐𝑝𝑢,
+                                                                                                  𝑟𝑎𝑚,𝑠𝑠𝑑,𝑜𝑡ℎ𝑒𝑟𝑠 }
+power supply, motherboard, casing and technical environment.
+   To account for the embodied impacts of the technical and build-       Equation 10 allows to obtain the instance embodied and usage
+ing environment, we refer to the study published by ARCEP [36],       impacts for an hour, each share is multiplied by the cloud platform
+which reports on embodied impact factors per 𝑚 2 of a server          total impacts for the resource (F𝑟 ). This assumes that the server
+room. The technical environment includes the building, genera-        is used continuously over its lifetime. To estimate the share of
+tors, chillers, inverters, and batteries, as well as a wide range of  technical and building environment associated with the instance,
+equipment such as electrical and network cables, lighting, fuel       Equation 8 is used with the instance energy consumption E𝑖𝑛𝑠𝑡 . For
+oil storage tanks, etc. Knowing the electricity consumption per       one-hour usage, this energy consumption is estimated using Equa-
+                                                                                              Q𝑢 (𝑖𝑛𝑠𝑡𝑎𝑛𝑐𝑒 )
+𝑚 2 and the Power Usage Effectiveness (PUE) used in [36], we in-      tion 5, using the ratio Q𝑢𝑟 (𝑝𝑙𝑎𝑡 𝑓 𝑜𝑟𝑚) to obtain for each component
+                                                                𝑒 as                            𝑟
+fer the embodied impacts of the technical environment F𝐷𝐶             the share to allocate to the instance.
+2.265e−02 kg𝐶𝑂 2 e/kWh, 5.740e−01 MJ/kWh, and 1.016e−06 kg𝑆𝑏eq/kWh To illustrate the aforementioned approach we consider a cloud
+for respectively GWP, PE and ADP criteria. As such, the embodied      platform comprising a single server with technical characteristics
+impact of the technical and building environment can be estimated     and environmental impacts defined in Section 3, with a lifespan of 5
+for a given energy consumption E as follows:                          years. We consider that the infrastructure is hosted in France where
+                           𝑒               𝑒                          F𝑒𝑚 is equal to 0, 098 kg𝐶𝑂 2 e/kWh [38]. The PUE is set arbitrarily
+                         I𝑒𝑛𝑣 (E) = E × F𝐷𝐶                       (8)
+                                                                      to 1.5. CPU power is estimated at 104.75 W using Equation 6 and
+   In order to account for the usage impacts of the technical and     the open factors within the API.5 Each SSD disk consumes 5.7 W.
+building environment, the PUE of the cloud infrastructure is applied     The impact of a year of usage for a cloud instance with 4 vCPUs,
+to the usage impacts of the server. The PUE is defined as the ratio   8 GB  of RAM, and 80 GB of SSD storage are estimated using Equa-
+of electricity consumed by the facility to the electricity consumed   tion 10 in Figure 3. One can observe that contrary to the server in
+by the IT equipment [37]. The usage impacts are therefore defined     Figure 2, the impact of SSDs is smaller due to a small share of disks
+as follows for a given energy consumption E, using the electricity    reserved. The technical and building environment substantially
+mix F𝑒𝑚 :                                                             increase the total impacts, both embodied and usage.
+                     𝑢
+                   I𝑒𝑛𝑣 (E) = E × (𝑃𝑈 𝐸 − 1) × F𝑒𝑚                          (9)       5 https://doc.api.boavizta.org/Explanations/usage/power/
+HotCarbon’24, July 9, 2024, Santa Cruz, CA                   Thibault Simon, David Ekchajzer, Adrien Berthelot, Eric Fourboul, Samuel Rince, and Romain Rouvoy
+
+
+4.3      Limits & future work                                                expertise of each contributor in each segment of the digital value
+As exposed in Fig. 1, our approach does not cover the entire perime-         chain. We believe that this collaborative approach to evaluation
+ter of a cloud infrastructure. This includes third-party services            will allow us to gradually and rigorously expand the scope of our
+hosted in the cloud platform that serve multiple customers. These            evaluation methodology while maintaining confidence in the tools.
+can be technical services, such as the control plane, or customer
+services, such as billing. In addition, the usage impacts of non-            6     ACKNOWLEDGEMENTS
+server IT equipment, such as network equipment, are not taken                We extend our gratitude to Pierre Rust for his insightful comments
+into account. This also minimizes the impacts of the technical and           and assistance in the development of this methodology. Addition-
+building environment, as we do not consider their consumption                ally, we wish to express our sincere appreciation to the open-source
+when applying the PUE. Finally, we do not consider servers in idle           contributors not previously mentioned in this paper, namely: Benoit
+states. This assumes that all servers are occupied, which is not             Petit, Olivier de Meringo, Bruno Thomas, Jacob Valdemar, Ben-
+always the case [39]. They are part of the cloud infrastructure and          jamin Le Bigot, Benjamin Davy, Christophe Saugé, Simon Shillaker,
+allow for rapid and important scaling. These exclusions mean that            Valentin Chaud, Luke Kuzmish, Olivier Delcroix, and Seb Solere.
+certain parts of the infrastructure remain unallocated to customers.         We welcome contributions and encourage readers to contact the
+   In addition, our allocation strategy poses some issues. It assumes        authors with any challenges they encounter.
+that no resource is overcommitted (when a resource is used by                   This work is partly supported by the French government through
+two or more cloud instances at the same time). If a resource is              the Agence Nationale de la Recherche (ANR) under the France 2030
+overcommitted [40], all the instances sharing a physical resource            program, including funding from the CARECloud (ANR-23-PECL-
+would double account its impacts. These examples underscore the              0003) and DISTILLER (ANR-21-CE25-0022) grants.
+significant margins of error associated with ICT environmental as-
+sessments, which remain inadequately quantified and documented,
+even though they have a significant impact on the final assessment
+                                                                             REFERENCES
+                                                                              [1] K. Richardson, W. Steffen, W. Lucht, J. Bendtsen, S. E. Cornell, J. F. Donges,
+results. In future work, we aim to enhance the tracing of uncertain-              M. Drüke, I. Fetzer, G. Bala, W. von Bloh, G. Feulner, S. Fiedler, D. Gerten, T. Glee-
+ties throughout the modeling process, employing approaches such                   son, M. Hofmann, W. Huiskamp, M. Kummu, C. Mohan, D. Nogués-Bravo, S. Petri,
+as those suggested by [41].                                                       M. Porkka, S. Rahmstorf, S. Schaphoff, K. Thonicke, A. Tobian, V. Virkki, L. Wang-
+                                                                                  Erlandsson, L. Weber, J. Rockström, Earth beyond six of nine planetary boundaries,
+   To enhance the modeling of energy consumption, our future                      Science Advances 9 (37) (2023) eadh2458. doi:10.1126/sciadv.adh2458.
+work includes Energizta, a collaborative project aimed at collecting          [2] C. Freitag, M. Berners-Lee, K. Widdicks, B. Knowles, A. Friday, The real climate
+                                                                                  and transformative impact of ICT: A critique of estimates, trends, and regulations,
+and reporting open data on server energy usage.6 Certain services,                Patterns 2 (9) (2021) 100340. doi:10.1016/j.patter.2021.100340.
+such as Artificial Intelligence, Machine Learning, cryptomining,              [3] Bordage, F., de Montenay, L., Benqassem, S., Delmas-Orgelet, J., Domon, F.,
+and High Performance Computing (HPC), heavily rely on GPUs,                       Prunel, D., Vateau, C. et Lees Perasso, E., Digital technologies in Europe: an
+                                                                                  environmental life cycle approach, [Online; accessed 18. Mar. 2024] (2021).
+which will be incorporated in future work.7                                       URL https://www.greenit.fr/wp-content/uploads/2021/12/EU-Study-LCA-7-
+   Finally, the choice of a vCPU-based allocation for the others                  DEC-EN.pdf
+component and the technical and building environment remains                  [4] L. Belkhir, A. Elmeligi, Assessing ict global emissions footprint: Trends to 2040
+                                                                                  & recommendations, Journal of Cleaner Production 177 (2018) 448–463. doi:
+arbitrary. This choice will be challenged in future work to better                10.1016/j.jclepro.2017.12.239.
+represent the link between these resources and the scaling of cloud           [5] D. Lundén, J. Malmodin, P. Bergmark, N. Lövehagen, Electricity consumption
+                                                                                  and operational carbon emissions of european telecom network operators, Sus-
+instance.                                                                         tainability 14 (5) (2022).
+                                                                              [6] A. Pasek, H. Vaughan, N. Starosielski, The world wide web of carbon: Toward a
+5     CONCLUSION                                                                  relational footprinting of information and communications technology’s climate
+                                                                                  impacts, Big Data & Society 10 (1) (2023) 20539517231158994. doi:10.1177/
+This paper introduces our bottom-up methodology for assessing the                 20539517231158994.
+environmental impacts of servers and cloud instance solutions based           [7] Electricity 2024 – analysis (2024).
+                                                                                  URL https://www.iea.org/reports/electricity-2024
+on crowd-sourced data. As an open-source project, we emphasize                [8] C. V. Networking, Cisco global cloud index: Forecast and methodology, 2016–
+the transparency and reliability of our bottom-up methodology.                    2021, White paper. Cisco Public, San Jose 1 (2016).
+While a top-down approach would allow for a broader scope, the                    URL https://virtualization.network/Resources/Whitepapers/0b75cf2e-0c53-4891-
+                                                                                  918e-b542a5d364c5_white-paper-c11-738085.pdf
+bottom-up approach allows us to pinpoint which part of the cloud              [9] Understanding your carbon emission estimations - AWS Billing, [Online;
+instance is responsible for the most impacts, empowering stake-                   accessed 18. Mar. 2024] (2024).
+                                                                                  URL       https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ccft-
+holders to identify actionable reduction levers. It has been notably              estimation.html
+utilized by companies, such as Orange [42],8 Sweep9 , and Sami,10            [10] A new approach for Scope 3 emissions transparency, [Online; accessed 18. Mar.
+as well as for conducting GHG assessments in France. The research                 2024] (2021).
+                                                                                  URL https://download.microsoft.com/download/7/2/8/72830831-5d64-4f5c-9f51-
+community has also used it as a basis to estimate and reduce various              e6e38ab1dd55/Microsoft_Scope_3_Emissions.pdf
+ICT aspects’ environmental footprint, such as Kubernetes schedul-            [11] Carbon Footprint reporting methodology, [Online; accessed 18. Mar. 2024] (2024).
+ing, AI, infrastructure management. . . [43–49]. Furthermore, the                 URL https://cloud.google.com/carbon-footprint/docs/methodology
+                                                                             [12] Overview | Cloud Carbon Footprint, [Online; accessed 18. Mar. 2024] (Feb. 2024).
+methodology can be enhanced in specific areas, benefiting from the                URL https://www.cloudcarbonfootprint.org/docs
+                                                                             [13] Busa, Andreas and Hegeman, Malcolm, Life cycle assessment of dell r740 (2019).
+6 https://boavizta.github.io/Energizta/
+                                                                                  URL https://www.delltechnologies.com/asset/en-us/products/servers/technical-
+7 https://github.com/Boavizta/boaviztapi/issues/65
+                                                                                  support/Full_LCA_Dell_R740.pdf
+8 https://orange.fr
+                                                                             [14] All Published SPEC SPECpower_ssj2008 Results, [Online; accessed 8. May 2024]
+9 https://sweep.net
+                                                                                  (May 2024).
+10 https://sami.eco                                                               URL https://www.spec.org/power_ssj2008/results/power_ssj2008.html
+BoaviztAPI: A Bottom-Up Model to Assess the Environmental Impacts of Cloud Services                                                     HotCarbon’24, July 9, 2024, Santa Cruz, CA
+
+
+[15] B. K. Sovacool, The precarious political economy of cobalt: Balancing prosperity,             prospective.html
+     poverty, and brutality in artisanal and industrial mining in the democratic republic     [37] C. L. Belady, C. G. Malone, Metrics and an infrastructure model to evaluate data
+     of the congo, The Extractive Industries and Society 6 (3) (2019) 915–939. doi:                center efficiency, in: Proceedings of the ASME 2007 InterPACK Conference collo-
+     10.1016/j.exis.2019.05.018.                                                                   cated with the ASME/JSME 2007 Thermal Engineering Heat Transfer Summer
+[16] G. Pitron, The Dark Cloud: how the digital world is costing the earth, Scribe                 Conference, Vol. ASME 2007 InterPACK Conference, Volume 1, 2007, pp. 751–755.
+     Publications, 2023.                                                                           doi:10.1115/IPACK2007-33338.
+[17] Jan Konietzko, Moving beyond carbon tunnel vision with a sustainability data             [38] N. Scarlat, M. Prussi, M. Padella, Quantification of the carbon intensity of elec-
+     strategy (2022).                                                                              tricity produced and used in Europe, Appl. Energy 305 (2022) 117901. doi:
+     URL https://www.cognizant.com/us/en/insights/insights-blog/moving-beyond-                     10.1016/j.apenergy.2021.117901.
+     carbon-tunnel-vision-with-a-sustainability-data-strategy-codex7121                       [39] J. W. Pierre Delforge, America’s data centers consuming and wasting growing
+[18] R. L. Lewison, A. F. Johnson, J. Gan, R. Pelc, K. Westfall, M. Helvey, Accounting for         amounts of energy, Tech. rep., NRDC (2015).
+     unintended consequences of resource policy: Connecting research that addresses                URL https://www.nrdc.org/resources/americas-data-centers-consuming-and-
+     displacement of environmental impacts, Conservation Letters 12 (3) (2019) e12628.             wasting-growing-amounts-energy
+     doi:10.1111/conl.12628.                                                                  [40] P. Jacquet, T. Ledoux, R. Rouvoy, ScroogeVM: Boosting cloud resource utilization
+[19] M. Amidpour, M. H. Khoshgoftar Manesh, Chapter 11 - environmental impacts                     with dynamic oversubscription, IEEE Transactions on Sustainable Computing
+     consideration, in: M. Amidpour, M. H. Khoshgoftar Manesh (Eds.), Cogeneration                 (2024) 1–13Publisher: IEEE. doi:10.1109/TSUSC.2024.3369333.
+     and Polygeneration Systems, Academic Press, 2021, pp. 195–213. doi:10.1016/              [41] É. Guégain, T. Simon, A. Rahier, R. Rouvoy, Managing Uncertainties in ICT Ser-
+     B978-0-12-817249-0.00011-2.                                                                   vices Life Cycle Assessment using Fuzzy Logic, in: ICT4S’24 - 10th International
+[20] W. Klöpffer, Life cycle assessment, Environmental Science and Pollution Research              Conference on ICT for Sustainability, IEEE, Stockhlom, Sweden, 2024.
+     4 (4) (1997) 223–228. doi:10.1007/BF02986351.                                            [42] T. Simon, P. Rust, R. Rouvoy, J. Penhoat, Uncovering the environmental impact
+[21] I. Boustead, LCA — how it came about: — the beginning in the u.k., The                        of software life cycle, in: 2023 International Conference on ICT for Sustainability
+     International Journal of Life Cycle Assessment 1 (3) (1996) 147–150. doi:                     (ICT4S), 2023, pp. 176–187. doi:10.1109/ICT4S58814.2023.00026.
+     10.1007/BF02978943.                                                                      [43] J. V. Andreasen, Carbon Efficient Karpenter: Optimizing Kubernetes Cluster
+[22] R. G. Hunt, W. E. Franklin, R. G. Hunt, LCA — how it came about: — personal re-               Autoscaling for Carbon Efficiency, Master’s thesis, Aarhus University (2024).
+     flections on the origin and the development of LCA in the USA, The International              URL https://github.com/JacobValdemar/carbon-efficient-karpenter-thesis
+     Journal of Life Cycle Assessment 1 (1) (1996) 4–7. doi:10.1007/BF02978624.               [44] M. Proske, Ecodesign concepts and environmental assessments addressing
+[23] V. Forti, C. Baldé, R. Kuehr, G. Bel, The Global E-waste Monitor 2020. Quan-                  product obsolescence, Ph.D. thesis, TU Berlin, https://depositonce.tu-berlin.de/
+     tities, flows, and the circular economy potential, United Nations University                  bitstreams/677ac517-6c03-41c2-b285-5a1449771df3/download (2023).
+     (UNU)/United Nations Institute for Training and Research (UNITAR) – co-hosted            [45] M. Cortes-Cornax, P. Lago, C. Roncancio, A case study of environmental consid-
+     SCYCLE Programme, International Telecommunication Union (ITU) & Interna-                      erations and opportunities in cyber physical systems, IET Software 17 (4) (2023)
+     tional Solid Waste Association (ISWA), 2020.                                                  424–434. doi:10.1049/sfw2.12130.
+[24] S. Fazio, F. Biganzoli, V. De Laurentiis, L. Zampori, S. Sala, E. Diaconu, Supporting    [46] B. Everman, T. Villwock, D. Chen, N. Soto, O. Zhang, Z. Zong, Evaluating the
+     information to the characterisation factors of recommended ef life cycle impact               carbon impact of large language models at the inference stage, in: 2023 IEEE In-
+     assessment methods (2018). doi:10.2760/002447.                                                ternational Performance, Computing, and Communications Conference (IPCCC),
+[25] L. van Oers, J. B. Guinée, R. Heijungs, Abiotic resource depletion potentials (ADPs)          2023, pp. 150–157. doi:10.1109/IPCCC59175.2023.10253886.
+     for elements revisited—updating ultimate reserve estimates and introducing time          [47] A. Berthelot, E. Caron, M. Jay, L. Lefèvre, Estimating the environmental impact
+     series for production data, The International Journal of Life Cycle Assessment                of generative-ai services using an lca-based methodology, Procedia CIRP 122
+     25 (2) (2020) 294–308. doi:10.1007/s11367-019-01683-x.                                        (2024) 707–712, 31st CIRP Conference on Life Cycle Engineering. doi:10.1016/
+[26] R. Frischknecht, F. Wyss, S. Büsser Knöpfel, T. Lützkendorf, M. Balouktsi, Cumu-              j.procir.2024.01.098.
+     lative energy demand in LCA: the energy harvested approach, The International            [48] N. Patel, A. Mamandipoor, D. Quinn, M. Alian, Xfm: Accelerated software-defined
+     Journal of Life Cycle Assessment 20 (7) (2015) 957–969. doi:10.1007/s11367-                   far memory, in: Proceedings of the 56th Annual IEEE/ACM International Sympo-
+     015-0897-4.                                                                                   sium on Microarchitecture, MICRO ’23, Association for Computing Machinery,
+[27] T. F. Stocker, D. Qin, G.-K. Plattner, M. Tignor, S. K. Allen, J. Boschung, A. Nauels,        New York, NY, USA, 2023, p. 769–783. doi:10.1145/3613424.3623776.
+     Y. Xia, V. Bex, P. M. Midgley, Climate change 2013: The physical science basis,          [49] C. Morand, A.-L. Ligozat, A. Névéol, MLCA: a tool for Machine Learning Life
+     Tech. rep., Intergovernmental Panel on Climate Change, Working Group I Contri-                Cycle Assessment, in: ICT4S’24 - 10th International Conference on ICT for Sus-
+     bution to the IPCC Fifth Assessment Report (AR5)(Cambridge University Press,                  tainability, IEEE, Stockhlom, Sweden, 2024.
+     Cambridge, United Kingdom and New York, NY, USA.), 1535 pp. (2013).
+[28] U. Gupta, M. Elgamal, G. Hills, G.-Y. Wei, H.-H. S. Lee, D. Brooks, C.-J. Wu, ACT:
+     designing sustainable computer systems with an architectural carbon modeling
+     tool, in: Proceedings of the 49th Annual International Symposium on Computer
+     Architecture, ISCA ’22, Association for Computing Machinery, 2022, pp. 784–799.
+     doi:10.1145/3470496.3527408.
+[29] T. Pirson, T. P. Delhaye, A. G. Pip, G. Le Brun, D. Bol, The Environmental Footprint
+     of IC Production: Review, Analysis, and Lessons From Historical Trends, IEEE
+     Trans. Semicond. Manuf. PP (99) (2023) 1. doi:10.1109/TSM.2022.3228311.
+[30] TechPowerUp, Cpu specs database, [Online; accessed 18. Mar. 2024] (2024).
+     URL https://www.techpowerup.com/cpu-specs/
+[31] J. Gröger, R. Liu, L. Stobbe, J. Druschke, N. Richter, Green Cloud Computing:
+     lebenszyklusbasierte Datenerhebung zu Umweltwirkungen des Cloud Comput-
+     ing: Abschlussbericht, Umweltbundesamt, 2021.
+     URL          https://www.umweltbundesamt.de/sites/default/files/medien/5750/
+     publikationen/2021-06-17_texte_94-2021_green-cloud-computing.pdf
+[32] J. Choe, Memory technology 2021: Trends & challenges, in: International Confer-
+     ence on Simulation of Semiconductor Processes and Devices (SISPAD), 2021, pp.
+     111–115. doi:10.1109/SISPAD54002.2021.9592547.
+[33] B. Davy, Building an aws ec2 carbon emissions dataset, [Online; accessed 22. Jun.
+     2024] (2021).
+     URL       https://medium.com/teads-engineering/building-an-aws-ec2-carbon-
+     emissions-dataset-3f0fd76c98ac
+[34] A. Noureddine, A. Bourdon, R. Rouvoy, L. Seinturier, Runtime monitoring of
+     software energy hotspots, in: ASE, ACM, 2012, pp. 160–169.
+[35] TechPowerUp, Ssd specs database, [Online; accessed 18. Mar. 2024] (2024).
+     URL https://www.techpowerup.com/ssd-specs/
+[36] Y. Aiouch, A. Chanoine, L. Corbet, P. Drapeau, L. Ollion, V. Vigneron, Evaluation
+     de l’impact environnemental du numérique en France et analyse prospective -
+     La librairie ADEME (2022).
+     URL           https://librairie.ademe.fr/consommer-autrement/5226-evaluation-
+     de-l-impact-environnemental-du-numerique-en-france-et-analyse-
+

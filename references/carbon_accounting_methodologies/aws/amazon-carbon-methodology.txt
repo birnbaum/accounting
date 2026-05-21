@@ -1,0 +1,467 @@
+Amazon Sustainability
+
+
+
+
+Carbon
+Methodology
+    July 2025
+                                 Amazon Sustainability
+
+
+
+
+                                 What’s in Amazon’s 2024 Carbon Footprint?
+                                 A carbon footprint measures the total greenhouse gas (GHG) emissions caused by the direct
+                                 and indirect activities of a company.1 These emissions are broken into three categories—
+                                 Scope 1, 2, and 3 emissions. Scope 1 emissions come directly from a company’s operations,
+                                 such as the fuel used by Amazon’s delivery fleet. Scope 2 emissions are indirect emissions
+                                 resulting from the generation of purchased energy, like the electricity used to power Amazon
+                                 facilities.2,3 Scope 3 emissions include activities that take place beyond a company’s
+                                 operational boundary, for example, the production of Amazon devices such as the Kindle, or
+                                 purchase of packaging materials used in our fulfillment operations.
+
+1. Amazon calculates and         To calculate Amazon's carbon footprint, we use the operational control approach to account
+   reports their carbon
+   footprint in accordance       for a diverse set of direct and indirect emissions that occur upstream of, within, and
+   with “The Greenhouse Gas      downstream of our operations. Our boundary includes the following emission sources:
+   Protocol: A Corporate
+   Accounting and Reporting
+   Standard (Revised             • Amazon’s last mile delivery fleet
+   Edition)” including the
+   “GHG Protocol Scope 2
+   Guidance (An amendment
+   to the GHG Protocol
+                                 • Amazon-operated freight, including trucks and airplanes
+   Corporate Standard)” and
+   “Technical Guidance for
+   Calculating Scope 3
+                                 • Purchased delivery services (e.g., postal services) and other contracted freight
+   Emissions (Supplement to
+   the Corporate Value Chain
+   (Scope 3) Accounting and
+                                 • Energy, and refrigerants for cooling used in our operations such as data centers, fulfillment
+   Reporting Standard)”,           facilities, retail stores, and corporate offices
+   published by the World
+   Resources Institute (WRI)
+   and the World Business        • Amazon-provided packaging used in our fulfillment operations
+   Council for Sustainable
+   Development (WBCSD).
+   We refer to this              • Amazon-branded product manufacturing, such as Echo devices, Kindle e-readers, Amazon
+   collectively, as the GHG
+   Protocol (GHGp).                Basics, Whole Foods Market brands, and other Amazon Private Brands products
+2. Amazon reports emissions
+   according to GHGp’s
+   market-based method           • Goods and services that enable our operations such as business travel, office supplies,
+   (MBM) in both Scope 2
+   and Scope 3 (as
+                                   corporate events, outside consulting services, and other expenditures
+   applicable) which
+   accounts for renewable
+   energy Amazon purchases
+                                 • Capital goods, such as emissions from building construction, vehicles, and manufacturing
+   to support its operations.      of servers and equipment
+3. These indirect emissions
+   come from electricity
+   consumed by Amazon’s          • Employee commuting
+   global facilities under
+   Amazon’s operational
+   control (e.g., owned,         • Customers’ trips to Amazon’s physical stores
+   leased, and co-located
+   Amazon Web Services
+   (AWS) data center             • Our customers’ use of Amazon devices
+   infrastructure, fulfillment
+   center and delivery
+   network buildings, on-site    • Amazon devices end-of-life treatment
+   electric vehicle charging,
+   corporate offices,
+   customer service centers,     We evaluate the quantity of GHG emitted for each of these activities by taking the amount of
+   physical stores, and
+   financially-integrated        the activity conducted (e.g., miles traveled, or gallons of fuel burned) multiplied by its
+   subsidiaries (e.g., Whole
+   Foods Market)).
+                                 emissions factor (e.g., grams carbon dioxide equivalent4 (CO2e) per kilowatt-hour (kWh) of
+4. GHG emissions are             electricity used), which provides a representative value for the CO2e associated with that
+    converted into the
+    standard unit of CO₂e via
+                                 activity. Once the emissions for our activities are calculated, we sum them to produce the
+    Global Warming               carbon footprint for Amazon’s business, spanning our physical and online retail businesses,
+    Potentials (GWPs). For
+    example, one kilogram of
+                                 cloud computing, device manufacturing, and beyond.
+    methane has a GWP of
+    28, meaning that those
+    methane emissions are
+                                 Our approach to quantifying our carbon footprint reflects the complexity of our business by
+    equivalent to 28             combining both operational and financial records from Amazon operations around the world.
+    kilograms of carbon
+    dioxide (CO₂). This          We first estimate our carbon emissions for all activities within our boundary using a spend-
+    conversion reflects the      based environmental assessment model, then enhance the accuracy with process-based
+    fact that methane traps
+    heat 28 times more
+    effectively than CO₂ over
+    a 100-year time horizon.     Carbon Methodology                                                                                2
+                               Amazon Sustainability
+
+
+
+                               calculations or lifecycle assessment (LCA) models, when applicable. Each year, we work to
+                               continuously improve our estimates and assumptions used for emission calculations.
+
+                               This carbon footprinting approach consists of these scientific measurements:
+
+                               • Financial: We combine data on Amazon’s spending with industry-average, spend-based
+                                 emissions factors (e.g., a standard amount of CO2e emissions associated with every dollar
+                                 of spending on a particular activity). We use this model to reflect carbon emissions from
+                                 activities, equipment used in our warehouses, and purchased goods and services such as
+                                 office supplies and advertising services.
+
+                               • Transportation: We track the emissions resulting from shipping products and equipment
+                                 to Amazon warehouses and facilities, between warehouses, and outbound to our
+                                 customers’ homes, Amazon lockers, and other pickup points. This includes estimated
+                                 emissions from customers’ trips to physical stores.
+
+                               • Refrigerants: We include the emissions that occur across our global operations from the
+                                 cooling and refrigeration occurring within our facilities.
+
+                               • Energy: We account for the impacts of the purchased electricity, back-up power
+                                 generation, and heating used in our offices and facilities, as well as the carbon free
+                                 electricity generated from our project commitments around the world.
+
+                               • Packaging: We measure the materials and processes behind all the boxes, mailers, and
+                                 other packing items Amazon uses in our fulfillment operations.
+
+                               • Amazon Devices: We developed a specialized carbon footprint model to address the
+                                 complexity of the manufacturing, use, and end-of-life of Amazon devices, including Echo
+                                 devices, Kindle e-readers, Fire Tablet, Fire TV, Ring, and Blink. This starts at the component
+                                 level—including where components are sourced and how they are manufactured into
+                                 products—and extends to customers’ use of the product and the eventual product end-of-
+                                 life.
+
+                               • Amazon Products and Supplier Provider Emissions: We utilize LCAs, and supplier
+                                 provided data to calculate emissions across our supply chain. This approach is used for our
+                                 sold products, and for materials and equipment used across our operations.
+
+                               • Amazon Buildings: We use building design models to calculate the emissions associated
+                                 with the construction of Amazon facilities. Source data comes from material, equipment,
+                                 and procurement inventories; as well as internally and externally developed, and supplier-
+                                 provided LCAs.
+
+                               • Business Travel: We incorporate third party calculated emissions based on trip level
+                                 information for air, rail and car business travel.
+
+                               • Employee Commuting: We estimate emissions associated with our employees’ transit
+                                 between their homes and worksites using survey results on how our employees regularly
+                                 come to work (car, bus, walking, biking, shuttle, etc.) and the distance they travel.
+
+                               Our team uses these approaches to transform activity and spend data into emissions
+                               measurements for Amazon’s specific business activities (e.g., shipping, packaging). We then
+                               compile the outputs of these calculations to assemble a company-wide carbon footprint.
+
+5.   WRI and WBCSD’s GHGp
+                               Our carbon footprint meets the widely adopted international standard of the GHG Protocol
+     delineates what actions   (GHGp).5 Scope 1 and Scope 2 were independently assured by Ernst & Young LLP, and Scope 3
+     fall within scope for
+     international standards
+     for corporate
+     footprinting.
+                               Carbon Methodology                                                                                 3
+                                Amazon Sustainability
+
+
+
+                                was independently verified by Apex Companies, LLC.
+
+                                As measurement techniques evolve, we adapt the way we measure and report our footprint,
+                                including the recalculation of prior year(s) data to enable consistent comparison over time.
+                                This may occur, for example, when we refine a calculation methodology, add new activity data
+                                as it becomes available or when we improve the way we collect data from our existing
+                                sources. When the change is significant, we apply the current year’s models, calculation
+                                methods, emission factors, and company structure to prior year(s) data to calculate the
+                                comparable total carbon emissions.
+
+                                The following sections elaborate on the science and data behind each of the emissions
+                                models we’ve developed to measure Amazon’s carbon footprint.
+
+                                Financial Emissions Model
+
+                                Using the Economic Input-Output Life Cycle Assessment (EIO LCA) method, our spend-based
+                                model combines expenditure data from Amazon’s general ledger with industry-specific,
+                                spend-based6 emissions factors published by the U.S. Environmental Protection Agency (EPA).
+                                EIO LCA emissions factors account for the “cradle-to-gate” emissions required to produce one
+                                dollar of goods or services from any industry, including emissions from the extraction of raw
+                                materials, energy use, supply-chain transportation, and manufacturing. This method leverages
+                                economic input-output data assembled by governments to track the “recipe” of inputs
+                                required to produce any good or service.7 EIO LCA accounts for the carbon emissions from
+                                producing each of these intermediate inputs, and from the production of all inputs from
+                                further up the supply chain.
+
+                                We apply EIO LCA by mapping our expenditures to one or more industry sectors and
+                                multiplying the appropriate emissions factors by the dollars spent. For example, spending on
+                                parcel delivery by third-party carriers is mapped to the couriers and messengers sector and
+                                shipping boxes are mapped to paperboard container. This method is the most efficient way to
+                                tie all corporate activity into an approximated carbon footprint. Outside of Amazon, this
+                                method is commonly used to estimate carbon footprints by a variety of organizations, from
+                                major corporations that disclose their carbon emissions, to government entities like the U.S.
+                                Department of Defense, and even individuals who wish to understand the environmental
+                                impact of their personal activities.8
+
+                                Transportation Emissions Model
+
+                                The transportation of products to customers is an integral part of Amazon’s business. Trips
+                                differ by mode, purpose, productivity, timing, and other localized variables, resulting in a
+                                broad range of emissions associated with transportation activities. To account for this
+6. When using the term
+   “spend” in this document,
+                                complexity, we use a robust modeling framework that estimates carbon emissions at the trip
+   we are referring to the      level and accommodates different levels of data availability. We give priority to fuel- and
+   United States Dollar
+   (USD).                       distance- based calculations, but if this information is not available, we rely on a spend-based
+7. Li, M.; Ingwersen, W.W.;     approach to calculate emissions. The scope of our assessment includes transport activities
+   Young, B.; Vendries, J.;
+   Birney, C. useeior: An       managed by Amazon and our third-party transportation providers, as well as the emissions
+   Open-Source R Package        generated from customers’ trips to Amazon retail and Whole Foods Market stores.
+   for Building and Using US
+   Environmentally-Extended
+   Input–Output Models.         Emissions Sources for Transportation
+   Appl. Sci. 2022, 12, 4469.
+   Retrieved online:
+   https://doi.org/10.3390/a    Transportation activities generate carbon emissions through the combustion of fossil fuels,
+   pp12094469.
+8. Henderson, A., M.            and from the supply chain activities related to vehicle fuels. The emissions model for
+   Bruckner, K. Scanlon, W.
+   Ingwersen. The USEEIO
+                                transportation covers emissions associated these “well-to-wheels” impacts. This is both the
+   framework to create IO       emissions associated with the well-to-tank (e.g., extraction, refinement, and distribution of
+   models: application to the
+   DoD and case
+                                fuels) and tank-to-wheels emissions created from the use of transportation fuels.
+   demonstration. LCA XVIII,
+   Fort Collins, CO,
+   September 25-27, 2018.
+   Retrieved online.            Carbon Methodology                                                                                 4
+                                     Amazon Sustainability
+
+
+
+                                     For well-to-tank impacts, the emissions model estimates the carbon-intensity of the “well”
+                                     fuels (e.g., grams of CO₂e per megajoule) based on data and logic from Argonne National
+                                     Laboratory’s Greenhouse Gases, Regulated Emissions, and Energy Use in Transportation
+                                     (GREET) model.9 GREET is an LCA tool used to evaluate various transportation fuels like diesel,
+                                     gasoline, hydrogen, natural gas, and biofuels. For tank-to-wheel, we use transportation fuel
+                                     related emission factors from both GREET and the United Kingdom’s Department of
+                                     Environment, Food and Rural Affairs (DEFRA). Fuel consumption rates for vehicles are based
+                                     on fleet averages from a variety of country and region-specific sources, including the U.S. EPA,
+                                     U.S. Department of Energy, European Union, United Nations, and the International Council for
+                                     Clean Transportation.
+
+                                     Supplier Provided Transportation of Products and Equipment
+
+                                     For some segments of Amazon’s logistics network, we receive emissions directly from third-
+                                     party transportation providers. These providers calculate emissions using Smart Freight
+                                     Centre Accredited tools10 that follow Global Logistic Emissions Council methodology, and we
+                                     evaluate and include the supplier provided “well-to-wheel” emissions when available.
+
+                                     Customer Trips to Stores
+
+                                     Our model calculates the aggregate emissions from customer trips to Amazon’s physical
+                                     stores (i.e., Whole Foods Market, Amazon Fresh and Amazon Go) using publicly available
+                                     travel behavior information from the Federal Highway Administration’s National Household
+                                     Travel Survey (NHTS). The model focuses on the following three variables that affect
+                                     emissions for this category of activities:
+
+                                     Distance driven – We use NHTS data to estimate the typical distance a customer drives for
+                                     “goods purchasing” based on their setting (e.g., urban, suburban, or rural). We assume customers
+                                     only travel to a single destination and that all trips are direct and round trip.
+
+                                     Mode of transportation used – NHTS data indicates how likely a customer is to use a certain
+                                     mode of transportation among the following five categories: car, light-duty truck (e.g., truck,
+                                     SUV, van), transit (e.g., bus, rail), non-motorized (e.g., walking, biking), and other.
+
+                                     Total customer trips per year – We estimate the number of customer trips to each physical
+                                     store based on the store’s setting (e.g., urban, suburban, or rural).
+
+                                     After assembling the data and emissions factors for all vehicle and transportation modes, and
+                                     estimated trips per store, we multiply the distance traveled by each mode by the appropriate
+                                     emissions factor to each store. Finally, we multiply that product by the total number of
+                                     customer transactions in the year.
+9. Wang, M., Elgowainy, A.,
+    Lu, Z, Baek, K. H., Bafana,
+    A., Benavides, P. T.,            Refrigerant Emissions Model
+    Burnham, A., Cai, H.,
+    Cappello, V., Chen, P.,
+    Gan, Y., Gracida-Alvarez,        Emissions related to cooling and refrigeration are present across Amazon’s global operations.
+    U. R., Hawkins, T. R., Iyer,
+    R. K., Kelly, J. C., Kim, T.,
+                                     These occur through normal business processes such as the cooling of our data centers,
+    Kumar, S., Kwon, H., Lee,
+    K., Lee, U., Liu, X., Masum,
+    F., Ng, C., Ou, L., Reddi, K.,
+                                     corporate offices, and fulfillment facilities, and refrigeration for our Whole Foods Market
+    Siddique, N., Sun, P.,           stores and other grocery operations. We calculate the emissions associated with refrigerant
+    Vyawahare, P., Xu, H., and
+    Zaimes, G. Greenhouse
+                                     materials across Amazon’s facilities through a combination of data collection mechanisms.
+    gases, Regulated                 Where primary data is unavailable, we use estimation based on each facility’s type and size, or
+    Emissions, and Energy use
+    in Technologies Model ®
+                                     intensity of electricity usage in the case of data centers. Amazon’s refrigerant emissions are
+    (2022 .Net). Computer            represented by total leakage of refrigerant material which occurs through normal operations
+    Software. USDOE Office
+    of Energy Efficiency and         multiplied by the global warming potential (GWP) of the specific material used.
+    Renewable Energy (EERE).
+    10 Oct. 2022. Web.
+    doi:10.11578/GREET-Net-
+    2022/dc.20220908.2.
+10. https://www.smartfreight
+    centre.org                       Carbon Methodology                                                                                 5
+Amazon Sustainability
+
+
+
+Energy Emissions Model
+
+We calculate the carbon footprint of energy used from purchased electricity, and fuel used for
+back-up power generation and heating across Amazon’s facilities, including data centers,
+fulfillment network facilities, retail stores, and corporate offices. Electricity emissions factors
+account for direct power plant emissions, as well as upstream emissions, and transmission and
+distribution losses. Fuel emission factors account for combustion of fuels and upstream
+emissions associated with fuel production. The primary source of carbon emissions for our
+facilities is the electricity used to power our operations. We collect usage data from our
+facilities around the globe and process data from utility invoices to gain visibility into
+electricity and fuel usage. When usage data is unavailable, we estimate usage based on the
+usage from facilities with similar characteristics (size, type, location). In the case of data center
+back-up power generation, we use an estimate of fuel consumption based on the intensity of
+electricity use at the site. We then calculate carbon emissions by multiplying actual or
+estimated usage by the appropriate emission factor (e.g., regional electricity grid mix, CO₂e
+per kWh, or fuel combusted CO₂e per liter).
+
+For electricity specifically, we use the GHGp’s market-based method to demonstrate the
+impact of our renewable energy investments. For more information on our renewable energy
+measurements in support of our goal of matching 100% of the electricity consumed by our
+global operations with renewable energy, see our Renewable Energy Methodology.
+
+Calculating the carbon emissions of energy relies on accurate emissions factors data from a
+variety of local, national, and regional sources. For example, electricity consumed by a site is
+multiplied by an emissions factor specific to its locality. Carbon from electricity generation
+varies widely by utility provider, state, country, and region due to the variety of technologies
+used for generation. Some countries rely heavily on coal, while other regions use significant
+amounts of low-carbon wind or hydropower. Our emissions model assigns the most precise
+emissions factors available for each facility based on its location. When supplier specific
+emission factors are not available, we assign state, province, sub-region or region level
+factors, and then national averages. In the U.S., the authoritative emissions factor sources
+come from the EPA’s eGrid data (electricity emissions by U.S. grid sub-region), while the
+International Energy Agency provides average electricity emissions per kWh for almost every
+country in the world. For heating, we use fuel combustion emission factors from UK DEFRA in
+our energy model.
+
+Packaging Emissions Model
+
+Amazon uses a detailed emissions model to quantify the carbon footprint of each type of
+Amazon packaging (e.g., corrugate boxes or envelopes) from production to end-of-life.
+Carbon emissions are released during the raw material extraction, processing, manufacturing,
+and disposal of packaging. Our environmental packaging model quantifies the carbon
+footprint of every package from manufacture to end-of-life given key parameters like
+material type, mass, and dimension. In total, the emissions model produces life cycle carbon
+emissions factors for hundreds of packages based on Amazon’s data on packaging materials,
+thickness, and recycling rates. We apply region-specific packaging emissions factors (where
+available) on a per-package basis to outbound shipments to calculate total emissions from
+packaging. The calculation covers emissions from raw materials and intermediate products,
+transportation overbox manufacturing, and end-of-life packaging (i.e., recycling or disposal).
+This service uses industry-standard LCA data from commercial LCA databases and supplier
+specific LCAs to model the impacts of raw materials and manufacturing processes.
+
+
+
+
+Carbon Methodology                                                                                      6
+                                Amazon Sustainability
+
+
+
+                                Amazon Devices Emissions Model
+
+                                We quantify the carbon footprint of Amazon devices sold during a given year using detailed
+                                data on the components of each device and the quantity sold each year. We produce detailed,
+                                parameterized models for our major device types, including Fire TV, Echo, Fire Tablets, Kindle,
+                                Ring, and Blink. We calculate the carbon footprint of each device type by inspecting the
+                                device’s “Bill of Materials”—which details the mass and makeup of each component used in a
+                                device—and model life cycle emissions of each component using supplier specific inputs and a
+                                mix of commercially and publicly available LCA databases. After each stage of the life cycle is
+                                modeled, our research team creates emissions factors for each device by aggregating the
+                                carbon emissions from the manufacturing, transportation, and device end-of-life phases. We
+                                scale these emissions factors by the quantity sold to estimate the carbon footprint associated
+                                with manufacturing, transportation, and the end-of-life treatment of all Amazon devices sold
+                                in a given year. To calculate the emissions associated with the use of our devices, our
+                                methodology relies on telemetry data to determine the number of active devices in the field.
+                                We then multiply that by each device’s average annual energy use. See our Devices Product
+                                Carbon Footprint Methodology for more information.
+
+                                To match our customer’s use of their devices with renewable energy sources, we calculate the
+                                emissions associated with the electricity grid that corresponds to the country in which the
+                                device is located. The electricity consumption is matched via renewable energy investments
+                                and is allocated in accordance with GHG Protocol market boundaries to offset average
+                                electricity grid emissions. Overall, annual emissions for devices are then determined by
+                                combining the annual emissions from all life cycle phases.11
+
+                                Amazon Branded and Supplier-Provided Product Emissions
+
+                                To calculate emissions associated with Amazon Private and Whole Foods Exclusive Brand
+                                products, we use LCA emission factors both by unit and weight sold from Amazon.com and
+                                Whole Food Markets. These LCAs are sourced from internal or external analysis, or supplier
+                                provided assessments based on the bill of materials and characteristic of the supply chain.
+                                Also covered by this approach, Amazon uses supplier provided LCAs to calculate the emissions
+                                from equipment used in Amazon’s operations and supply chain such as warehouse carts and
+                                vehicles.
+
+                                Amazon Building and Emissions Model
+
+                                Amazon accounts for emissions for the use of our buildings within our other models but we
+                                incorporate the emissions associated with building lifecycle such as the materials and
+                                manufacturing, transportation of those components to the site, and construction in a separate
+                                building model.
+
+                                Based on each building design, we built a model to calculate the emissions associated with
+                                the construction of Amazon facilities. These incorporate individual building plans, materials,
+                                internally and externally developed LCAs, and supplier provided data to estimate each
+                                building’s emissions based on the actual building design or similar building designs based on
+                                similar characteristics (i.e., type, size and location).
+
+                                Business Travel Emissions Model
+
+                                For emissions from air and rail travel, mileage and car rentals, Amazon provides trip level
+                                details including travel origin, destination, mode of transport (such as aircraft type, class of
+                                service, aircraft seating, etc.), and associated costs to a third-party partner. Using a
+11.   See our Device
+                                hierarchical approach based on specificity of data, a distance-based approach is prioritized to
+      Renewable Energy          calculate each trip’s emissions using the provided detail multiplied by supplier specific,
+      Methodology for more
+      information on Device’s
+      renewable energy
+      matching calculation.     Carbon Methodology                                                                                 7
+Amazon Sustainability
+
+
+
+regional, UK DEFRA, and International Civil Aviation Organization (ICAO)+ derived emission
+factors. Amazon then combines these individual trip calculations to determine our total
+business travel emissions.
+
+Employee Commute Emissions Model
+
+We estimate the emissions associated with employees commuting to and from work at
+Amazon locations using a model that follows the GHGp recommended distance-based
+approach for employee commute estimation. We conduct a representative survey to
+understand how employees commute each day and what mode of transportation they use,
+such as walking, carpooling, biking, driving alone, or taking public transportation. Using the
+survey results, we generate estimated emission factors based on the distances employees
+reported traveling, the percentage of employees using each transportation mode, the
+associated mode’s tailpipe emission factor based on available national, regional, and industry
+data sources. Finally, we multiplied the emission factors by the number of employees and the
+frequency of their commute to calculate the Amazon employee commute carbon emissions.
+
+
+
+
+Carbon Methodology                                                                               8
+

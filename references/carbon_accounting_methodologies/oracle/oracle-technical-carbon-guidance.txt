@@ -1,0 +1,218 @@
+Business / Technical Brief
+
+
+
+
+Oracle Cloud Infrastructure:
+Technical Carbon Calculation
+Guidance to Support Customer
+Requests on Sustainability
+Reporting
+
+OCI Data Center Engineering | Sustainability Team
+
+February 2023, Version 1.0
+Copyright © 2023, Oracle and/or its affiliates
+Public
+
+
+
+
+1 Business / Technical Brief / Oracle Cloud Infrastructure: Technical Carbon Calculation Guidance to Support Customer Requests on Sustainability
+Reporting / Version 1.0
+    Copyright © 2023, Oracle and/or its affiliates / Public
+Purpose statement
+This document provides technical guidance on how to calculate Oracle Cloud
+related carbon emissions for customer requests on sustainability reporting.
+
+Disclaimer
+This document in any form, software or printed matter, contains proprietary
+information that is the exclusive property of Oracle. Your access to and use of
+this confidential material is subject to the terms and conditions of your Oracle
+software license and service agreement, which has been executed and with
+which you agree to comply. This document and information contained herein
+may not be disclosed, copied, reproduced or distributed to anyone outside
+Oracle without prior written consent of Oracle. This document is not part of your
+license agreement nor can it be incorporated into any contractual agreement
+with Oracle or its subsidiaries or affiliates.
+
+This document is for informational purposes only and is intended solely to assist
+you in planning for the implementation and upgrade of the product features
+described. It is not a commitment to deliver any material, code, or functionality,
+and should not be relied upon in making purchasing decisions. The
+development, release, and timing of any features or functionality described in
+this document remains at the sole discretion of Oracle. Due to the nature of the
+product architecture, it may not be possible to safely include all features
+described in this document without risking significant destabilization of the code.
+
+
+
+
+2 Business / Technical Brief / Oracle Cloud Infrastructure: Technical Carbon Calculation Guidance to Support Customer Requests on Sustainability
+Reporting / Version 1.0
+    Copyright © 2023, Oracle and/or its affiliates / Public
+Table of contents
+
+Purpose statement                                                                                      2
+Disclaimer                                                                                             2
+Our Commitment                                                                                         4
+Carbon Footprint Context                                                                               4
+Carbon Footprint Customer Calculation                                                                  5
+Calculation Methodology                                                                                5
+Framework Alignment                                                                                    6
+References                                                                                             6
+
+
+
+
+3 Business / Technical Brief / Oracle Cloud Infrastructure: Technical Carbon Calculation Guidance to Support Customer Requests on Sustainability
+Reporting / Version 1.0
+    Copyright © 2023, Oracle and/or its affiliates / Public
+                                                                                                                     Our sustainability
+Our Commitment                                                                                                       commitment to our customers
+
+                                                                                                                     “Oracle is committed to
+Oracle is building a more sustainable future and using technology as a force                                         embedding sustainability across
+for good.                                                                                                            our enterprise and delivering
+                                                                                                                     innovative cloud technology to
+Oracle Cloud Infrastructure (OCI) endeavors to lead the way with our cloud                                           accelerate meaningful change.”
+regions. We challenge ourselves to address climate change and create a more                                          - Safra Catz, CEO.
+circular economy. Oracle Cloud enables our customers to support their
+sustainable computing goals, while also achieving other benefits of the cloud,
+including security, reliability, and performance.
+
+Oracle is setting the bar for environmental progress with goals that apply to our
+cloud regions:
+
+     •      Carbon Neutral by 2025 including 100% renewable energy use for
+            Oracle Cloud and Oracle operations,
+     •      Net Zero by 2050 as aligned to the Exponential Roadmap Initiative, and
+     •      50% reduction in total emissions by 2030 relative to a 2020 baseline.
+
+Carbon Footprint Context
+Emissions accounting requires understanding that the same emissions that are
+Scope 1 or Scope 2 for one business are accounted as Scope 3 for another or
+may be deemed out of scope all together. The Greenhouse Gas Protocol (TGGP)
+allows for flexibility when determining how to classify a corporation’s emissions
+for voluntary carbon reporting.
+
+
+
+
+Figure 1. Carbon emissions by scope for each participate in the Cloud value chain. Note, in corporate
+greenhouse gas accounting companies may opt to include upstream and downstream impacts one
+step removed from their value chain partners within their Scope 3 boundaries, or they may deem them
+out of scope and thus not applicable.
+
+Oracle Cloud Infrastructure, for example, generates Scope 1, 2, and 3 emissions
+for Oracle Corporation, but for our customers who purchase our services, the
+allotted portion of these emissions qualifies as their Scope 3 emissions. The
+graphic depicts the life-cycle emissions associated with our value chain, our own
+activities, and our Oracle Cloud customers. Customers can estimate their
+
+
+4 Business / Technical Brief / Oracle Cloud Infrastructure: Technical Carbon Calculation Guidance to Support Customer Requests on Sustainability
+Reporting / Version 1.0
+    Copyright © 2023, Oracle and/or its affiliates / Public
+emissions using use emission factors from supplier emissions data as reported
+in annual sustainability reports and surveys such as CDP Climate Change.
+
+Carbon associated with OCI cloud region operations is comprised of Scope 1 –
+direct emissions 1 associated with onsite emissions at the cloud regions and
+Scope 2 – indirect emissions associated with the production of electricity
+consumed by our cloud regions. Scope 2 emissions are reported in two forms:
+location-based Scope 2 emissions which account for the geographic location of
+our sites and inherent grid energy mix; and market-based Scope 2 emissions
+which account for the specific energy supply contracts in place and the specific
+energy suppliers’ emissions factors which can be zeroed out from the purchase
+of high-quality renewable energy 2. OCI’s Scope 1 and 2 emissions contribute
+to our customers’ Scope 3 value chain emissions.
+
+
+
+
+Figure 2. Sources of Oracle Cloud data center operational emissions.
+
+
+Carbon Footprint Customer Calculation
+To enhance transparency around the impact of our Oracle Cloud regions, we
+publish revenue-based carbon emissions factors to enable our customers to
+estimate their Scope 3 emissions across all Oracle products and services.
+
+The formula for calculating carbon emissions is given below:
+
+
+
+
+Using Oracle’s intensity metrics, customers can easily estimate their Scope 3
+emissions using their monthly invoices. For the most current emissions factors,
+see Oracle’s Clean Cloud OCI Data Sheet.
+
+Calculation Methodology
+Oracle’s Greenhouse Gas Inventory methodology is governed by the application
+of the Greenhouse Gas Protocol (TGGP) standards and guidance from CDP.
+Oracle’s emissions are externally assured by a third party using the ISO14064-3
+greenhouse gas verification standard. Understanding that not every customer
+reports the same way, we value the importance of data and transparency. More
+information and details related to emissions and our full CDP Climate Change
+Response and program details are found on our website:
+www.oracle.com/sustainability.
+5 Business / Technical Brief / Oracle Cloud Infrastructure: Technical Carbon Calculation Guidance to Support Customer Requests on Sustainability
+Reporting / Version 1.0
+    Copyright © 2023, Oracle and/or its affiliates / Public
+Framework Alignment
+
+
+
+
+References
+Oracle publishes social impact and environmental information in a variety of locations:
+
+      •      Oracle CDP Climate Change Survey: https://www.oracle.com/a/ocom/docs/cdp-climate-change-
+             questionnaire-2022.pdf
+      •      Oracle Clean Cloud Website: https://www.oracle.com/sustainability/green-cloud/
+      •      Oracle Clean Cloud OCI Data Sheet: https://www.oracle.com/a/ocom/docs/corporate/citizenship/clean-
+             cloud-oci.pdf
+      •      Oracle Environmental Sustainability Website: www.oracle.com/sustainability
+      •      Oracle ESG Hub: https://www.oracle.com/social-impact/esg-hub/
+      •      Oracle Social Impact Report Website: https://www.oracle.com/corporate/citizenship/
+      •      Oracle Social Impact Datasheet: https://www.oracle.com/a/ocom/docs/corporate/citizenship/ccr-
+             datasheet.pdf
+
+
+
+
+Connect with us
+
+Call +1.800.ORACLE1 or visit oracle.com. Outside North America, find your local office at: oracle.com/contact.
+
+      blogs.oracle.com                         facebook.com/oracle                           twitter.com/oracle
+
+
+Copyright © 2023, Oracle and/or its affiliates. All rights reserved. This document is       Oracle and Java are registered trademarks of Oracle and/or its affiliates. Other names may be
+provided for information purposes only, and the contents hereof are subject to change       trademarks of their respective owners.
+without notice. This document is not warranted to be error-free, nor subject to any other
+                                                                                            Intel and Intel Xeon are trademarks or registered trademarks of Intel Corporation. All SPARC
+warranties or conditions, whether expressed orally or implied in law, including implied
+                                                                                            trademarks are used under license and are trademarks or registered trademarks of SPARC
+warranties and conditions of merchantability or fitness for a particular purpose. We
+                                                                                            International, Inc. AMD, Opteron, the AMD logo, and the AMD Opteron logo are trademarks or
+specifically disclaim any liability with respect to this document, and no contractual
+                                                                                            registered trademarks of Advanced Micro Devices. UNIX is a registered trademark of The Open
+obligations are formed either directly or indirectly by this document. This document
+                                                                                            Group. 0120
+may not be reproduced or transmitted in any form or by any means, electronic or
+mechanical, for any purpose, without our prior written permission.                          Disclaimer: If you are unsure whether your data sheet needs a disclaimer, read the revenue
+                                                                                            recognition policy. If you have further questions about your content and the disclaimer
+This device has not been authorized as required by the rules of the Federal
+                                                                                            requirements, e-mail REVREC_US@oracle.com.
+Communications Commission. This device is not, and may not be, offered for sale or
+lease, or sold or leased, until authorization is obtained.
+
+
+
+
+6 Business / Technical Brief / Oracle Cloud Infrastructure: Technical Carbon Calculation Guidance to Support Customer Requests on Sustainability
+Reporting / Version 1.0
+     Copyright © 2023, Oracle and/or its affiliates / Public
+
