@@ -198,7 +198,128 @@ Abstract goes here.
 %   experiment per the new framing is signal-variation under fixed
 %   workload; rework once the new experiment design lands.
 
-Introduction goes here.
+Data-center electricity demand is growing at an unprecedented
+rate~\cite{masanet2020recalibrating,epri2024powering,bashir2024climate,gaffney2025earth},
+driven primarily by generative AI. Despite the major cloud providers' 2020
+pledges to reach net-zero or carbon-negative operations by
+2030~\cite{google2020envreport,microsoft2020envreport,facebook2020sustainability},
+recent disclosures point the other way: Google
+reported a 48\% increase in GHG emissions over five
+years~\cite{google2024envreport}, Microsoft a 29\%
+rise since 2020~\cite{microsoft2024envreport}, and Meta a 46\% jump in 2022
+alone~\cite{meta2023sustainability}. The historical
+energy-efficiency gains that kept data-center electricity at a near-flat 1--2\%
+share of global demand~\cite{masanet2020recalibrating} are largely
+exhausted~\cite{bashir2023hotair}, and rebound (Jevons) effects are absorbing
+what remains: the same chip-level efficiency improvements that made deep learning
+tractable are now the engine of the demand growth~\cite{gaffney2025earth}.
+Against this backdrop, regulators have begun to require firm-level GHG
+disclosure --- the EU CSRD~\cite{eu2022csrd}, the SEC Climate Disclosure
+Rule~\cite{deloitte2024SEC_analysis}, science-based-target
+commitments~\cite{sbti2024netzero} --- which makes the accuracy and
+\emph{actionability} of cloud-tenant carbon reporting a load-bearing engineering
+problem, not a marketing one.
+
+In response, the community has built a substantial \emph{carbon-aware computing}
+stack on top of bottom-up per-workload metrics. The community's per-workload
+unit is the Software Carbon Intensity~(\SCI)~\cite{sci-spec}, refined by Bashir
+et al.~\cite{bashir2024} into the operational-only \OSCI and the
+datacenter-telemetry-grounded \TSCI. A decade of research uses metrics in this
+family to drive spatial and temporal load
+shifting~\cite{wiesner2021letswaitawhile,radovanovic2022google,hanafy2024gaia,sukprasert2024limits,gsteiger2024caribou,murillo2024cdn,lechowicz2023pause,lechowicz2024carbonclipper},
+elastic scaling~\cite{hanafy2024carbonscaler}, virtual-energy
+abstractions~\cite{souza2023ecovisor}, and quality- or
+approximation-side
+adaptation~\cite{wiesner2025qualitytime,vitali2026adaptive}; even fleet-level
+infrastructure planning that already considers embodied carbon optimises against
+a bottom-up operational
+objective~\cite{acun2023carbon_explorer}. Virtually all of this work
+targets a quantity structurally equivalent to \OSCI --- per-workload operational
+footprint $E\cdot I$, with embodied carbon either dropped, fixed-as-amortised,
+or relegated to design-time. The community has converged on \OSCI not because
+operational carbon is what matters but because it is what is computable from
+publicly available signals.
+
+\paragraph{The headline critique: reconcilability.}
+Every metric in the \SCI family is decoupled --- by construction --- from the
+carbon number the cloud provider actually allocates to the tenant. \SCI, \OSCI,
+and \TSCI are all bottom-up energy models; the provider's top-down report
+contains overheads no bottom-up model captures without provider-internal data:
+PUE, idle and over-provisioned capacity, PPA / market-based adjustments,
+upstream fuel-and-transmission losses, building embodied carbon, refrigerant
+leakage, water, and end-of-life. \S\ref{sec:sota} shows how unevenly these land
+even within the Big-3, and how Microsoft's own 2021 Scope-3 transparency
+whitepaper explicitly states that its customer-tool methodology
+``\emph{will differ from those reflected in Microsoft's corporate
+disclosure}''~\cite[p.~2, fn.~2]{microsoft-s3-2021}. The consequence is operational: an
+engineer who improves \SCI cannot point to a matching movement in the
+organisation's reported carbon. The Green Software Foundation treats this as a
+feature (``measuring for action'' vs.\ ``measuring for
+reporting''~\cite{gsf-measuring}); we treat it as the failure mode.
+
+\paragraph{Reconcilable \SCI (\RSCI).}
+We argue that any per-workload sustainability metric intended to drive both
+engineering decisions and corporate disclosure should \emph{reconcile} with the
+provider's top-down GHG report by construction.
+\RSCI is a concrete metric in this class: it anchors a bottom-up energy
+estimate to the provider's per-scope top-down report through a \emph{residual
+bridge} for each Scope. By construction, the per-workload numbers sum to the
+reported total --- not as an empirical check, but as a structural identity
+(\S\ref{sec:rsci}). It is the only formulation in the \SCI family that captures
+all provider-side overheads, because everything the bottom-up model misses is
+absorbed into the residual rather than dropped; it is structurally
+sunk-carbon-free (no per-server $M$ term~\cite{gupta2022act}; embodied lives in
+the Scope-3 residual); and it degrades gracefully to \OSCI when the provider
+does not yet ship reconciliation-grade data. \TSCI shares the same coverage
+ambition but requires datacenter telemetry only the provider has; \RSCI's
+distinction is that the customer or operator can actually compute it.
+
+\paragraph{Vision contribution: the residual as a design surface.}
+Reconciliation forces an explicit residual term per scope, and the question
+becomes \emph{how} to allocate that residual across workloads. The choice of
+allocation is where incentives live. Energy-share allocation is the right
+default for the Scope-2 residual, but applied to the Scope-3 (embodied)
+residual it gives the wrong gradient: a workload running off-peak on a clean
+grid picks up the same embodied charge as one that drives the next server
+purchase. Load-shape-aware allocations --- formally, the Shapley
+value~\cite{shapley1953value} over the fleet's peak-capacity game, with
+tractable proxies that retain the qualitative
+gradient~\cite{sharma2024accountable_footprint_serverless,castro2009polynomial}
+--- make \RSCI reward trough-filling and penalise peak-driving, the incentive
+structure operators need to defer fleet expansion. Han et al.\
+recently made the same physical argument for embodied-carbon attribution
+\emph{within} a single server~\cite{han2024gametheoretic}; \RSCI generalises it
+to the slice and fleet scope via the top-down residual.
+We make this concrete with a worked demonstration: \SCI's embodied term
+$M = TE \cdot (TR/EL) \cdot (RS/TS)$ is \emph{time-invariant per request},
+so 03:00 and 18:00 receive the same embodied charge regardless of fleet load.
+Under peak-attribution allocation, \RSCI responds to temporal shifting; no \SCI
+variant can, because the design surface --- a residual to allocate --- does not
+exist in bottom-up-only formulations.
+
+\paragraph{Contributions.}
+\begin{itemize}\setlength{\itemsep}{1pt}
+\item A structural critique of the \SCI family: every variant is a bottom-up
+energy model decoupled by construction from the provider's top-down report and
+therefore misses most of the carbon picture (\S\ref{sec:background}).
+\item A cross-provider survey of carbon-accounting tooling through a
+\emph{reconcilability} lens, including a lever-by-provider diagnostic matrix
+showing which engineering actions actually move which provider's reported
+number (\S\ref{sec:sota}, \S\ref{sec:practice}).
+\item \RSCI: the only per-workload metric in the \SCI family that reconciles
+with the provider's top-down report by construction, captures all provider-side
+overheads, is structurally sunk-carbon-free, and degrades gracefully to \OSCI
+under limited data (\S\ref{sec:rsci}).
+\item The \emph{residual as a design surface}: a family of weight choices
+(energy-share, static-share, peak-attribution) that preserve reconciliation by
+construction and induce sharply different per-workload incentives ---
+including a peak-shaving / procurement-deferral incentive no bottom-up metric
+can supply (\S\ref{sec:rsci-design}).
+\item A diagnosis of why \RSCI cannot yet be computed on today's provider
+reports, and a set of concrete asks on provider reporting, customer-side
+estimation, and standards that would close the gap
+(\S\ref{sec:practice}, \S\ref{sec:asks}).
+\end{itemize}
 
 \section{Background: \SCI and the Sunk Carbon Fallacy}
 \label{sec:background}
@@ -209,7 +330,10 @@ codified by the Green Software Foundation and adopted as ISO/IEC 21031~\cite{sci
 \SCI \;=\; \frac{E \cdot I \;+\; M}{R},
 \]
 where $E$ is the energy consumed running the workload, $I$ the carbon intensity of that
-energy, $M$ the amortised embodied carbon of the server, and $R$ a unit of work
+energy, $M$ the amortised embodied carbon of the server (the device's cradle-to-gate
+LCA total scaled by the request's share of its expected lifetime,
+following the architectural carbon-modelling convention of Gupta et al.'s
+ACT~\cite{gupta2022act}), and $R$ a unit of work
 (API call, transaction, training run, $\ldots$). The metric is real-time-sensitive,
 applicable from a single function to a datacenter, and intended to drive engineering
 optimisation.
@@ -495,9 +619,11 @@ subset of what the provider measures internally.
 
 \paragraph{The internal/external gap is structural --- and is the \RSCI residual.}
 Concrete evidence from three of the Big-3:
-(i) Microsoft's 2021 Scope-3 Whitepaper (footnote~2) acknowledges that the customer-tool
-methodology and the corporate-disclosure methodology have not been
-reconciled~\cite{microsoft-s3-2021};\footnote{\textbf{TODO --- verification pending.} The PDF currently in \texttt{references/carbon\_accounting\_methodologies/azure/} is the 2018/2020 Microsoft+WSP cloud-carbon study, not the 2021 Scope-3 Whitepaper. Verify the footnote-2 wording against the actual 2021 doc before camera-ready.}
+(i) Microsoft's 2021 Scope-3 transparency whitepaper~\cite{microsoft-s3-2021}
+states, in a footnote attached to its own description of the customer-facing tool,
+that ``\emph{Microsoft Cloud is exploring new methods for emissions reporting that Microsoft has not yet
+adopted in its corporate disclosure. The underlying methodologies and emissions findings generated
+from the calculator will differ from those reflected in Microsoft's corporate disclosure}''~\cite[p.~2, fn.~2]{microsoft-s3-2021};
 (ii) GCP measures machine-level power via Borg telemetry hourly, but the customer
 surface is monthly and uses a \emph{list-price-proportional} SKU factor that does not
 reflect the underlying physical
@@ -629,21 +755,27 @@ w^{k}_{i,s,r} \;=\; \frac{\varphi_i}{\sum_j \varphi_j},
 \label{eq:w-peak}
 \end{equation}
 where $\varphi_i$ is workload $i$'s contribution to fleet peak --- formally, the
-Shapley value of $i$ in the cooperative game whose value function is the slice's
-peak provisioned capacity. Appropriate for the embodied-IT sub-component of
-$\Delta^{\text{S3}}$, whose physical driver is peak provisioning: the workload at
-peak forces the next server purchase; the workload at the trough does not. Exact
-Shapley over the peak-capacity game is exponential in workload count and infeasible
-online; following the precedent set
-by~\cite{sharma2024accountable_footprint_serverless}, we treat $\varphi_i$ as a
-\emph{best-effort Shapley approximation} satisfying the four Shapley properties
-(efficiency, null-player, symmetry, linearity). Practical proxies that retain the
-qualitative gradient include:
+Shapley value~\cite{shapley1953value} of $i$ in the cooperative game whose value
+function is the slice's peak provisioned capacity. Appropriate for the embodied-IT
+sub-component of $\Delta^{\text{S3}}$, whose physical driver is peak provisioning:
+the workload at peak forces the next server purchase; the workload at the trough
+does not. The same physical argument was recently made for embodied-carbon
+attribution within a single server by Han et al.~\cite{HotCarbon2024GameTheoretic},
+who frame ``\emph{embodied carbon attribution as the problem of demand-driven
+supply provisioning for hardware}''~\cite[\S3.4]{HotCarbon2024GameTheoretic};
+\RSCI generalises the move to the slice / fleet scope via the top-down residual.
+Exact Shapley over the peak-capacity game is exponential in workload count and
+infeasible online; following the precedent set
+by~\cite{sharma2024accountable_footprint_serverless,HotCarbon2024GameTheoretic},
+we treat $\varphi_i$ as a \emph{best-effort Shapley approximation} satisfying the
+four Shapley properties (efficiency, null-player, symmetry, linearity). Practical
+proxies that retain the qualitative gradient include:
 (a)~\emph{peak-hour energy share} $\varphi_i = E_i(t^{*})$ with $t^{*}$ the slice
 peak hour;
 (b)~\emph{leave-one-out marginals} $\varphi_i = \text{peak}(\mathcal{N}) -
 \text{peak}(\mathcal{N}\setminus\{i\})$;
-(c)~\emph{sampled-permutation} Shapley over a few hundred coalition orderings.
+(c)~\emph{sampled-permutation} Shapley over a few hundred coalition
+orderings~\cite{castro2009polynomial}.
 The choice of proxy is itself a design surface; \RSCI reconciles under any choice
 satisfying $\sum_i w^{k}_{i,s,r} = 1$.
 
@@ -916,8 +1048,34 @@ A cloud-specific gold standard must close these and require independent assuranc
 \label{sec:future-work}
 
 % TODO: tighten after §5 lands. Current draft covers (i) signals beyond carbon,
-% (ii) attribution refinements, (iii) \TSCI parallel, (iv) multi-tenant/serverless,
-% (v) energy-coefficient standardisation.
+% (ii) additional roles (user reporting, customer Scope-3), (iii) attribution
+% refinements, (iv) \TSCI parallel, (v) multi-tenant/serverless,
+% (vi) energy-coefficient standardisation.
+
+\paragraph{Beyond internal scheduling: user reporting and customer Scope-3.}
+\S\ref{sec:rsci} frames \RSCI as an operator- and scheduler-facing signal, but
+reconciliation by construction (Eq.~\ref{eq:reconcile}) enables two further roles
+worth flagging. First, \RSCI is the only metric in the family that can be
+\emph{honestly reported to end users} of a cloud-hosted service: \OSCI shows a slice
+of operational electricity decoupled from the embodied, peak-driven, and overhead
+costs the user's request actually triggers, whereas an \RSCI number reflects all of
+these and therefore admits behavioral adaptation (load-shifting, request shaping,
+volume reduction) on grounds that match what the provider will ultimately report.
+A practical concern is routing-invariance --- two identical user requests should not
+get different numbers because of operator placement decisions the user cannot see.
+This is addressable without redefining \RSCI: because the peak-attribution weight
+$\varphi_i$ depends on the workload's \emph{temporal} contribution to fleet peak
+(when and how big), not on \emph{which physical machine} it lands on, the user-facing
+view can marginalise over spatial placement at fixed temporal and sizing profile.
+The resulting per-(request-class, submission-time) expectation is routing-invariant
+for the user, preserves their temporal and sizing levers, and (by linearity of
+expectation, with weights still summing to one) preserves reconciliation.
+Second, the same property makes \RSCI directly usable for the customer's own
+\emph{Scope-3 Cat-1} (purchased goods and services) accounting of cloud use: rather
+than relying on the provider's monthly per-account total, the customer can attribute
+Scope-3 across internal teams or products at workload granularity, with the
+guarantee that the bottom-up breakdown sums to the provider's disclosed
+total --- closing the loop a parallel bottom-up estimate cannot.
 
 The residual-decomposition framework is \emph{signal-agnostic}: replace
 $C^{\downarrow}_{s,r}$ with a top-down water-use report and the same machinery yields

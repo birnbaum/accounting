@@ -7,6 +7,11 @@ This folder is the **source of truth** for any claim in `paper/paper.tex` that c
 **Hard rule (also in `CLAUDE.md`):** Before writing or repeating any claim about a cited document, open the file in this folder, find the supporting §/page, and cite it. Do not paraphrase from `vision_paper_notes.md` or memory.
 If the document is not in this folder, ask the user to add it — do not invent or guess.
 
+**PDF access convention:** Every PDF in this folder has a sibling `.txt` produced by `pdftotext -layout`.
+Always grep the `.txt` first (`grep -n <keyword> <file>.txt`), read a narrow window with `Read offset= limit=30`, and cite the §/page from the PDF.
+Only open the PDF itself for figures or tables that survived poorly in the text extraction.
+When adding a new PDF, immediately run: `pdftotext -layout <file>.pdf <file>.txt`
+
 ## Layout
 
 ```
@@ -90,7 +95,7 @@ Web-only or paywalled — must be acquired by the user and dropped in:
 | **Radovanović et al.** | IEEE | Google carbon-aware compute scheduling. |
 | **Wiesner et al.** (Cucumber, *Let's Wait Awhile*, …) | Author's own | Self-citation for §6 / §7 prior-art coverage. |
 | **Lin et al.** | TBD by author | Specific carbon-aware paper to cite. |
-| **Microsoft 2021 Scope-3 Whitepaper** (with footnote 2) | Microsoft | **Verified 2026-05-17: the PDF currently in `azure/microsoft-cloud-carbon-study-2018.pdf` is the 2020 update of the 2018 cloud-carbon study — NOT the 2021 Scope-3 Whitepaper.** The famous footnote-2 customer-tool / corporate-disclosure non-reconciliation passage is in a separate 2021 doc that is not yet in this folder. The paper.tex citation `\cite{microsoft-s3-2021}` currently has a `TODO --- verification pending` footnote. Locate the 2021 doc and add it. |
+| ~~Microsoft 2021 Scope-3 Whitepaper~~ | ~~Microsoft~~ | **Resolved 2026-05-21**: added as `azure/microsoft-scope3-transparency-2021.{pdf,txt}`. Footnote 2, p. 2 (repeated as fn. 11, p. 10) verbatim: *"Microsoft Cloud is exploring new methods for emissions reporting that Microsoft has not yet adopted in its corporate disclosure. The underlying methodologies and emissions findings generated from the calculator will differ from those reflected in Microsoft's corporate disclosure."* `paper.tex:496–509` updated to quote this directly. |
 | **Azure Emissions Calculation Methodology (Microsoft Learn page snapshot)** | learn.microsoft.com | Currently web-only. Print-to-PDF as `azure/azure-methodology-2026-01-snapshot.pdf` for a citable artifact. |
 
 ## Verification protocol (mandatory before paper-level prose)
