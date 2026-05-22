@@ -1,0 +1,321 @@
+ENVIRONMENTAL POLICY
+
+
+Customer Emissions Data
+Akamai’s policy regarding customer emissions data
+
+
+
+Purpose
+
+This document establishes Akamai Technologies, Inc.’s (“Akamai”) comprehensive policy regarding the
+customized reporting of customer emissions data. It aims to provide clear guidance on the creation, use,
+and audit of emissions reports while outlining the roles and responsibilities of Akamai and its customers
+in this process. This policy reflects Akamai’s commitment to transparency and environmental
+stewardship while maintaining the confidentiality of its proprietary methodologies, models, and data.
+
+By defining the scope, limitations, and protocols for emissions data reporting, this policy ensures a
+structured and consistent approach to addressing customer needs, including requests for customized
+reports, audits, and additional data formats. It further emphasizes Akamai’s adherence to industry
+standards and its broader sustainability goals.
+
+
+Scope
+
+This policy applies to all customers of Akamai who
+    ●​ Require customized emissions reports
+    ●​ Seek to audit these customized emissions reports
+    ●​ May request additional information or services related to emissions reporting
+
+
+Policy statements
+
+1. Provision of customized emissions reports
+1.1. Standard reporting
+    ●​ Customized reports: Akamai will provide customized emissions reports that include data specific
+       to the customer’s use of Akamai services, reflecting the proportional impact of emissions
+       attributable to the individual customer.
+    ●​ Data included: The reports will encompass emissions data inclusive of Scopes 1, 2, and 3
+       (including all categories 1 through 8 for Scope 3), even if emissions are zero or immaterial.
+    ●​ Data reporting timeline: We will provide customer-specific, unaudited numbers for Q1-Q3 in the
+       current fiscal reporting year of Akamai and will provide a full set of unaudited, customer-specific
+
+
+
+
+                                 ©2025 Akamai Technologies I Published 1/25​                 Page 1 of 7
+      emissions figures for the entire calendar year (including Q4), following the completion of our
+      company-wide emissions audit in the first half of the following year.
+
+
+1.2. Limitations on data provision
+  ●​ Limited service-level emissions measurement: Akamai does not measure emissions or cash
+     spent at the service level beyond what is provided in the customized reports.
+  ●​ Exclusivity of CDP disclosure: Akamai’s total company revenue and emissions data are disclosed
+     exclusively through its Carbon Disclosure Project (CDP) response, including details regarding the
+     same.
+
+
+1.3. Additional customer requests
+  ●​ Evaluation of requests: Any customer requests for additional data, formats, or reporting not
+     covered by the standard customized emissions report will be evaluated on a case-by-case basis.
+  ●​ Written agreements: Provision of additional services or data requires a separate written
+     agreement outlining the scope, costs, and terms, subject to Akamai’s discretion.
+
+
+2. Customer responsibility and cost allocation
+2.1. Burden of proof and cost
+  ●​ Financial responsibility: Customers requesting the audit of customized emissions reports or
+     additional reporting services are solely responsible for initiating and funding these activities.
+  ●​ Third-party engagement: Customers must engage qualified third-party assurance providers or
+     consultants at their own expense to verify emissions data.
+
+
+2.2. Discretionary nature of audits
+  ●​ Customer’s decision: The decision to conduct an audit and its scope are at the customer’s
+     discretion.
+  ●​ No obligation on Akamai: Akamai is not obligated to participate in or fund the customer’s audit
+     process beyond providing a requested standard customized emissions report
+
+
+3. Nondisclosure of proprietary models and data
+3.1. Confidentiality and intellectual property
+  ●​ Protection of proprietary information: Akamai’s models, methodologies, algorithms, and
+     underlying data that are used to develop customized emissions reports are proprietary and
+     confidential.
+  ●​ Refusal to disclose: Akamai will not provide access to its proprietary models, algorithms, or
+     underlying data during the audit process or in response to customer requests, unless expressly
+     agreed upon in writing.
+
+
+
+
+                               ©2025 Akamai Technologies I Published 1/25​                  Page 2 of 7
+4. Reporting standards
+4.1. Emissions scope and category reporting
+    ●​ Relevant scope coverage: Akamai will only provide emissions data that is relevant to our
+       operational footprint. This coverage is based on our internal method of calculation developed
+       from the Greenhouse Gas Protocol Scope 1, 2 and 3 guidance.
+    ●​ Comprehensive coverage: Akamai will report emissions covering Scope 1, Scope 2, and Scope 3
+       categories 1 through 8, even if emissions in those categories are zero. Information will be
+       published and can be reviewed publicly by the customer each reporting period.1
+    ●​ Verification of emissions: Zero or immaterial emissions in only applicable categories will be
+       verified in Akamai’s assurance report or consultant letter for the relevant scopes related to
+       Akamai’s business.
+
+
+4.2. Assurance and consultant letters
+    ●​ Requirement: Akamai commits to obtain assurance reports for each reporting year to verify the
+       accuracy and completeness of emissions data.1
+    ●​ Scope of verification: The verification will cover all relevant scopes and categories applicable to
+       Akamai based on our internal Scope Reporting Method.
+
+
+5. Service-level emissions accounting
+5.1. Akamai’s reporting
+    ●​ Customized emissions data: Akamai will provide data reflecting the customer’s use of Akamai
+       services in the customized emissions report.
+    ●​ No cash spent data: Akamai does not provide data on cash spent at the service level.
+
+
+5.2. Customer’s assurance requirements
+    ●​ Discretionary assurance: If the customer requires an assurance report or consultant letter
+       covering service-level accounting emissions, they must arrange and pay for this service
+       independently.
+    ●​ Akamai’s involvement: Akamai will not participate in the customer’s assurance process beyond
+       providing the customized emissions report.
+
+
+6. Akamai’s emissions disclosure commitments
+6.1. Total company emissions
+    ●​ CDP disclosure: Akamai discloses its total company revenue and emissions data through its CDP
+       response, including all relevant scopes as defined in Akamai’s internal Scope Reporting Method 1,
+       2, and 3 (categories 1 through 8).
+
+1
+ Akamai has an end-to-end view of all categories relevant to our business, which includes Scope 3, categories 1 to 8,
+starting from 2022 onward. Akamai will not amend published emissions values prior to 2022.
+
+
+
+
+                                    ©2025 Akamai Technologies I Published 1/25​                        Page 3 of 7
+  ●​ Baseline year adjustments: Akamai adjusts its baseline year as necessary via the CDP to ensure
+     comprehensive scope coverage.
+
+
+6.2. Assurance report publication
+  ●​ Public access: Akamai publishes an assurance report for the preceding year through a publicly
+     accessible link, verifying the accuracy and completeness of all required scopes and categories.
+
+
+6.3. Emissions reduction plan
+  ●​ Annual updates: Akamai publishes its emissions reduction plan annually, including progress
+     updates leading up to 2030 as a part of our reporting cycle each year. Reports will be made
+     publicly available.
+
+
+7. Potential customer requests and Akamai’s
+position
+7.1. Requests for additional data or formats
+  ●​ Customized data formats: Akamai may, at its discretion, agree to provide emissions data in
+     specific formats requested by the customer, subject to a separate agreement and additional
+     costs.
+
+
+7.2. Requests for underlying data
+  ●​ Denial of requests: Akamai will deny requests for underlying models, algorithms, or proprietary
+     data to protect its intellectual property rights.
+
+
+7.3. Requests for on-site audits
+  ●​ Policy on on-site audits: Akamai does not permit on-site audits of its facilities or systems by
+     customers or their representatives.
+  ●​ Alternative solutions: Akamai may provide additional assurances through third-party
+     certifications or attestations such as ISO 14001 or other applicable environmental certifications.
+
+
+7.4. Requests for meetings with Akamai’s auditors
+  ●​ Denial of access: Akamai will not facilitate meetings between customers and its external
+     auditors.
+
+
+8. Limitation of liability and indemnification
+8.1. Limitation of liability
+  ●​ Exclusion of certain damages: Akamai shall not be liable for indirect, incidental, consequential, or
+     special damages arising from the provision or use of customized emissions reports.
+
+
+
+
+                              ©2025 Akamai Technologies I Published 1/25​                   Page 4 of 7
+    ●​ Cap on liability: Akamai’s total liability shall not exceed the fees paid by the customer for the
+       customized emissions report in question.
+
+
+8.2. Indemnification
+    ●​ Customer’s obligation: The customer agrees to indemnify, defend, and hold harmless Akamai
+       from any claims, damages, or expenses arising out of the customer’s use of the emissions report
+       or breach of this policy.
+
+
+9. Amendments and modifications
+9.1. Right to amend
+    ●​ Akamai’s discretion: Akamai reserves the right to amend or modify this policy at any time.
+
+
+9.2. Customer acceptance
+    ●​ Continued use: The customer’s continued use of Akamai’s services after any amendments
+       constitutes acceptance of the new terms.
+
+
+10. Confidentiality and Nondisclosure
+The confidentiality obligations between Akamai and the customer, as detailed in Akamai’s General Terms
+and Conditions, the Parties’ Master Service Agreement, or similar document, shall govern all disclosures,
+reports, and other information exchanged pursuant to this policy.
+
+
+11. Requesting customized emissions reports
+    ●​ Submission process: Customers may request customized emissions reports by contacting their
+       Akamai relationship manager in writing.
+    ●​ Information required: Requests should include specific details about the data needed and any
+       deadlines.
+    ●​ Acknowledgment: Akamai will acknowledge receipt of the request within five business days.
+
+
+12. Handling of customer audits
+    ●​ Notification: Customers must notify Akamai in writing of their intent to audit, including the
+       proposed scope and objectives.
+    ●​ Coordination: Akamai will coordinate with the customer to provide necessary information within
+       the limits of this policy.
+    ●​ Timeline: Responses to audit requests will be provided within a reasonable time frame,
+       considering the complexity and scope of the request.
+
+
+
+
+                                 ©2025 Akamai Technologies I Published 1/25​                   Page 5 of 7
+Contact information
+
+For questions or assistance regarding this policy, please contact:
+
+​        ​      ​       Akamai Technologies, Inc
+Attn: ​ ​       ​       Corporate Sustainability Dept
+Email: ​ ​      ​       sustainability@akamai.com
+Phone: ​​       ​       (617) 444-3000
+Address: ​      ​       145 Broadway
+                        Cambridge, MA 02142
+
+
+Appendix A: Definitions
+
+Assurance reports: Verification documents produced by third-party auditors or consultants to validate the
+accuracy and completeness of reported emissions data
+
+Audit: A systematic, independent examination of emissions data to determine whether it conforms to
+stated requirements, often conducted by a qualified third-party organization
+
+Baseline year: A reference year used for measuring emissions reductions or progress toward
+sustainability goals
+
+Carbon Disclosure Project (CDP): An international nonprofit organization that runs a global disclosure
+system for managing environmental impacts and reporting corporate emissions data
+
+Customized emissions reports: Reports tailored to individual customers that reflect the proportional
+impact of emissions attributable to their use of Akamai services, covering relevant Scope 1, 2, and 3
+emissions
+
+Emissions reduction plan: A structured strategy outlining steps Akamai will take to reduce its greenhouse
+gas emissions over a specified time frame, typically in alignment with long-term sustainability goals.
+
+Emissions verification: The process of confirming that emissions data is accurate and reliable, typically
+conducted by a third-party assurance provider
+
+Intellectual property: Proprietary assets such as models, methodologies, algorithms, and data that are
+owned and protected by Akamai
+
+ISO 14001: An internationally recognized standard for environmental management systems that provides
+a framework for managing environmental responsibilities systematically
+
+Nondisclosure agreement: A legal contract that ensures confidentiality of shared information, protecting
+proprietary and sensitive data exchanged between parties
+
+
+
+
+                                 ©2025 Akamai Technologies I Published 1/25​                  Page 6 of 7
+Proprietary models and data: Akamai’s internally developed algorithms, methodologies, and datasets
+used to calculate emissions; these remain confidential and are not disclosed unless expressly agreed
+upon in writing
+
+Scope 3 categories (1–8): Subcategories under Scope 3 emissions include:
+
+    ●​   Business travel: Emissions from employee travel for business purposes
+    ●​   Capital goods: Emissions from the production of assets like buildings, machinery, and equipment
+    ●​   Employee commuting: Emissions from employees commuting to and from work
+    ●​   Fuel and energy-related activities: Emissions associated with energy production not included in
+         Scope 1 or 2
+    ●​   Purchased goods and services: Emissions from the production of goods and services purchased
+         by Akamai
+    ●​   Upstream leased assets: Emissions from leased assets not included in Scope 1 or 2
+    ●​   Upstream transportation and distribution: Emissions from the transportation and distribution of
+         products purchased by Akamai
+    ●​   Waste generated in operations: Emissions from the disposal and treatment of waste from
+         Akamai’s operations
+
+Scopes 1, 2, and 3: Categories of greenhouse gas emissions as defined by the Greenhouse Gas Protocol:
+
+    ●​ Scope 1: Direct emissions from owned or controlled sources
+    ●​ Scope 2: Indirect emissions from the generation of purchased electricity, steam, heating, and
+       cooling consumed by the reporting company
+    ●​ Scope 3: All other indirect emissions occurring in a company’s value chain, categorized into
+       upstream and downstream activities
+
+Service-level emissions accounting: Emissions data calculated based on the specific services used by a
+customer, as provided in Akamai’s customized emissions reports
+
+
+
+
+                                ©2025 Akamai Technologies I Published 1/25​                Page 7 of 7
+

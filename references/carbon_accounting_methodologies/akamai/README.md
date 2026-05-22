@@ -2,7 +2,10 @@
 
 **Customer tool:** Per-customer Carbon Calculator inside the Akamai Control Center.
 
-## No PDF available in this folder
+## Sources in this folder
+
+- `akamai-carbon-calculator-blog-compilation-2026-05.md` — compiled blog content. Source 1 (May 2025 Cat-8 customer-reporting blog by Mike Mattera) pasted in full by researcher 2026-05-22. Three other blog URLs still return HTTP 403.
+- `akamai-emissions-reporting-policy-2025.pdf` / `.txt` — **Akamai Environmental Policy: Customer Emissions Data** (published 2025-01, 7 pp.). Formal policy governing what Akamai provides to customers and what it refuses to disclose. Cite this for replicability / assurance gaps.
 
 Akamai does not publish a single methodology PDF. The information below consolidates the blog posts and the corporate sustainability PDF.
 
@@ -33,9 +36,12 @@ Akamai does not publish a single methodology PDF. The information below consolid
 ### Allocation key
 - Byte utilization + machine utilization per DC are used to allocate the appropriate proportion of a data center's energy use and emissions to a customer.
 - This is real DC-utilization allocation, not bytes-only — distinguishes Akamai from Cloudflare's bytes-only approach.
+- Source: May 2025 blog verbatim — see `akamai-carbon-calculator-blog-compilation-2026-05.md`.
 
 ### Energy model
 - Real DC energy use × utilization weighting; not bytes-only.
+- Five emission factor types reported: location-based, market-based, balancing authority, location marginal, and MOER (real-time sub-hourly).
+- Report includes: MWh consumed, PUE, renewable share, total emissions impact (MBM), grid losses.
 
 ### Embodied carbon
 - Not separately disclosed in the customer report.
@@ -49,11 +55,14 @@ Akamai does not publish a single methodology PDF. The information below consolid
 - Customer report is explicitly **Cat-8-compatible**.
 
 ### Assurance
-- Akamai's corporate emissions are externally reported.
-- The **customer-allocated report itself is not separately assured**.
+- Akamai obtains a corporate-level assurance report annually covering "all relevant scopes and categories" (§4.2, policy doc). Published publicly through CDP.
+- The **customer-allocated report itself is not separately assured** — customers must arrange and fund their own third-party verification (§2.1, policy doc).
+- Scope 3 full-year coverage in customer reports starts from 2022 onward; Akamai will not amend published values prior to 2022 (policy doc §4.1, fn. 1).
 
 ### Replicability
 - **Low** — equations not published; customer relies on Akamai's allocation.
+- Formally confirmed by policy: *"Akamai will not provide access to its proprietary models, algorithms, or underlying data during the audit process or in response to customer requests"* (§3.1, `akamai-emissions-reporting-policy-2025.pdf`).
+- On-site audits not permitted (§7.3). Customers cannot meet Akamai's external auditors (§7.4).
 
 ### Known gaps for rSCI
 - Linode Compute uncovered despite being a major product line.
@@ -61,7 +70,7 @@ Akamai does not publish a single methodology PDF. The information below consolid
 - No tool-implementation assurance.
 - Customer-allocated number is Cat-8-shaped — useful for customer inventory but not directly comparable with provider total.
 
-## Recent verification (2026-05-16)
-- Carbon Calculator confirmed live in Akamai Control Center.
-- Delivery-only coverage confirmed via 2025 customer-reporting blog and supply-chain blog.
-- Linode/Compute exclusion confirmed — no mention in any Carbon Calculator coverage description.
+## Recent verification (2026-05-22)
+- May 2025 Cat-8 blog (Mattera) read in full (pasted by researcher). Allocation key verbatim confirmed: byte + machine utilization. Five emission factor types confirmed. No CSRD/SB-253 named; GHG Protocol only. Linode/Compute still absent from coverage language.
+- `akamai-emissions-reporting-policy-2025.pdf` read in full. Key additions: (1) non-disclosure of models confirmed in formal policy §3.1; (2) on-site audits not permitted §7.3; (3) customer assurance is customer's own expense §2.1; (4) Scope 3 coverage from 2022 onward; (5) corporate disclosure via CDP only.
+- Three other blog URLs still return HTTP 403 from automated agents.

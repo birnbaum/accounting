@@ -98,12 +98,11 @@ For completeness — when contrasted against Big-3:
 - **Alibaba** is the only Tier-A provider with third-party *data* assurance (Bureau Veritas under ISO 14064-3); all others have at most methodology-level assurance.
 - **None** of the Tier-A providers reflects compute utilization in the customer-reported number.
 
-## Three methodology families (used in `paper/paper.tex` §3)
+## Methodology taxonomy → see `methodology_comparison.md`
 
-The Tier-A landscape splits into three families that don't produce comparable numbers without an explicit residual bridge:
+The earlier "three methodology families" framing (usage-time / traffic / component-LCA) has been retired.
+It put AWS-foundational and OVHcloud-dedicated in different families even though both compute `Σ (customer_usage_units × per-unit factor)`.
 
-1. **Usage-time allocated** — AWS, GCP, Azure, Oracle, IBM, Alibaba. Carbon proportional to rental-line: vCPU-hours or instance-hours of an SKU, possibly re-weighted by list price (GCP), revenue (AWS non-foundational), or "normalized cost" (Azure). Embodied carbon folded into the per-SKU factor.
-2. **Traffic-allocated** — Akamai, Cloudflare, Fastly. Carbon proportional to work-volume: bytes delivered or CPU-time consumed. Embodied carbon largely or entirely excluded.
-3. **Component-LCA per resource** — OVHcloud, Scaleway. Carbon built from a physical inventory: per-component embodied factor + operational energy.
+The replacement is a single shared template with four orthogonal axes (activity unit, per-unit-factor source, embodied treatment, idle/overhead allocation); see `methodology_comparison.md` for the template, axis values, per-provider profiles, and the source-grounded inconsistencies vs the prior framing.
 
-The three families allocate different slices of provider emissions in different units; adding or directly benchmarking across them is not meaningful without an explicit residual bridge — this is the rSCI gap.
+Key cross-cutting consequence for the residual bridge in `paper/paper.tex` §3–§4: providers' numbers are not directly summable or benchmarkable because activity units differ (vCPU-hours vs bytes vs `$`-spend vs server-hours) *and* per-unit factor sources differ (list-price vs revenue vs component-LCA vs benchmark). The rSCI gap arises from both dimensions, not from a clean family split.

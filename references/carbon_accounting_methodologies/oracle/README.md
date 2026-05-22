@@ -4,7 +4,8 @@
 
 ## Authoritative sources in this folder
 
-- `oracle-technical-carbon-guidance.pdf` — Oracle's published methodology guidance. Power-based is the primary mode for CSRD / SB-253 compliance reporting; spend-based remains the fallback for services without power-based coverage.
+- `oracle-technical-carbon-guidance.pdf` — Oracle's published methodology guidance (Feb 2023, v1.0). **Spend/revenue-based only** — predates the power-based rollout. Formula: customer revenue × regional emission intensity factor = estimated Scope 3 emissions.
+- `oracle-power-based-calc-releasenote-2025-06.md` — Compiled text of the OCI release note for power-based calculation support (page release date: June 30, 2025; fetched 2026-05-22). Documents LBM/MBM distinction, EU/UK regulatory alignment, and zero-MBM in European regions. **Note:** specific service coverage list (which services are power-based vs spend-based) is not enumerated in public docs.
 
 ## Provider URLs
 
@@ -47,7 +48,11 @@ Medium. Allocation logic described qualitatively but emission factors and per-se
 - Power-based service list undisclosed.
 - Spend-based is the broadest coverage — same allocation pathology as AWS revenue-fallback.
 
-## Recent verification (2026-05-16)
-- Tool confirmed live; paying customers only.
-- Docs page does not enumerate power-based vs spend-based service lists.
-- "Not intended to reduce emissions" disclaimer confirmed in docs page.
+## Recent verification (2026-05-22)
+- Release note fetched; power-based calculation confirmed live as of June 30, 2025.
+- "Feb 2026" in prior notes was researcher annotation, not the page's own date.
+- Service list for power-based coverage still not enumerated in public docs.
+- Oracle blog (blogs.oracle.com/...) returned HTTP 403 — not accessible via automated crawl.
+- "Not intended to reduce emissions" disclaimer confirmed in release note.
+- Zero-MBM in European regions confirmed (Oracle PPA contracts).
+- Power-based supports both LBM and MBM; spend-based supports MBM only.
