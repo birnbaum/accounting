@@ -23,4 +23,5 @@ dependencies = [
     "kaleido>=0.2.1",
     "pydantic-ai-slim>=1.98.0",
     "google-genai>=2.4.0",
+    "scaleway>=2.11.0",
 ]
