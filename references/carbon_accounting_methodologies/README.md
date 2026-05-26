@@ -2,11 +2,11 @@
 
 Each subdirectory is the authoritative reference for one cloud provider's customer-facing carbon-accounting tool. Each folder contains the provider's methodology PDF(s) (where available) and a `README.md` consolidating URLs, methodology details, scope/embodied/allocation choices, assurance posture, and recent verification notes.
 
-## Tier-A providers (per-customer dashboard exists) — 11 first-party tools
+## Tier-A providers (per-customer dashboard exists) — 12 first-party tools
 
 | Provider | Folder | Primary methodology source |
 |---|---|---|
-| AWS | `aws/` | `aws-ccft-methodology-model3.pdf` (Oct 2025) |
+| AWS | `aws/` | `aws-ccft-methodology-model3.pdf` (Oct 2025); superseded by AWS Sustainability Console (Mar 2026) |
 | GCP | `gcp/` | `schneider-mattia-2024-gcp.pdf` (arXiv:2406.09645, peer-reviewed) |
 | Azure | `azure/` | `azure-chem-2026.pdf` + Microsoft Learn (web, snapshot pending) |
 | Oracle (OCI) | `oracle/` | `oracle-technical-carbon-guidance.pdf` |
@@ -14,19 +14,14 @@ Each subdirectory is the authoritative reference for one cloud provider's custom
 | Alibaba Cloud | `alibaba/` | web-only — see folder README |
 | OVHcloud | `ovhcloud/` | `ovh-eit-methodology-v2-2025.pdf` + v1 |
 | Scaleway | `scaleway/` | web-only (per-product pages) — see folder README |
+| T Cloud Public (ex-OTC) | `t-cloud-public/` | web-only (launch blog 2026-03-24) — see folder README. Newest entrant; tier upgrade verified 2026-05-23 |
 | Akamai | `akamai/` | web-only — see folder README |
 | Cloudflare | `cloudflare/` | `cloudflare-impact-report-2023.pdf` + methodology blog |
 | Fastly | `fastly/` | web-only (methodology docs page) — see folder README |
 
-## Borderline: Exoscale
+## Excluded from Tier-A: Huella Cloud (third-party tool sometimes referenced on Huawei Cloud)
 
-| Provider | Folder | Notes |
-|---|---|---|
-| Exoscale | `exoscale/` | Calculator is third-party (CloudAssess by Resilio/Kleis); engine methodology partner-owned and not fully public. Excluded from the paper's main Tier-A table for this reason. |
-
-## Excluded: Huawei Cloud (Huella Cloud)
-
-Verified 2026-05-16: vendor is **SGS Solutions** (Chile), multi-cloud. Not a first-party Huawei product. Not added as a folder; mentioned only as a footnote in `paper/paper.tex` §3.
+Verified 2026-05-16: vendor is **SGS Solutions** (Chile), multi-cloud. Not a first-party Huawei Cloud product, so Huawei Cloud does not qualify as Tier-A on the strength of Huella. Huawei Cloud itself is listed as Tier-B in `tier-b-c-providers.md` (corporate-level Huawei sustainability reports cover its DCs). Huella's exclusion from Tier-A is also mentioned as a footnote in `paper/paper.tex` §3.
 
 ## Tier-B / Tier-C providers — no per-customer tools
 

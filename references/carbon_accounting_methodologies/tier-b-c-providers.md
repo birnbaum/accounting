@@ -48,13 +48,14 @@ Provider publishes corporate-level Scope 1/2/3 data, but no customer-allocated n
 - Refs: [2022 ESG Report PDF](https://crusoe-public.s3.us-east-2.amazonaws.com/Crusoe_ESG+Report_2023.05.10.pdf), [resources blog](https://www.crusoe.ai/resources/blog/crusoe-tallys-law-leading-energy-transition).
 - *Note for rSCI*: the DFM "avoided emissions" framing sits awkwardly against rSCI's residual model.
 
-### Nebius (formerly Yandex international)
+### Nebius (international AI-infra; formerly Yandex N.V. holding, rebranded 2024)
 - Status: **Report**.
 - 2024 Sustainability Report.
 - Claims 94% low-carbon electricity, 0.04 tCO₂e/MWh market-based intensity.
 - Finland DC reportedly provides 65% of local municipality heating via heat reuse.
 - Iceland / Paris / UK sites stated as 100% renewable.
 - Scope 3 and water consumption reportedly absent from disclosure (flagged externally as a transparency gap).
+- Distinct entity from the Russian Yandex Cloud (Tier-C below) — Nebius emerged from the 2024 divestiture of Yandex N.V.'s non-Russian assets.
 - Refs: [Sustainability hub](https://nebius.com/sustainability), [2024 report announcement](https://nebius.com/newsroom/nebius-group-2024-sustainability-report-highlights-importance-of-sustainability-to-long-term-value-creation-in-ai-infrastructure).
 
 ### Verne (Iceland/Finland)
@@ -88,13 +89,9 @@ Provider publishes corporate-level Scope 1/2/3 data, but no customer-allocated n
 - Heat-reuse model places servers inside buildings that need heat (pools, apartments, nursing homes).
 - Refs: [Truly Green landing](https://leaf.cloud/truly-green), [Green-cloud explainer](https://leaf.cloud/blog/green-cloud-energy-use-and-residual-heat-what-actually-makes-a-cloud-sustainable).
 
-### Open Telekom Cloud (T-Systems / Deutsche Telekom)
-- Status: **Claim**.
-- Climate Neutral Data Centre Pact signatory.
-- 100% green-electricity purchase for DCs (Biere/Magdeburg PUE 1.28; Aalsmeer/Almere 1.46/1.40).
-- Deutsche Telekom corporate CR report covers Scopes 1/2/3.
-- No per-customer cloud carbon tool surfaced.
-- Refs: [Sustainability page](https://www.open-telekom-cloud.com/en/benefits/sustainability), [Telekom CR report 2024 PDF](https://report.telekom.com/cr-report/2024/_assets/downloads/env-environment-dtag-cr24.pdf).
+### Open Telekom Cloud — MOVED to Tier-A (renamed T Cloud Public, dashboard launched 2026-02-23)
+- See `t-cloud-public/README.md` for the current per-tenant Sustainability Dashboard, methodology surface, and tier-upgrade rationale.
+- Telekom group CR report still cited there as the corporate-level baseline.
 
 ### atNorth
 - Status: **Report**.
@@ -111,6 +108,31 @@ Provider publishes corporate-level Scope 1/2/3 data, but no customer-allocated n
 - The "Tnebula" internal carbon-management platform exists but is for Tencent's own DC operations, not exposed to customers.
 - Refs: [Sustainability page](https://www.tencentcloud.com/global-infrastructure/sustainability), [2024 ESG report](https://static.www.tencent.com/uploads/2025/04/08/00ef711d9596ce09344c0260b14cda7e.pdf).
 
+### Huawei Cloud
+- Status: **Report** (corporate-only, via Huawei group sustainability reports).
+- Huawei has published annual sustainability reports since 2008; most recent is the 2025 Annual Report (released 2026-03-31).
+- Group-level Scope 1/2/3 disclosure covers Huawei Cloud datacenters; no per-customer cloud carbon dashboard surfaced.
+- Note: the third-party Huella Cloud calculator (by SGS Solutions) is sometimes referenced *on* Huawei Cloud, but it is not a first-party Huawei product and is excluded from the Tier-A landscape — see paper §3 footnote.
+- Refs: [Sustainability hub](https://www.huawei.com/en/sustainability), [Reports & policies](https://www.huawei.com/en/sustainability/sustainability-report).
+
+### Baidu AI Cloud
+- Status: **Report** (corporate-only, via Baidu Inc ESG reports).
+- Baidu publishes annual ESG reports with operational carbon-neutrality targets covering Baidu AI Cloud datacenters at group level.
+- No per-customer cloud carbon dashboard.
+- Refs: [Baidu ESG hub](https://home.baidu.com/) (ESG section), Baidu Inc annual ESG reports.
+
+### JD Cloud
+- Status: **Report** (corporate-only, via JD.com ESG reports).
+- JD.com publishes annual ESG reports covering JD Cloud datacenters at group level.
+- JD Cloud markets an "Energy & Carbon Management Platform" (能碳管理平台) — but this is an IoT *solution for clients' own operations*, not a JD-Cloud-workload carbon tool. No first-party per-customer dashboard.
+- Refs: [JD ESG](https://ir.jd.com/esg), JD.com annual ESG reports.
+
+### Exoscale (A1 Digital)
+- Status: **Calculator surfaced, but methodology partner-owned** — see `exoscale/README.md`.
+- Customer-facing CloudAssess-based calculator (console + API) exists, but the engine is third-party (CloudAssess by Resilio/Kleis); the underlying methodology is not fully public.
+- Previously classified as "borderline Tier-A"; demoted here because the methodology is not first-party and therefore not auditable against Exoscale's own emission factors.
+- Refs: [Sustainability hub](https://www.exoscale.com/sustainability/), [Compliance academy doc](https://community.exoscale.com/academy/intro_cpl/), and per-folder `exoscale/README.md`.
+
 ## Tier C — marketing claims only
 
 Marketing-level renewable/PUE statements; no methodology and no per-customer accounting. Listed for completeness only.
@@ -120,19 +142,21 @@ Marketing-level renewable/PUE statements; no methodology and no per-customer acc
 | Hetzner | Tier-2 | Solar-generation shift (HT clean energy GmbH 2025); CSRD reporting from 2026; PUE 1.13 | [Sustainability](https://www.hetzner.com/unternehmen/nachhaltigkeit) |
 | Vultr | Tier-2 | Net-zero 2029; 2026 focus on GPU orchestration (NVIDIA Rubin) and silicon efficiency | [Impact](https://www.vultr.com/about/sustainability/) |
 | STACKIT | Sovereign EU | Green-electricity DCs in DE/AT; DC10 Ostermiething PUE 1.1; Schwarz Group net-zero-by-2050 | [Sustainability](https://stackit.com/en/learn/knowledge/cloud/sustainability) |
-| GreenGeeks | Niche green | REC-based "300% renewable" via Bonneville Environmental Foundation; US EPA Green Power Partner since 2009 | [Going green](https://www.greengeeks.com/going-green) |
-| Krystal | Niche green | Direct renewable PPAs preferred over RECs; Gold-Standard projects; tree-planting via Veritree | [Green hosting](https://krystalhosting.com/green) |
 | CoreWeave | AI/GPU | Sustainability strategy stated (clean energy, efficiency, recycling); Scope 1/2 measurement "in progress"; no formal targets or methodology | [About](https://www.coreweave.com/about-us), [FY25 10-K](https://s205.q4cdn.com/133937190/files/doc_financials/2025/q4/CoreWeave-Inc-FY25-10-K-7.pdf) |
 | Lambda | AI/GPU | Marketing references to "zero-emissions energy standards" at Mountain View; no report or methodology | [Site](https://lambda.ai/) |
 | Hyperstack (NexGen) | AI/GPU | 100% renewable marketing claim; Tier-3 DC partnerships; AQ Compute "net-zero AI supercloud" | [Site](https://www.hyperstack.cloud/), [AQ Compute blog](https://www.hyperstack.cloud/blog/company-news/nexgen-cloud-and-aq-compute-advance-towards-net-zero-ai-supercloud) |
 | DataCrunch | AI/GPU | Helsinki + Iceland sites; waste-heat reuse claim; no formal report | [Clusters](https://datacrunch.io/clusters), [TechCrunch](https://techcrunch.com/2024/10/21/datacrunch-wants-to-be-europes-first-ai-cloud-hyperscaler-powered-by-renewable-energy/) |
 | RunPod | AI/GPU | Nothing found | n/a |
 | Paperspace | AI/GPU | Acquired by DigitalOcean — inherits DO Tier-B | n/a |
-| Together AI / Fireworks AI / Replicate | AI/GPU | Nothing found | n/a |
+| Together AI  | AI/GPU | Nothing found | n/a |
+| Fireworks AI | AI/GPU | Nothing found | n/a |
+| Replicate | AI/GPU | Nothing found | n/a |
 | Vercel | PaaS | "Green energy policy" KB only; emissions inherited from underlying cloud providers | [KB](https://vercel.com/kb/guide/what-is-vercel-green-energy-policy) |
 | Netlify | PaaS | "Jamstack/CDN is intrinsically lower-emission" narrative; no per-customer accounting | [Sustainability](https://www.netlify.com/sustainability/) |
 | Fly.io | PaaS | Community thread only | [Thread](https://community.fly.io/t/carbon-emissions/4345) |
 | Render | PaaS | Inherits AWS/GCP — no first-party disclosure | [Thread](https://community.render.com/t/does-render-use-green-energy/912) |
+| Yandex Cloud | Russia (post-2024 split) | Russian successor of Yandex N.V. (Nebius = international spinoff). Minimal post-split ESG surface; sanctions context. No per-customer carbon tool. | [Yandex Cloud](https://yandex.cloud/en/) |
+
 
 ## Adjacent open-source / independent references
 
