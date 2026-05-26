@@ -26,7 +26,7 @@
 
 ### Customer framing
 - Presented as a **Scope 3** report from the customer's perspective.
-- **Primary narrative**: "carbon saved by using Cloudflare vs. average network" — i.e., the headline is *savings vs. industry baseline*, not absolute emissions. This is a meaningful difference from the other Tier-A tools.
+- **Primary narrative**: "carbon saved by using Cloudflare vs. average network" — i.e., the headline is *savings vs. industry baseline*, not absolute emissions. This is a meaningful difference from the other per-customer tools.
 
 ### Calculation method
 - Per-customer **data-transfer (bytes) × per-request energy factor**.

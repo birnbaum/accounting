@@ -1,11 +1,12 @@
-# Methodology comparison — Tier-A customer-facing tools
+# Methodology comparison — per-customer carbon tools
 
 **Purpose.**
-Consolidate the per-provider methodology evidence (in `carbon_accounting_methodologies/<provider>/`) into a single comparison that uses *one* shared computational template for every Tier-A tool, so the real differences between providers are visible on a few orthogonal axes instead of three pseudo-families.
+Consolidate the per-provider methodology evidence (in `carbon_accounting_methodologies/<provider>/`) into a single comparison that uses *one* shared computational template for every per-customer-tool tool, so the real differences between providers are visible on a few orthogonal axes instead of three pseudo-families.
 
 **Scope.**
-11 Tier-A providers with first-party per-customer carbon tools, verified 2026-05-16:
-AWS, GCP, Azure, Oracle, IBM, Alibaba, OVHcloud, Scaleway, Akamai, Cloudflare, Fastly.
+12 providers shipping first-party per-customer carbon tools, verified 2026-05-26:
+AWS, GCP, Azure, Oracle, IBM, Alibaba, OVHcloud, Scaleway, T Cloud Public, Akamai, Cloudflare, Fastly.
+T Cloud Public launched its dashboard 2026-02-23; methodology detail is sparse so it appears in the headcount and notes but not in the per-axis tables below.
 Exoscale (third-party engine) and Huawei (third-party multi-cloud) excluded — see `carbon_accounting_methodologies/README.md`.
 
 The four-axis decomposition supersedes the "three methodology families" framing previously used in `paper/paper.tex` §3 and in `cross_provider_synthesis.md`.
@@ -14,7 +15,7 @@ The four-axis decomposition supersedes the "three methodology families" framing 
 
 ## The shared template
 
-Every Tier-A customer tool reports a per-account number that, stripped of marketing, computes as:
+Every per-customer-tool customer tool reports a per-account number that, stripped of marketing, computes as:
 
 ```
 customer_carbon(account, period) =
@@ -36,11 +37,11 @@ How well a usage-unit proxy approximates that depends on whether the unit tracks
 - For **network**, energy is approximately linear in throughput (per-packet / per-bit cost dominates), so bytes-delivered is a structurally sound energy proxy. Cloudflare / Fastly-Delivery / Akamai's byte component all sit on this regime.
 - For **compute**, energy is highly nonlinear in load (idle ≈ 50–60% of full-load draw at the server). vCPU-hours, instance-hours, and `$`-spend therefore *underweight* heavily loaded workloads and *overweight* idle ones at the same SKU and duration. This is where the customer-surface allocation decouples from physical reality.
 
-**Critical shared property — verified across all 11 Tier-A providers from primary sources:**
+**Critical shared property — verified across all 11 documented per-customer-tool providers from primary sources (T Cloud Public excluded; methodology not yet published):**
 
 The four customer-surface allocations that approach energy-direct (in decreasing order of how concretely the source documents the claim):
 
-1. **Scaleway** — *closest to load-direct*. Uses **actual measured CPU consumption** combined with published Boavizta consumption profiles (non-linear CPU%→power) for CPU Instances; a fully-loaded VM and an idle VM at the same SKU receive different allocations in the monthly report. PDF-grounded (per-product calculation pages compiled in `scaleway/scaleway-methodology-docs-2026-05.md`). The strongest published energy-aware customer methodology in the Tier-A set, restricted to CPU Instances.
+1. **Scaleway** — *closest to load-direct*. Uses **actual measured CPU consumption** combined with published Boavizta consumption profiles (non-linear CPU%→power) for CPU Instances; a fully-loaded VM and an idle VM at the same SKU receive different allocations in the monthly report. PDF-grounded (per-product calculation pages compiled in `scaleway/scaleway-methodology-docs-2026-05.md`). The strongest published energy-aware customer methodology in the per-customer-tool set, restricted to CPU Instances.
 2. **Akamai** — *energy-metered, allocation rule semi-disclosed*. Per-server and per-device kWh metering in colocations; allocated to customers via (byte-share × DC-machine-utilization). PDF-grounded via the 2025 emissions-reporting policy doc and blog compilation, but per-customer equations still not published.
 3. **Oracle (power-based)** — *energy-metered, allocation algorithm undisclosed*. Tracks kWh by service workload and allocates from "data center hardware (both dedicated and shared)" via an undisclosed algorithm; multiplied by regional LBM/MBM EF. PDF-grounded via the June-2025 release-note markdown in `oracle/`. Service-coverage list not published; spend-based mode used for everything else.
 4. **GCP (internal stage only)** — energy-direct via Borg power telemetry at the internal stage, but the customer-facing step §3.6 deliberately re-projects onto vCPU-hours × list-price. Energy-aware physics on the input side; price-proportional re-projection on the customer side.
@@ -122,7 +123,7 @@ Source is the per-provider folder; no claim here is independent of that folder.
 - **A2**: meter-then-bucket. `per-IDC PUE × resource sales × green-power-usage ratio × technical carbon-reduction measures`. Per-service intensities not published.
 - **A3**: excluded; embodied not addressed in public docs.
 - **A4**: undisclosed.
-- **Differentiator**: Bureau Veritas (Beijing) third-party *data* assurance under ISO 14064-3 — the only Tier-A tool with data-level (not methodology-level) assurance.
+- **Differentiator**: Bureau Veritas (Beijing) third-party *data* assurance under ISO 14064-3 — the only per-customer-tool tool with data-level (not methodology-level) assurance.
 
 ### OVHcloud — Environmental Impact Tracker (v2.0, Apr 2025)
 
@@ -138,11 +139,11 @@ Source is the per-provider folder; no claim here is independent of that folder.
 (Now PDF-grounded via `scaleway/scaleway-methodology-docs-2026-05.md` — markdown compilation of the per-product calculation pages.)
 
 - **A1**: per-product activity units across 7 products with **published formulas** per product. For Instances: `ManufacturingImpact_Instance = (dU / DDV) × ManufacturingImpact_hypervisor × Resources_Used_VM`, where `Resources_Used_VM` is a vCPU/RAM/Storage share of the hypervisor. For Block Storage: `bls_ratio = VOLsto / VolstoPool` with `×3` replication factor baked in. For Bare Metal: full per-server attribution.
-- **A1 — actual CPU consumption** (the differentiator): for the *monthly report*, Scaleway uses **actual measured CPU consumption** combined with **Boavizta consumption profiles** (non-linear CPU%→power model) for CPU Instances. Only the pre-order *estimation* mode uses a flat 30% CPU assumption. Verbatim: *"Monthly report mode: uses actual CPU consumption for highest accuracy."* GPU Instances use average per-offer consumption (not load-tracked). This makes Scaleway, for CPU Instances, one of the two Tier-A providers that reflect customer-side compute load in the customer number — though through a published *consumption-profile model* rather than direct kWh metering.
+- **A1 — actual CPU consumption** (the differentiator): for the *monthly report*, Scaleway uses **actual measured CPU consumption** combined with **Boavizta consumption profiles** (non-linear CPU%→power model) for CPU Instances. Only the pre-order *estimation* mode uses a flat 30% CPU assumption. Verbatim: *"Monthly report mode: uses actual CPU consumption for highest accuracy."* GPU Instances use average per-offer consumption (not load-tracked). This makes Scaleway, for CPU Instances, one of the two per-customer-tool providers that reflect customer-side compute load in the customer number — though through a published *consumption-profile model* rather than direct kWh metering.
 - **A2**: component-LCA × hardware inventory via Boavizta for *manufacturing*; manufacturing prorated by `(customer use duration) / (server lifespan)`. Construction (non-IT) via ADEME generic factors. For *usage*: per-VM-instance `UsageImpact = Power_kW × EmissionFactor × dU × allocation_ratio` (worked example for fr-par-2: PUE 1.16, France EF 0.065 kgCO₂e/kWh). For transversal tools: *"aggregated impact is allocated to each resource based on the electrical power it consumes."*
 - **A3**: separate LCA term. Scope 3 ≈ 80% of reported total. Water consumption included alongside carbon.
-- **A4**: undisclosed at the global/idle-DC level; non-IT impacts updated annually from personnel stats to avoid seasonal distortion. Within compute, the Boavizta-profile + actual-CPU pipeline means idle vs busy *does* affect the per-VM customer number — a stronger A4 signal than any other Tier-A provider documents.
-- **Granularity — Scaleway is the most temporally granular Tier-A tool.** Verbatim: *"Data is generated daily and becomes visible the day after product activation."* Dashboard switches to **daily breakdown when a single month is selected**, monthly when multiple months are selected.
+- **A4**: undisclosed at the global/idle-DC level; non-IT impacts updated annually from personnel stats to avoid seasonal distortion. Within compute, the Boavizta-profile + actual-CPU pipeline means idle vs busy *does* affect the per-VM customer number — a stronger A4 signal than any other per-customer-tool provider documents.
+- **Granularity — Scaleway is the most temporally granular per-customer-tool tool.** Verbatim: *"Data is generated daily and becomes visible the day after product activation."* Dashboard switches to **daily breakdown when a single month is selected**, monthly when multiple months are selected.
 
 ### Akamai — Carbon Calculator (Control Center)
 
@@ -173,29 +174,31 @@ Source is the per-provider folder; no claim here is independent of that folder.
 
 ## State of the practice — breadth of customer-facing carbon accounting
 
-The inventory in `carbon_accounting_methodologies/` covers ~40 cloud providers surveyed 2026-05-16. The breakdown:
+The inventory in `carbon_accounting_methodologies/` covers 48 cloud providers surveyed for the appendix table (May~2026). The disclosure breakdown (status taxonomy mirrors the appendix; see also `non-customer-tool-providers.md`):
 
-| Tier | Definition | Count | Providers |
-|---|---|---|---|
-| **A** | First-party per-customer carbon tool | **11** | AWS, GCP, Azure, Oracle, IBM, Alibaba, OVHcloud, Scaleway, Akamai, Cloudflare, Fastly |
-| **B** | Corporate-level Scope 1/2/3 disclosure, no per-customer tool | **~13** | Rackspace, DigitalOcean, UpCloud, GleSYS, Crusoe, Nebius, Verne, Infomaniak, Salesforce/Heroku, Leafcloud, Open Telekom Cloud, atNorth, Tencent Cloud |
-| **C** | Marketing-level renewable/PUE statements only, no methodology | **~15** | Hetzner, Vultr, STACKIT, GreenGeeks, Krystal, CoreWeave, Lambda, Hyperstack, DataCrunch, RunPod, Paperspace, Together AI, Fireworks AI, Replicate, Vercel, Netlify, Fly.io, Render |
+| Status | Definition | Count |
+|---|---|---|
+| Per-customer tool | First-party per-tenant carbon dashboard | **12** |
+| Assured GHG report | Externally-assured corporate Scope 1/2/3 inventory; no per-customer surface | **5** |
+| Self-reported | Corporate Scope 1/2/3 inventory or substantive operational metrics; no external GHG assurance | **9** |
+| Marketing claim | Pledges or qualitative "renewable" / PUE statements only | **8** |
+| No disclosure | Nothing surfaced through our search | **14** |
 
 Key observations for the §3 "poor SOTA" paragraph:
 
 - **Roughly 1 in 4 providers gives customers a per-account carbon number at all.** The other ~75% leave customers unable to source even a credible Scope-3 Cat-1 input for the cloud services they purchase.
-- **The fastest-growing segment has no tools.** Every AI/GPU "neocloud" surveyed — CoreWeave, Lambda, Hyperstack, DataCrunch, RunPod, Together AI, Fireworks AI, Replicate, plus DigitalOcean-acquired Paperspace — is Tier-C marketing-only. Compute capacity for AI training/inference is being built out at the fastest pace in cloud history with the *least* customer carbon transparency.
-- **Tier-B providers publish *corporate* GHG numbers but offer no per-customer allocation.** A customer cannot use a Tier-B provider's published total to compute their share, because there is no allocation rule and no per-account surface. They are reporting in compliance for themselves, not enabling their customers' reporting.
+- **The fastest-growing segment has no tools.** Every AI/GPU "neocloud" surveyed — CoreWeave, Lambda, Hyperstack, Verda (ex-DataCrunch), RunPod, Together AI, Fireworks AI, Replicate, plus DigitalOcean-acquired Paperspace — ships only marketing-grade renewable/PUE claims or no disclosure. Compute capacity for AI training/inference is being built out at the fastest pace in cloud history with the *least* customer carbon transparency.
+- **Providers without customer tools publish *corporate* GHG numbers but offer no per-customer allocation.** A customer cannot use a corporate total to compute their share, because there is no allocation rule and no per-account surface. They are reporting in compliance for themselves, not enabling their customers' reporting.
 - **PaaS / Jamstack providers inherit-without-disclosing.** Vercel, Netlify, Fly.io, Render run on AWS/GCP underneath but expose neither inherited Big-3 figures nor any first-party number — the upstream allocation is invisible at this layer.
-- **The only providers with *third-party-assured customer data* (not just methodology) are at most one.** Alibaba (Bureau Veritas, ISO 14064-3) is the lone Tier-A example; everyone else's assurance covers the methodology document, not the per-customer numbers.
+- **The only providers with *third-party-assured customer data* (not just methodology) are at most one.** Alibaba (Bureau Veritas, ISO 14064-3) is the lone per-customer-tool example; everyone else's assurance covers the methodology document, not the per-customer numbers.
 
-Net: customers wanting GHG-Protocol-compliant Scope-3-Cat-1 inputs from their cloud spend have 11 candidate providers, 8 of those (AWS, GCP, Azure, Oracle, IBM, OVHcloud, Scaleway, Alibaba) cover compute meaningfully, and **none of those 8 publishes a tool whose implementation has been independently verified end-to-end**.
+Net: customers wanting GHG-Protocol-compliant Scope-3-Cat-1 inputs from their cloud spend have 12 candidate providers; 8 of those (AWS, GCP, Azure, Oracle, IBM, OVHcloud, Scaleway, Alibaba) cover compute meaningfully, and **none of those 8 publishes a tool whose implementation has been independently verified end-to-end**.
 
 ---
 
 ## Temporal granularity audit (customer-facing)
 
-A separate question from allocation method: at what time resolution does the customer actually see the number? Verified across all 11 Tier-A providers:
+A separate question from allocation method: at what time resolution does the customer actually see the number? Verified across the 11 documented per-customer tools (T Cloud Public excluded — launch blog does not specify granularity):
 
 | Provider | Customer-facing granularity | Lag | Source |
 |---|---|---|---|
@@ -211,7 +214,7 @@ A separate question from allocation method: at what time resolution does the cus
 | Cloudflare | not stated explicitly | n/a | Cloudflare 2023 impact report |
 | **Fastly** | **daily** (also facility / country / state-or-region / global aggregations) | ~12-month-old EFs baked in | Fastly methodology page |
 
-**Result: Scaleway and Fastly are the only Tier-A providers publishing daily customer-facing emissions data.** Everyone else is monthly. *None publishes hourly customer data.* GCP publishes per-region hourly CFE %, but that's a separate signal from the customer-allocated number — a customer can't read their own hourly emissions from GCP's tool.
+**Result: Scaleway and Fastly are the only per-customer-tool providers publishing daily customer-facing emissions data.** Everyone else is monthly. *None publishes hourly customer data.* GCP publishes per-region hourly CFE %, but that's a separate signal from the customer-allocated number — a customer can't read their own hourly emissions from GCP's tool.
 
 The Scaleway and Fastly daily numbers are structurally different from each other:
 - *Fastly* uses previous-year PUE/EFs in a daily-resolved usage calculation — the daily resolution comes from usage volume × annual-baked factor.
@@ -225,7 +228,7 @@ Sub-monthly customer-facing granularity is therefore both rare *and* differently
 
 The detailed compliance posture, GHG-Protocol gap matrix, and gold-standard scorecard live in `cross_provider_synthesis.md`. The taxonomy-relevant cross-cuts are:
 
-1. **No Tier-A tool publishes a measured-energy customer allocation that we can verify.** The ideal weighting factor — per-customer kWh — is claimed only by Oracle (power-based mode, release-note URL only) and Akamai (blog, no equations); neither is PDF-grounded. GCP measures power physically internally but the customer-facing step re-projects to vCPU-hours × list-price. Every other Tier-A provider allocates by usage-units (good proxy for network where energy ≈ linear in bytes; poor proxy for compute where energy is nonlinear in load). This is the practical bound on what carbon-aware computing can change in the *reported* footprint: where the unit is bytes, reducing load reduces the number; where the unit is vCPU-hours/instance-hours/`$`-spend, reducing load *at fixed SKU and duration* does not.
+1. **No per-customer-tool tool publishes a measured-energy customer allocation that we can verify.** The ideal weighting factor — per-customer kWh — is claimed only by Oracle (power-based mode, release-note URL only) and Akamai (blog, no equations); neither is PDF-grounded. GCP measures power physically internally but the customer-facing step re-projects to vCPU-hours × list-price. Every other per-customer-tool provider allocates by usage-units (good proxy for network where energy ≈ linear in bytes; poor proxy for compute where energy is nonlinear in load). This is the practical bound on what carbon-aware computing can change in the *reported* footprint: where the unit is bytes, reducing load reduces the number; where the unit is vCPU-hours/instance-hours/`$`-spend, reducing load *at fixed SKU and duration* does not.
 
 2. **Three A2 patterns dominate, not three families of providers.** *Meter-then-bucket* (AWS-FS, GCP-internal, Oracle-power-based, IBM, Alibaba). *Price- or revenue-proportional* (AWS-nFS, GCP-customer-stage, Azure, Oracle-spend-based). *Component-LCA × inventory* (OVHcloud, Scaleway). Most providers use *more than one* — the per-provider story is a mix, not a single label.
 
@@ -233,7 +236,7 @@ The detailed compliance posture, GHG-Protocol gap matrix, and gold-standard scor
 
 4. **A4 idle/overhead is undisclosed for almost everyone.** GCP (proportional) and OVHcloud (flat-per-server + 100%/24×7 baseline) are the only providers that document this dimension. Big-3 fleet-monthly embodied therefore mechanically decreases as equipment ages past the amortisation window (4 yr GCP, 6 yr AWS/Azure) — independent of actual environmental impact.
 
-5. **Assurance posture is shallow across the board.** Apex (AWS) covers Model 3.0.x Scope-3 Cat 2/3/4 methodology at limited assurance; WSP (Azure) covers Scope-3 doc only; Fraunhofer (GCP) covers LCA methodology only. No Big-3 has its customer tool end-to-end audited. Alibaba's Bureau Veritas data assurance is the lone exception in the Tier-A set.
+5. **Assurance posture is shallow across the board.** Apex (AWS) covers Model 3.0.x Scope-3 Cat 2/3/4 methodology at limited assurance; WSP (Azure) covers Scope-3 doc only; Fraunhofer (GCP) covers LCA methodology only. No Big-3 has its customer tool end-to-end audited. Alibaba's Bureau Veritas data assurance is the lone exception in the per-customer-tool set.
 
 ---
 

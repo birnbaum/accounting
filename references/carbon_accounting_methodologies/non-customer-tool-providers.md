@@ -1,14 +1,14 @@
 # Provider notes — caveats not captured in the appendix table
 
 Companion to the cloud provider survey in `paper/paper.tex` §A.
-The appendix is authoritative for cluster, tier, and URL; this file holds per-provider methodology context, certifications relevant to the assurance/self-reported boundary, and rSCI-specific caveats.
+The appendix is authoritative for cluster, status, and URL; this file holds per-provider methodology context, certifications relevant to the assurance/self-reported boundary, and rSCI-specific caveats.
 Last refreshed: 2026-05-26 — aligned with the May~2026 survey rework (5-cluster status taxonomy, "Operational metrics only" collapsed into Self-reported).
 
 ## Hyperscalers
 
 ### Huawei Cloud — Assured
 - Group sustainability reports since 2008; latest is the 2025 Annual Report (released 2026-03-31).
-- The third-party Huella Cloud calculator (by SGS Solutions) is sometimes referenced *on* Huawei Cloud but is not a first-party product — excluded from the Tier-A landscape (see paper §3 footnote).
+- The third-party Huella Cloud calculator (by SGS Solutions) is sometimes referenced *on* Huawei Cloud but is not a first-party product — excluded from the per-customer-tool list (see paper §3 footnote).
 
 ### Tencent Cloud — Self-reported
 - "Tnebula" internal carbon-management platform is for Tencent's own DC operations, not exposed to customers.
@@ -23,7 +23,7 @@ Last refreshed: 2026-05-26 — aligned with the May~2026 survey rework (5-cluste
 - ISO 14001:2015 (SGS-audited annually) + ISO 50001. PUE 1.06 (air-cooled, no water).
 
 ### Exoscale (A1 Digital) — Self-reported
-- A console+API CloudAssess calculator is surfaced, but the engine is third-party (CloudAssess by Resilio/Kleis) — methodology not fully public and not auditable against Exoscale's own emission factors. Previously borderline Tier-A; demoted on first-party criterion.
+- A console+API CloudAssess calculator is surfaced, but the engine is third-party (CloudAssess by Resilio/Kleis) — methodology not fully public and not auditable against Exoscale's own emission factors. Previously borderline as a per-customer tool; demoted on first-party criterion.
 
 ### Hetzner — Self-reported
 - EMAS-verified environmental statement at German sites (third-party verified EU scheme, distinct from ISO 14001 self-attestation). PUE 1.10–1.16. Hydropower since 2008 (DE) / 2018 (FI).
@@ -32,7 +32,7 @@ Last refreshed: 2026-05-26 — aligned with the May~2026 survey rework (5-cluste
 - Coverage via parent ESG reports (Baidu Inc., JD.com). No per-customer cloud surface.
 - JD's "Energy & Carbon Management Platform" (能碳管理平台) is an IoT solution for clients' own operations, *not* a JD-Cloud-workload tool.
 
-### Open Telekom Cloud → T Cloud Public — MOVED to Tier A
+### Open Telekom Cloud → T Cloud Public — MOVED to per-customer-tool list
 - Renamed; per-tenant Sustainability Dashboard launched 2026-02-23. See `t-cloud-public/README.md`.
 
 ## Sustainability-positioned regionals
@@ -56,7 +56,7 @@ Last refreshed: 2026-05-26 — aligned with the May~2026 survey rework (5-cluste
 
 ## CDN / edge
 
-- Akamai / Cloudflare / Fastly are Tier-A (per-customer tools). Cloudflare additionally publishes a full Scope 1/2/3 inventory (Impact Report 2025) and is SBTi-committed.
+- Akamai / Cloudflare / Fastly ship per-customer tools (see their own folders). Cloudflare additionally publishes a full Scope 1/2/3 inventory (Impact Report 2025) and is SBTi-committed.
 - Gcore, Bunny.net, CDNetworks: no first-party emissions disclosure or per-customer tool. CDNetworks is the international brand of Wangsu Science & Technology (97.82% owned); Sustainalytics rates Wangsu's ESG management as Weak.
 
 ## Neocloud (AI/GPU)
@@ -73,11 +73,11 @@ Last refreshed: 2026-05-26 — aligned with the May~2026 survey rework (5-cluste
 - Rebranded from DataCrunch. Pan-Nordic (Helsinki + Iceland). "100% renewable" + waste-heat reuse claim; no formal report.
 
 ### CoreWeave, Lambda, Hyperstack, Paperspace, Together AI, RunPod, Fireworks AI, Replicate
-- See appendix for per-provider tier. Paperspace was acquired by DigitalOcean — does not inherit any Tier-B status (DigitalOcean is itself Marketing claim).
+- See appendix for per-provider status. Paperspace was acquired by DigitalOcean — does not inherit any corporate-disclosure status (DigitalOcean is itself Marketing claim).
 
 ## PaaS
 
-All current entries (Netlify, Vercel, Fly.io, Railway, Render) are Tier C — no per-account surface; emissions implicitly inherit from underlying IaaS.
+All current entries (Netlify, Vercel, Fly.io, Railway, Render) are marketing-claim or no-disclosure — no per-account surface; emissions implicitly inherit from underlying IaaS.
 
 Excluded from this row:
 - Heroku (sunset under Salesforce).

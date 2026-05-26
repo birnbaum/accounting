@@ -392,24 +392,28 @@ today.
 \label{sec:sota}
 
 \paragraph{Customer-facing tools are rare.}
-A survey of 40+ cloud providers (May~2026) finds only eleven that ship a
-first-party, per-customer carbon dashboard --- the bar for a customer to source
-a GHG-Protocol-compliant Scope-3 Cat-1 input from their cloud
+We surveyed 48 cloud providers in May~2026, covering hyperscalers, mid-tier and
+regional IaaS, CDN/edge, AI-specialised neoclouds, application-PaaS, and
+sustainability-positioned regional operators (full enumeration with disclosure
+classification in Appendix~\ref{app:inventory}). Only twelve ship a first-party,
+per-customer carbon dashboard --- the bar for a customer to source a
+GHG-Protocol-compliant Scope-3 Cat-1 input from their cloud
 spend.\footnote{We exclude marketplace third-party SaaS such as Huella Cloud on
 Huawei Cloud (vendor: SGS Solutions), since the per-provider allocation is not
 auditable against the provider's own emission factors. Exoscale's calculator is
 borderline (Exoscale-branded surface, CloudAssess engine by Resilio/Kleis) and
-is omitted.} Of the remaining $\sim$30, around 13 publish corporate-level
-Scope~1/2/3 disclosures with no per-customer surface (Tier~B); the rest publish
-only marketing-grade renewable/PUE claims (Tier~C). Most starkly, the
+is omitted.} Of the remaining 36, fourteen publish corporate-level Scope~1/2/3
+disclosures without any per-customer surface; the other 22 publish only
+marketing-grade renewable/PUE claims or nothing at all. Most starkly, the
 fastest-growing segment --- AI/GPU clouds (CoreWeave, Lambda, Crusoe, Nebius,
-RunPod, Together, Replicate, Hyperstack, DataCrunch) --- has \emph{zero}
-per-customer tools. Compute capacity for AI training and inference is being
-built at the fastest pace in cloud history with the \emph{least} customer
-carbon transparency.
+RunPod, Together, Replicate, Hyperstack, Verda, Fireworks~AI, Paperspace) ---
+has \emph{zero} per-customer tools. Compute capacity for AI training and inference is being built at the
+fastest pace in cloud history with the \emph{least} customer carbon
+transparency. The rest of this section focuses on the twelve per-customer
+tools.
 
 \paragraph{One shared template, four axes of variation.}
-Strip the marketing and every Tier-A tool computes the same shape:
+Strip the marketing and every customer tool computes the same shape:
 \[
 \mathrm{customer\,carbon} \;=\;
 \textstyle\sum_{r}\, u_{r}\,\cdot\,f_{r} \;+\; \mathrm{overheads},
@@ -418,12 +422,13 @@ where $u_{r}$ is an activity unit (vCPU-hours, instance-hours, bytes, CPU-time,
 GB-month, \$-spend, server-hours) and $f_{r}$ is a per-unit factor. Provider
 variation lives on four orthogonal axes: (A1)~which activity unit, (A2)~how
 $f_{r}$ is derived, (A3)~embodied carbon treatment, (A4)~idle/overhead
-allocation. Figure~\ref{fig:axes} maps the eleven Tier-A tools onto the two
-most discriminating axes (A1, A2); the prior literature's three-family
-taxonomy (usage-time / traffic / component-LCA) puts AWS-foundational
-and OVHcloud-dedicated in different families even though both reduce to
-$\sum u_{r} f_{r}$, and we replace it with the per-axis decomposition
-below.
+allocation. Figure~\ref{fig:axes} maps eleven of the twelve customer tools
+onto the two most discriminating axes (A1, A2); T Cloud Public is the twelfth
+(launched 2026-02-23) but has not disclosed its per-resource allocation rule.
+The prior literature's three-family taxonomy (usage-time / traffic /
+component-LCA) puts AWS-foundational and OVHcloud-dedicated in different
+families even though both reduce to $\sum u_{r} f_{r}$, and we replace it
+with the per-axis decomposition below.
 
 \begin{figure}[t]
 \centering
@@ -448,10 +453,11 @@ server-h      &             & OVH, Scaleway$^{\ddagger}$ &              & \\
 \\[2pt]
 {\scriptsize\textit{$\dagger$ Akamai claims per-server kWh metering $\times$ byte/machine-utilization share.}}\\
 {\scriptsize\textit{$\ddagger$ Scaleway's monthly report combines per-component LCA with actual measured CPU consumption.}}
-\caption{Tier-A customer tools on the activity-unit (A1) $\times$ factor-source
-(A2) axes. Cells often hold more than one provider; a single provider can
-appear in multiple cells when it uses a different rule for different service
-classes (e.g.~AWS foundational vs.\ non-foundational; Azure '21 vs.\ '26).}
+\caption{Per-customer carbon tools on the activity-unit (A1) $\times$ factor-source
+(A2) axes (eleven of twelve; T Cloud Public's allocation rule is undisclosed).
+Cells often hold more than one provider; a single provider can appear in
+multiple cells when it uses a different rule for different service classes
+(e.g.~AWS foundational vs.\ non-foundational; Azure '21 vs.\ '26).}
 \label{fig:axes}
 \end{figure}
 
@@ -476,9 +482,12 @@ but does not disclose the shared-hardware allocation
 algorithm;\footnote{\url{https://docs.oracle.com/en-us/iaas/releasenotes/governance/carbon-analysis-powercalculation.htm}, June~2025.}
 and \emph{GCP-internal} measures power per machine via Borg telemetry but
 deliberately re-projects to vCPU-h~$\times$~list-price at the customer
-surface~\cite{schneider-mattia-2024}. The rest of the Tier-A set (AWS, Azure,
-IBM, Alibaba, OVHcloud-currently) propagates a usage-unit proxy: an idle and a
-fully-loaded VM of the same SKU and duration produce the same number.
+surface~\cite{schneider-mattia-2024}. The remaining compute-allocation tools
+(AWS, Azure, IBM, Alibaba, OVHcloud-currently) propagate a usage-unit proxy:
+an idle and a fully-loaded VM of the same SKU and duration produce the same
+number. T Cloud Public claims a utilization-share allocation from measured
+device-level power but has not yet published its per-resource formula, so the
+customer-side weighting cannot be independently checked.
 
 \paragraph{Coverage and verification are shallower than the dashboards suggest.}
 Table~\ref{tab:bigthree-s3} breaks the Big-3 Scope-3 perimeter down by
@@ -496,7 +505,7 @@ end-to-end}, and only Alibaba's Energy~Expert carries third-party \emph{data}
 assurance (Bureau Veritas, ISO~14064-3) of the per-customer numbers. The
 temporal surface is similarly thin: \textbf{only Scaleway and Fastly publish
 daily customer-facing data}; the other nine, including all of the Big-3, are
-monthly; \emph{no} Tier-A tool publishes hourly customer-allocated emissions,
+monthly; \emph{no} customer tool publishes hourly customer-allocated emissions,
 so any carbon-aware-scheduling claim today rests on signals outside the
 customer tool itself.
 
@@ -544,7 +553,7 @@ rather their allocated emissions based on list prices}''~\cite{schneider-mattia-
 AWS's Model~3.0 defines a foundational/non-foundational service split but
 publishes neither the service list nor the share of emissions allocated by
 equivalent revenue~\cite{aws-ccft-model3}. The pattern is not three isolated
-quirks: every Tier-A tool ships a methodologically distinct, thinner subset of
+quirks: every customer tool ships a methodologically distinct, thinner subset of
 what the provider measures internally, and the size of that gap is the
 residual that \S\ref{sec:rsci} formalises through \RSCI. Bottom-up engines
 such as BoaviztAPI~\cite{simon2024boaviztapi} and
@@ -1053,9 +1062,8 @@ That is a separate problem.
 \section{Cloud provider survey universe}
 \label{app:inventory}
 
-An illustrative sample of 48 cloud providers reviewed in May~2026,
-clustered by focus and classified by what the provider publishes.
-URLs last verified 2026-05-26.
+All 48 cloud providers reviewed for §\ref{sec:sota}, clustered by focus and
+classified by what the provider publishes. URLs last verified 2026-05-26.
 
 \paragraph{Provider clusters.} Six clusters, each capturing a different point of view on the market rather than a clean
 structural distinction:
@@ -1068,14 +1076,13 @@ structural distinction:
 \item \textit{Sustainability-positioned regionals}: regional IaaS or DC operators whose primary differentiator is environmental, e.g. Nordic siting, heat reuse, hydro-powered grids.
 \end{itemize}
 
-\paragraph{Status taxonomy.} Five mutually-exclusive disclosure clusters,
-collapsing into the three tiers used in \S\ref{sec:sota}:
+\paragraph{Status taxonomy.} Five mutually-exclusive disclosure clusters:
 \begin{itemize}\setlength{\itemsep}{1pt}
-\item \statusA{Per-customer tool} (Tier A): first-party dashboard or API exposing workload-level emissions per tenant.
-\item \statusB{Assured GHG report} (Tier B): Scope~1/2/3 corporate inventory with external assurance --- SBTi-validated, third-party-audited, CSRD-baselined, or ISO~14064-certified. The corporate number is reliable enough to inherit downstream as Scope~3.
-\item \statusB{Self-reported} (Tier B): published Scope~1/2/3 inventory, \emph{or} substantive quantitative operational disclosure (per-DC carbon intensity, PUE, energy mix, EMAS environmental statement), without external GHG assurance.
-\item \statusC{Marketing claim} (Tier C): forward net-zero pledge, ``100\,\% renewable'' / REC-backed statement, or qualitative sustainability strategy, but no quantified disclosure.
-\item \statusC{No disclosure} (Tier C): nothing surfaced through our search.
+\item \statusA{Per-customer tool}: first-party dashboard or API exposing workload-level emissions per tenant.
+\item \statusB{Assured GHG report}: Scope~1/2/3 corporate inventory with external assurance --- SBTi-validated, third-party-audited, CSRD-baselined, or ISO~14064-certified. The corporate number is reliable enough to inherit downstream as Scope~3.
+\item \statusB{Self-reported}: published Scope~1/2/3 inventory, \emph{or} substantive quantitative operational disclosure (per-DC carbon intensity, PUE, energy mix, EMAS environmental statement), without external GHG assurance.
+\item \statusC{Marketing claim}: forward net-zero pledge, ``100\,\% renewable'' / REC-backed statement, or qualitative sustainability strategy, but no quantified disclosure.
+\item \statusC{No disclosure}: nothing surfaced through our search.
 \end{itemize}
 
 \begin{longtable}{@{}p{2.5cm}p{1.5cm}p{3.0cm}p{9.5cm}@{}}

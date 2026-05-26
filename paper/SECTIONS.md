@@ -13,7 +13,7 @@ Use this to orient before reading paper.tex; Claude should read the narrow line 
 | §6 | Closing the Gap: A Call to Action | L916–954 | cross_provider_synthesis.md §5 |
 | §7 | Future Work | L955–1025 | TODO: Acun 2023, Radovanović, Wiesner et al. (self-citations — not yet in references/) |
 | §8 | Conclusion | L1026–1040 | — |
-| App A | Cloud provider survey universe (45 providers) | L1042–end | carbon_accounting_methodologies/README.md + tier-b-c-providers.md |
+| App A | Cloud provider survey universe (48 providers) | L1042–end | carbon_accounting_methodologies/README.md + non-customer-tool-providers.md |
 
 ## Subsection landmarks (§4)
 

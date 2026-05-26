@@ -55,7 +55,7 @@ The Fastly 2024 Sustainability Report PDF download is bot-blocked (verified 2026
 - PUE, renewable percentages, and emission factors **only ever available for the previous year**.
 
 ### Replicability
-- Methodology page is the **most explicit allocation rule** in the Tier-A set — both the apportionment rule and the 25% overhead correction are stated.
+- Methodology page is the **most explicit allocation rule** among the per-customer tools — both the apportionment rule and the 25% overhead correction are stated.
 - Reference factors not fully tabulated, though.
 
 ### Known gaps for rSCI

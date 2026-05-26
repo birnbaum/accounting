@@ -91,4 +91,4 @@ If they come back "no", Option D, and we keep things close to the current frame.
 
 The §3 rewrite of 2026-05-22 was done under Option D (current structure, tight §3, no restructuring §4–§8).
 If the Scaleway investigation pushes the paper to Option B later, §3 becomes shorter still and most of its content shifts into the rSCI-lens version of §4.
-The 4-axis figure and the tier-breadth narrative are structure-agnostic and survive either choice.
+The 4-axis figure and the customer-tool-vs-rest survey narrative are structure-agnostic and survive either choice.

@@ -159,7 +159,7 @@ Load-bearing claims that would feed into `paper.tex` are quoted exactly with PDF
   Validation includes external wall-power measurement on two systems.
   Relevance to rSCI: this is part of the ε_p estimation literature — a candidate input for bottom-up energy modelling of GPU workloads when the operator does not have telemetry. Same group's MASCOTS-2026 paper deepens the same analysis.
 - **Hooks for paper.tex**:
-  - §3 non-provider alternatives / ε_p engine (L423–438): cite as evidence that workload-agnostic GPU energy proxies are tractable from public metrics — relevant to the AI/GPU-cloud Tier-A coverage gap (§3 mentions CoreWeave, Lambda, etc., have zero per-customer tools).
+  - §3 non-provider alternatives / ε_p engine (L423–438): cite as evidence that workload-agnostic GPU energy proxies are tractable from public metrics — relevant to the AI/GPU-cloud coverage gap (§3 mentions CoreWeave, Lambda, etc., have zero per-customer tools).
   - §4 / §5 LLM toy experiments: cite as the ε_p method for the GPU components.
 
 ---

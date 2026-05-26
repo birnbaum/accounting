@@ -6,7 +6,7 @@
 
 Exoscale's calculator is built on **CloudAssess**, a third-party LCA engine co-developed with **Resilio** and **Kleis**. The underlying CloudAssess methodology is partner-owned and not fully public.
 
-**Borderline status**: Exoscale-branded surface, but the engine is third-party. Excluded from the main paper's Tier-A landscape table for this reason.
+**Borderline status**: Exoscale-branded surface, but the engine is third-party. Excluded from the main paper's per-customer-tool list for this reason.
 
 ## Provider URLs
 

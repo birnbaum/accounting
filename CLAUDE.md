@@ -43,7 +43,7 @@ A useful habit: every time you verify a new fact for the paper, ask "should this
 ### Authoritative for provider methodologies
 - `references/carbon_accounting_methodologies/<provider>/README.md` — per-provider consolidated methodology summary, plus any PDFs in the same folder.
 - `references/carbon_accounting_methodologies/README.md` — provider matrix.
-- `references/carbon_accounting_methodologies/tier-b-c-providers.md` — providers without customer tools.
+- `references/carbon_accounting_methodologies/non-customer-tool-providers.md` — providers without customer tools.
 
 ### Paper artifacts
 - `paper/SECTIONS.md` — **read this first**: maps each §, its line range in `paper.tex`, and its key references. Read the narrow line range rather than the full file.

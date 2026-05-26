@@ -13,7 +13,7 @@ This folder will be updated when a methodology PDF or technical guide is release
 - **2026-02-02**: rebrand from *Open Telekom Cloud* (OTC) to *T Cloud Public* announced.
 - **2026-02-23**: Sustainability Dashboard launched.
 - **Operator**: T-Systems / Deutsche Telekom group.
-- **Folder note**: per-provider folder created 2026-05; provider previously appeared in `tier-b-c-providers.md` as "Open Telekom Cloud" Tier-B.
+- **Folder note**: per-provider folder created 2026-05; provider previously appeared in `non-customer-tool-providers.md` as "Open Telekom Cloud" (corporate disclosure only).
 
 ## Provider URLs
 
@@ -82,6 +82,6 @@ This folder will be updated when a methodology PDF or technical guide is release
 
 ## Why this changed the survey classification
 
-In the pre-2026-05 inventory, OTC sat in **Tier-B** (corporate-level Telekom CR report only; no customer tool).
-The Sustainability Dashboard launch on 2026-02-23 moved it to **Tier-A** (per-tenant carbon dashboard exists).
-It is the only Tier-A provider in our survey that crossed the threshold during the survey window itself, which makes T Cloud Public a useful contemporary data point for §3.
+In the pre-2026-05 inventory, OTC appeared only with a corporate-level Telekom CR report (no customer tool).
+The Sustainability Dashboard launch on 2026-02-23 moved it into the per-customer-tool set (per-tenant carbon dashboard exists).
+It is the only provider in our survey that crossed this threshold during the survey window itself, which makes T Cloud Public a useful contemporary data point for §3.

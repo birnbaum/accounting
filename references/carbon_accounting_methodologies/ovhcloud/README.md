@@ -79,7 +79,7 @@ Aggregate of everything not in Manufacturing or Usage. Allocated by **equal dist
 - **Water** (WUE measured per DC) included.
 - **Abiotic resources + land use** flagged as planned (in line with launch press but not yet in v2.0 equations).
 
-### Replicability — *high by Tier-A standards*
+### Replicability — *high by customer-tool standards*
 - Embodied factors tabulated.
 - Electricity factors sourced to public open-licensed dataset (Electricity Maps).
 - Allocation rules stated as equations.
@@ -95,4 +95,4 @@ Aggregate of everything not in Manufacturing or Usage. Allocated by **equal dist
 - **100% / 24/7 baseline** = customer numbers are *over-estimates*. Opposite direction of Big-3 tools. Residual decomposition has to handle both signs of bias.
 - **Operations allocated equally per dedicated server** = a flat per-server overhead independent of usage. Exactly the "burden into customer / kept on provider / omitted" split rSCI's overhead-treatment dimension surfaces.
 - **Mutualized vs dedicated split** = different allocation equations for the same physical resource depending on procurement model.
-- **Per-DC electricity factors from a public open-licensed dataset (Electricity Maps)** = replicable by anyone; combined with the published per-DC PUE/WUE table, OVHcloud is closer to "auditable in public" than any other Tier-A provider.
+- **Per-DC electricity factors from a public open-licensed dataset (Electricity Maps)** = replicable by anyone; combined with the published per-DC PUE/WUE table, OVHcloud is closer to "auditable in public" than any other per-customer-tool provider.

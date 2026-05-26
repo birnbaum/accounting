@@ -40,7 +40,7 @@ references/
 │
 └── carbon_accounting_methodologies/    one folder per provider
     ├── README.md                       provider matrix; links to each folder
-    ├── tier-b-c-providers.md           consolidated list of providers with no customer tool
+    ├── non-customer-tool-providers.md  consolidated list of providers with no customer tool
     ├── aws/        (PDFs + README)
     ├── gcp/        (PDF + README)
     ├── azure/      (PDFs + README)
@@ -49,8 +49,8 @@ references/
     ├── alibaba/    (web-only; README)
     ├── ovhcloud/   (PDFs + README)
     ├── scaleway/   (web-only; README)
-    ├── t-cloud-public/  (web-only; README — formerly Open Telekom Cloud; tier upgrade 2026-02-23)
-    ├── exoscale/   (web-only; README — folder retained, provider classified Tier-B in `tier-b-c-providers.md` since CloudAssess engine is third-party)
+    ├── t-cloud-public/  (web-only; README — formerly Open Telekom Cloud; per-customer dashboard launched 2026-02-23)
+    ├── exoscale/   (web-only; README — folder retained, provider listed in `non-customer-tool-providers.md` since CloudAssess engine is third-party)
     ├── akamai/     (web-only; README)
     ├── cloudflare/ (PDF + README)
     └── fastly/     (web-only; README)

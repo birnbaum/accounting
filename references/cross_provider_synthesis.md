@@ -87,16 +87,16 @@ Status: **Full** / **Partial** / **Not Met** / **Unclear**.
 7. **Azure has the broadest Scope-3 count** (6 categories: Cat 1, 2 IT-only, 4, 5, 9, 12) but **excludes FERA and building embodied**. Uniquely includes Cat 12 end-of-life. As of Jan 2026 data (released Feb 2026), GCP additionally attributes AI-inference emissions at SKU level (Vertex AI, Cloud Natural Language, Speech APIs, Dialogflow).
 8. **Compute utilization is invisible to all three customer methodologies.** Idle and fully-loaded VMs/GPUs report the same carbon for the same duration × SKU. Only reducing resource-time moves the reported number. This is the practical bound on what carbon-aware computing can change in the *reported* footprint.
 
-## Tier-A non-Big-3 cross-cutting
+## Non-Big-3 customer tools — cross-cutting
 
 For completeness — when contrasted against Big-3:
 
-- **Akamai, OVHcloud** use real-DC-utilization allocation (the closest to physical among Tier-A).
+- **Akamai, OVHcloud** use real-DC-utilization allocation (the closest to physical among the per-customer tools).
 - **OVHcloud** uniquely uses a **100%/24×7 baseline** until Smart-PDU rollout completes — customer numbers are *over-estimates*, the opposite bias of the Big-3.
-- **Scaleway, OVHcloud** are the only Tier-A providers with component-level published LCA factors (Boavizta / IJO).
+- **Scaleway, OVHcloud** are the only customer-tool providers with component-level published LCA factors (Boavizta / IJO).
 - **Cloudflare, Fastly** allocate by bytes/CPU-time — fundamentally different unit from the Big-3.
-- **Alibaba** is the only Tier-A provider with third-party *data* assurance (Bureau Veritas under ISO 14064-3); all others have at most methodology-level assurance.
-- **None** of the Tier-A providers reflects compute utilization in the customer-reported number.
+- **Alibaba** is the only customer-tool provider with third-party *data* assurance (Bureau Veritas under ISO 14064-3); all others have at most methodology-level assurance.
+- **None** of the per-customer tools reflects compute utilization in the customer-reported number.
 
 ## Methodology taxonomy → see `methodology_comparison.md`
 
