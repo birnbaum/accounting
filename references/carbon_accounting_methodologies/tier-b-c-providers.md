@@ -1,169 +1,94 @@
-# Tier-B / Tier-C providers — no customer-facing carbon tools
+# Provider notes — caveats not captured in the appendix table
 
-Providers without per-customer carbon dashboards. Listed for inventory completeness; **not directly usable as Scope-3 customer input** under rSCI. Sourced from the deleted `CLOUD_CARBON_ACCOUNTING_INVENTORY.md` plus the per-provider sections of `CLOUD_CARBON_ACCOUNTING_DEEPDIVE.md`.
+Companion to the cloud provider survey in `paper/paper.tex` §A.
+The appendix is authoritative for cluster, tier, and URL; this file holds per-provider methodology context, certifications relevant to the assurance/self-reported boundary, and rSCI-specific caveats.
+Last refreshed: 2026-05-26 — aligned with the May~2026 survey rework (5-cluster status taxonomy, "Operational metrics only" collapsed into Self-reported).
 
-## Tier B — corporate disclosure only
+## Hyperscalers
 
-Provider publishes corporate-level Scope 1/2/3 data, but no customer-allocated number.
+### Huawei Cloud — Assured
+- Group sustainability reports since 2008; latest is the 2025 Annual Report (released 2026-03-31).
+- The third-party Huella Cloud calculator (by SGS Solutions) is sometimes referenced *on* Huawei Cloud but is not a first-party product — excluded from the Tier-A landscape (see paper §3 footnote).
 
-### Rackspace
-- Status: **Report** (corporate-level).
-- SBTi-validated net-zero targets (50% by 2032, 90% by 2045).
-- Third-party-audited Scope 1/2/3 baseline.
-- 80% renewable across global DCs.
-- Customer-facing offering is consulting (Workload Aware Modernization), not a carbon dashboard.
-- Refs: [2025 Sustainability Report](https://www.rackspace.com/newsroom/rackspace-technology-releases-2025-sustainability-report), [SBTi approval press](https://www.rackspace.com/newsroom/rackspace-receives-sbti-approval-net-zero-targets).
+### Tencent Cloud — Self-reported
+- "Tnebula" internal carbon-management platform is for Tencent's own DC operations, not exposed to customers.
 
-### DigitalOcean (+ Paperspace)
-- Status: **Report**.
-- Publishes ESG microsite; no per-customer carbon data, no SBTi or CDP participation.
-- PUE-only operational disclosure (~1.15).
-- Inherits energy mix from colocation partners (e.g. Equinix); does not state per-region energy policy.
-- Refs: [Impact page](https://www.digitalocean.com/impact), [IR ESG](https://investors.digitalocean.com/esg/esg-overview/default.aspx).
+## Mid-tier and regional IaaS
 
-### UpCloud
-- Status: **Report**.
-- First ESG report published 2024.
-- 70% of DCs on renewable electricity; remainder mixed-grid + offsetting.
-- ISO 14001 (energy management) and ISO 27001.
-- Green Web Foundation verified.
-- Identified own largest emissions source as DC hardware purchases.
-- Refs: [2024 year-in-review](https://upcloud.com/2024-year-in-review/), [Green Web Provider blog](https://upcloud.com/blog/were-a-green-web-provider/).
+### Rackspace — Assured
+- SBTi-validated net-zero targets; third-party-audited Scope 1/2/3 baseline.
+- Customer-facing offering is consulting (Workload Aware Modernization), not a dashboard.
 
-### GleSYS
-- Status: **Report**.
-- 2024 sustainability report with CSRD-aligned baseline.
-- 100% renewable electricity; market-based Scope 2 = 0.22 tCO₂e from district heating; total 1,956 tCO₂e (2024).
-- Energy Reuse Factor 84% (recovered heat into Falkenberg district heating, 4.8 GWh).
-- PUE 1.28 group-wide.
-- Targets: -99% Scope 1 by 2030, fossil-free backup by 2030.
-- Refs: [Sustainability](https://glesys.com/sustainability/), [2024 report](https://glesys.com/blog/glesys-releases-2024-sustainability-report-and-establishes-csrd-aligned-baseline-edited/).
+### Infomaniak — Assured
+- ISO 14001:2015 (SGS-audited annually) + ISO 50001. PUE 1.06 (air-cooled, no water).
 
-### Crusoe
-- Status: **Report**.
-- First ESG report 2022.
-- Business model is the disclosure: Digital Flare Mitigation diverts otherwise-flared gas into compute — reports volumetric methane / flared-gas avoidance (~5.4 Bcf flared gas avoided, ~8,500 t methane avoided, ~635,000 MWh generated in 2023).
-- Per-GPU reduction claim of ~4.4 tCO₂e/yr.
-- No per-customer allocated emissions tool.
-- Refs: [2022 ESG Report PDF](https://crusoe-public.s3.us-east-2.amazonaws.com/Crusoe_ESG+Report_2023.05.10.pdf), [resources blog](https://www.crusoe.ai/resources/blog/crusoe-tallys-law-leading-energy-transition).
-- *Note for rSCI*: the DFM "avoided emissions" framing sits awkwardly against rSCI's residual model.
+### Exoscale (A1 Digital) — Self-reported
+- A console+API CloudAssess calculator is surfaced, but the engine is third-party (CloudAssess by Resilio/Kleis) — methodology not fully public and not auditable against Exoscale's own emission factors. Previously borderline Tier-A; demoted on first-party criterion.
 
-### Nebius (international AI-infra; formerly Yandex N.V. holding, rebranded 2024)
-- Status: **Report**.
-- 2024 Sustainability Report.
-- Claims 94% low-carbon electricity, 0.04 tCO₂e/MWh market-based intensity.
-- Finland DC reportedly provides 65% of local municipality heating via heat reuse.
-- Iceland / Paris / UK sites stated as 100% renewable.
-- Scope 3 and water consumption reportedly absent from disclosure (flagged externally as a transparency gap).
-- Distinct entity from the Russian Yandex Cloud (Tier-C below) — Nebius emerged from the 2024 divestiture of Yandex N.V.'s non-Russian assets.
-- Refs: [Sustainability hub](https://nebius.com/sustainability), [2024 report announcement](https://nebius.com/newsroom/nebius-group-2024-sustainability-report-highlights-importance-of-sustainability-to-long-term-value-creation-in-ai-infrastructure).
+### Hetzner — Self-reported
+- EMAS-verified environmental statement at German sites (third-party verified EU scheme, distinct from ISO 14001 self-attestation). PUE 1.10–1.16. Hydropower since 2008 (DE) / 2018 (FI).
 
-### Verne (Iceland/Finland)
-- Status: **Report**.
-- 2024 Iceland-campus emissions: 556.25 tCO₂e total (S1 9.1%, S2 80.4%, S3 10.4%).
-- 100% renewable power on Iceland campus; three Finland DCs on renewable power.
-- No per-customer tool.
-- Refs: [Sustainability](https://www.verne.co/about-us/sustainability).
+### Baidu AI Cloud, JD Cloud — Self-reported (group-level only)
+- Coverage via parent ESG reports (Baidu Inc., JD.com). No per-customer cloud surface.
+- JD's "Energy & Carbon Management Platform" (能碳管理平台) is an IoT solution for clients' own operations, *not* a JD-Cloud-workload tool.
 
-### Infomaniak
-- Status: **Report**.
-- ISO 14001:2015 (SGS-audited annually) and ISO 50001.
-- Scope includes raw materials, production, transport, waste, employee commute.
-- PUE 1.06 (air-cooled, no water cooling).
-- 200% offset via Myclimate Foundation (gap from internal reductions).
-- Server lifetime extended to 15 years.
-- No per-customer carbon dashboard.
-- Refs: [Ecology page](https://www.infomaniak.com/en/ecology), [200% offset blog](https://news.infomaniak.com/en/infomaniak-offsets-twice-as-many-co-emissions/), [Eco-design FAQ](https://www.infomaniak.com/en/support/faq/1160/eco-design-to-reduce-carbon-footprint).
+### Open Telekom Cloud → T Cloud Public — MOVED to Tier A
+- Renamed; per-tenant Sustainability Dashboard launched 2026-02-23. See `t-cloud-public/README.md`.
 
-### Salesforce / Heroku
-- Status: **Report**.
-- Carbon-neutral corporate cloud claim.
-- Internal KPI "Carbon to Serve" (DC emissions ÷ application work done); reported -26% since 2020.
-- Hyperforce positioned as 100% renewable architecture.
-- No per-app or per-account customer emissions surface on Heroku — only inheritance of the corporate-level claim.
-- Refs: [Sustainability hub](https://www.salesforce.com/company/sustainability/), [Net Zero Cloud product](https://www.salesforce.com/products/sustainability-cloud/overview/), [Green Code initiative](https://www.salesforce.com/news/stories/green-code-software/), [Heroku KB](https://help.heroku.com/2163BDDI/is-my-app-carbon-neutral).
+## Sustainability-positioned regionals
 
-### Leafcloud
-- Status: **Claim** (operational metrics + heat-reuse model; no per-customer dashboard).
-- PUE 1.02, ERE ~0.15, ~85% heat capture.
-- Heat-reuse model places servers inside buildings that need heat (pools, apartments, nursing homes).
-- Refs: [Truly Green landing](https://leaf.cloud/truly-green), [Green-cloud explainer](https://leaf.cloud/blog/green-cloud-energy-use-and-residual-heat-what-actually-makes-a-cloud-sustainable).
+### GleSYS — Assured
+- 2024 CSRD-aligned baseline; ERF 84% (heat into Falkenberg district heating).
 
-### Open Telekom Cloud — MOVED to Tier-A (renamed T Cloud Public, dashboard launched 2026-02-23)
-- See `t-cloud-public/README.md` for the current per-tenant Sustainability Dashboard, methodology surface, and tier-upgrade rationale.
-- Telekom group CR report still cited there as the corporate-level baseline.
+### atNorth — Assured
+- 2024 Sustainability Report carries **Grant Thornton limited assurance under ISAE 3000** over Scope 1/2/3. Pan-Nordic (IS/SE/DK/FI).
 
-### atNorth
-- Status: **Report**.
-- Sustainability strategy + Nordic-grid-mix disclosure.
-- No first-party emissions report at provider level surfaced; no per-customer tool.
-- Refs: [Sustainability strategy](https://www.atnorth.com/sustainability/sustainability-strategy/).
+### UpCloud — Self-reported
+- First ESG report 2024 (Scope 1/2/3 per GHG Protocol Corporate Standard).
+- Note: parent ISO 27001; ISO 14001 *not* held (mistakenly listed in older notes).
 
-### Tencent Cloud
-- Status: **Report** (corporate-only).
-- DC PUE trajectory: 1.8 → 1.2 across DC generations (target PUE < 1.2 in latest builds).
-- Energy mix: hydro, wind, biogas, waste-to-energy in site selection; rooftop PV 8–13 MW/campus.
-- Specific renewable percentage of total mix not disclosed publicly.
-- No third-party certifications cited.
-- The "Tnebula" internal carbon-management platform exists but is for Tencent's own DC operations, not exposed to customers.
-- Refs: [Sustainability page](https://www.tencentcloud.com/global-infrastructure/sustainability), [2024 ESG report](https://static.www.tencent.com/uploads/2025/04/08/00ef711d9596ce09344c0260b14cda7e.pdf).
+### Verne — Self-reported
+- 2025 unified certification: ISO 27001/45001/9001/14001 + PCI DSS. **ISO 14001 is an environmental-management-system standard, not GHG assurance** (no ISO 14064 / SBTi / external GHG verification).
+- Pan-Nordic (Iceland + 3 Finnish DCs; London HQ).
 
-### Huawei Cloud
-- Status: **Report** (corporate-only, via Huawei group sustainability reports).
-- Huawei has published annual sustainability reports since 2008; most recent is the 2025 Annual Report (released 2026-03-31).
-- Group-level Scope 1/2/3 disclosure covers Huawei Cloud datacenters; no per-customer cloud carbon dashboard surfaced.
-- Note: the third-party Huella Cloud calculator (by SGS Solutions) is sometimes referenced *on* Huawei Cloud, but it is not a first-party Huawei product and is excluded from the Tier-A landscape — see paper §3 footnote.
-- Refs: [Sustainability hub](https://www.huawei.com/en/sustainability), [Reports & policies](https://www.huawei.com/en/sustainability/sustainability-report).
+### Leafcloud — Marketing claim
+- Heat-reuse model (servers placed inside buildings that need heat). Cites comparative figures but no PUE, no GHG inventory.
 
-### Baidu AI Cloud
-- Status: **Report** (corporate-only, via Baidu Inc ESG reports).
-- Baidu publishes annual ESG reports with operational carbon-neutrality targets covering Baidu AI Cloud datacenters at group level.
-- No per-customer cloud carbon dashboard.
-- Refs: [Baidu ESG hub](https://home.baidu.com/) (ESG section), Baidu Inc annual ESG reports.
+## CDN / edge
 
-### JD Cloud
-- Status: **Report** (corporate-only, via JD.com ESG reports).
-- JD.com publishes annual ESG reports covering JD Cloud datacenters at group level.
-- JD Cloud markets an "Energy & Carbon Management Platform" (能碳管理平台) — but this is an IoT *solution for clients' own operations*, not a JD-Cloud-workload carbon tool. No first-party per-customer dashboard.
-- Refs: [JD ESG](https://ir.jd.com/esg), JD.com annual ESG reports.
+- Akamai / Cloudflare / Fastly are Tier-A (per-customer tools). Cloudflare additionally publishes a full Scope 1/2/3 inventory (Impact Report 2025) and is SBTi-committed.
+- Gcore, Bunny.net, CDNetworks: no first-party emissions disclosure or per-customer tool. CDNetworks is the international brand of Wangsu Science & Technology (97.82% owned); Sustainalytics rates Wangsu's ESG management as Weak.
 
-### Exoscale (A1 Digital)
-- Status: **Calculator surfaced, but methodology partner-owned** — see `exoscale/README.md`.
-- Customer-facing CloudAssess-based calculator (console + API) exists, but the engine is third-party (CloudAssess by Resilio/Kleis); the underlying methodology is not fully public.
-- Previously classified as "borderline Tier-A"; demoted here because the methodology is not first-party and therefore not auditable against Exoscale's own emission factors.
-- Refs: [Sustainability hub](https://www.exoscale.com/sustainability/), [Compliance academy doc](https://community.exoscale.com/academy/intro_cpl/), and per-folder `exoscale/README.md`.
+## Neocloud (AI/GPU)
 
-## Tier C — marketing claims only
+### Crusoe — Self-reported
+- 2024 Impact Report (released June 2024, successor to the 2022/2023 reports).
+- ***rSCI caveat:*** the Digital Flare Mitigation framing reports *avoided* emissions relative to a flaring counterfactual, not operational footprint. Awkward fit with rSCI's residual model — DFM credits sit alongside, not inside, the SCI numerator.
 
-Marketing-level renewable/PUE statements; no methodology and no per-customer accounting. Listed for completeness only.
+### Nebius — Self-reported
+- 2024 Sustainability Report. Scope 3 + water flagged externally as transparency gap.
+- Distinct entity from Russian Yandex Cloud — Nebius emerged from the 2024 divestiture of Yandex N.V.'s non-Russian assets.
 
-| Provider | Category | Published | Source |
-|---|---|---|---|
-| Hetzner | Tier-2 | Solar-generation shift (HT clean energy GmbH 2025); CSRD reporting from 2026; PUE 1.13 | [Sustainability](https://www.hetzner.com/unternehmen/nachhaltigkeit) |
-| Vultr | Tier-2 | Net-zero 2029; 2026 focus on GPU orchestration (NVIDIA Rubin) and silicon efficiency | [Impact](https://www.vultr.com/about/sustainability/) |
-| STACKIT | Sovereign EU | Green-electricity DCs in DE/AT; DC10 Ostermiething PUE 1.1; Schwarz Group net-zero-by-2050 | [Sustainability](https://stackit.com/en/learn/knowledge/cloud/sustainability) |
-| CoreWeave | AI/GPU | Sustainability strategy stated (clean energy, efficiency, recycling); Scope 1/2 measurement "in progress"; no formal targets or methodology | [About](https://www.coreweave.com/about-us), [FY25 10-K](https://s205.q4cdn.com/133937190/files/doc_financials/2025/q4/CoreWeave-Inc-FY25-10-K-7.pdf) |
-| Lambda | AI/GPU | Marketing references to "zero-emissions energy standards" at Mountain View; no report or methodology | [Site](https://lambda.ai/) |
-| Hyperstack (NexGen) | AI/GPU | 100% renewable marketing claim; Tier-3 DC partnerships; AQ Compute "net-zero AI supercloud" | [Site](https://www.hyperstack.cloud/), [AQ Compute blog](https://www.hyperstack.cloud/blog/company-news/nexgen-cloud-and-aq-compute-advance-towards-net-zero-ai-supercloud) |
-| DataCrunch | AI/GPU | Helsinki + Iceland sites; waste-heat reuse claim; no formal report | [Clusters](https://datacrunch.io/clusters), [TechCrunch](https://techcrunch.com/2024/10/21/datacrunch-wants-to-be-europes-first-ai-cloud-hyperscaler-powered-by-renewable-energy/) |
-| RunPod | AI/GPU | Nothing found | n/a |
-| Paperspace | AI/GPU | Acquired by DigitalOcean — inherits DO Tier-B | n/a |
-| Together AI  | AI/GPU | Nothing found | n/a |
-| Fireworks AI | AI/GPU | Nothing found | n/a |
-| Replicate | AI/GPU | Nothing found | n/a |
-| Vercel | PaaS | "Green energy policy" KB only; emissions inherited from underlying cloud providers | [KB](https://vercel.com/kb/guide/what-is-vercel-green-energy-policy) |
-| Netlify | PaaS | "Jamstack/CDN is intrinsically lower-emission" narrative; no per-customer accounting | [Sustainability](https://www.netlify.com/sustainability/) |
-| Fly.io | PaaS | Community thread only | [Thread](https://community.fly.io/t/carbon-emissions/4345) |
-| Render | PaaS | Inherits AWS/GCP — no first-party disclosure | [Thread](https://community.render.com/t/does-render-use-green-energy/912) |
-| Yandex Cloud | Russia (post-2024 split) | Russian successor of Yandex N.V. (Nebius = international spinoff). Minimal post-split ESG surface; sanctions context. No per-customer carbon tool. | [Yandex Cloud](https://yandex.cloud/en/) |
+### Verda (ex-DataCrunch) — Marketing claim
+- Rebranded from DataCrunch. Pan-Nordic (Helsinki + Iceland). "100% renewable" + waste-heat reuse claim; no formal report.
 
+### CoreWeave, Lambda, Hyperstack, Paperspace, Together AI, RunPod, Fireworks AI, Replicate
+- See appendix for per-provider tier. Paperspace was acquired by DigitalOcean — does not inherit any Tier-B status (DigitalOcean is itself Marketing claim).
 
-## Adjacent open-source / independent references
+## PaaS
+
+All current entries (Netlify, Vercel, Fly.io, Railway, Render) are Tier C — no per-account surface; emissions implicitly inherit from underlying IaaS.
+
+Excluded from this row:
+- Heroku (sunset under Salesforce).
+- Salesforce, Snowflake, Databricks (SaaS / data-platform, not cloud-tenant-facing accounting).
+
+## Adjacent / independent references
 
 Not providers, but routinely cited methodologically:
 
 - Cloud Carbon Footprint (open-source tool): https://www.cloudcarbonfootprint.org/docs/methodology/
 - Green Web Foundation — green-power evidence policy: https://www.thegreenwebfoundation.org/what-we-accept-as-evidence-of-green-power/
-- DitchCarbon provider directory (third-party emissions estimates): https://ditchcarbon.com/
-- Carbone 4 — analysis of hyperscaler footprints: https://www.carbone4.com/en/analysis-carbon-footprint-cloud
+- DitchCarbon provider directory: https://ditchcarbon.com/
+- Carbone 4 — hyperscaler footprint analysis: https://www.carbone4.com/en/analysis-carbon-footprint-cloud
 - Computing.co.uk neocloud sustainability analysis: https://www.computing.co.uk/research/2026/sustainability-mirage-heart-of-neocloud
