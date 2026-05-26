@@ -1053,21 +1053,32 @@ That is a separate problem.
 \section{Cloud provider survey universe}
 \label{app:inventory}
 
-The 45 cloud providers reviewed in our May~2026 survey, clustered by archetype
-(table sub-headers) and classified by what the provider \emph{itself} publishes
-(colour-coded status column --- supply-chain disclosure by an upstream provider
-does not count). \RSCI is applicable to all archetypes; for PaaS, applying it
-requires the PaaS provider to chain reconciliation through its underlying IaaS
-account, which none currently do. URLs last verified 2026-05-23.
+An illustrative (non-comprehensive) sample of 48 cloud providers reviewed in
+May~2026, grouped by how the industry positions them (table sub-headers ---
+informal clusters that mix structural and marketing distinctions, not an
+orthogonal taxonomy) and classified by what the provider \emph{itself}
+publishes (colour-coded status column --- supply-chain disclosure by an
+upstream provider does not count). URLs last verified 2026-05-26.
 
-\paragraph{Status taxonomy.} Six mutually-exclusive disclosure clusters,
+\paragraph{Provider clusters.} Six informal groupings (table sub-headers),
+each capturing a recognisable position in the market rather than a clean
+structural distinction:
+\begin{itemize}\setlength{\itemsep}{1pt}
+\item \textit{Hyperscalers}: multi-region, multi-service IaaS+PaaS+SaaS portfolios with global reach (AWS, Azure, GCP, plus the Chinese big-three and second-tier global IaaS).
+\item \textit{Mid-tier and regional IaaS}: general-purpose IaaS with a narrower geographic footprint or service catalog than the hyperscalers, often positioned on jurisdiction or sovereignty (e.g., EU data residency).
+\item \textit{CDN / edge}: globally-distributed edge networks selling caching, request handling, and short-lived compute.
+\item \textit{Neocloud}: AI-specialized compute providers with focus on GPUs and other accelerators.
+\item \textit{PaaS}: developer-facing application hosting layered atop a hyperscaler. Heroku is excluded as it is being sunset under Salesforce, and broader SaaS / data-platform companies (Salesforce, Snowflake, Databricks, etc.) are out of scope for this paper.
+\item \textit{Sustainability-positioned regionals}: regional IaaS or DC operators whose primary differentiator is environmental, e.g. Nordic siting, heat reuse, hydro-powered grids.
+\end{itemize}
+
+\paragraph{Status taxonomy.} Five mutually-exclusive disclosure clusters,
 collapsing into the three tiers used in \S\ref{sec:sota}:
 \begin{itemize}\setlength{\itemsep}{1pt}
 \item \statusA{Per-customer tool} (Tier A): first-party dashboard or API exposing workload-level emissions per tenant.
-\item \statusB{Assured GHG report} (Tier B): Scope~1/2/3 corporate inventory with external assurance --- SBTi-validated, third-party-audited, CSRD-baselined, or ISO~14064/14001-certified. The corporate number is reliable enough to inherit downstream as Scope~3.
-\item \statusB{Self-reported GHG report} (Tier B): published Scope~1/2/3 inventory without external assurance.
-\item \statusB{Operational metrics only} (Tier B): site- or fleet-level PUE / ERE / renewable~\% / heat-reuse numbers, but no quantified GHG inventory.
-\item \statusC{Marketing claim} (Tier C): forward net-zero pledge, ``100\,\% renewable'' / REC-backed statement, or qualitative sustainability strategy, but no quantified GHG inventory.
+\item \statusB{Assured GHG report} (Tier B): Scope~1/2/3 corporate inventory with external assurance --- SBTi-validated, third-party-audited, CSRD-baselined, or ISO~14064-certified. The corporate number is reliable enough to inherit downstream as Scope~3.
+\item \statusB{Self-reported} (Tier B): published Scope~1/2/3 inventory, \emph{or} substantive quantitative operational disclosure (per-DC carbon intensity, PUE, energy mix, EMAS environmental statement), without external GHG assurance.
+\item \statusC{Marketing claim} (Tier C): forward net-zero pledge, ``100\,\% renewable'' / REC-backed statement, or qualitative sustainability strategy, but no quantified disclosure.
 \item \statusC{No disclosure} (Tier C): nothing surfaced through our search.
 \end{itemize}
 
@@ -1082,8 +1093,7 @@ collapsing into the three tiers used in \S\ref{sec:sota}:
 \endhead
 \bottomrule
 \endfoot
-% --- Global hyperscalers ---
-\multicolumn{4}{@{}l}{\textit{Global hyperscalers (10)}} \\
+\multicolumn{4}{@{}l}{\textit{Hyperscalers}} \\
 \midrule
 AWS                       & US      & \statusA{Per-customer tool}        & \href{https://aws.amazon.com/sustainability/tools/console/}{aws.amazon.com/sustainability/tools/console/} \\
 Alibaba Cloud             & China   & \statusA{Per-customer tool}        & \href{https://alibabacloud.com/en/product/energy-expert}{alibabacloud.com/en/product/energy-expert} \\
@@ -1092,64 +1102,62 @@ GCP                       & US      & \statusA{Per-customer tool}        & \href
 IBM Cloud                 & US      & \statusA{Per-customer tool}        & \href{https://ibm.com/cloud/carbon-calculator}{ibm.com/cloud/carbon-calculator} \\
 Oracle (OCI)              & US      & \statusA{Per-customer tool}        & \href{https://docs.oracle.com/iaas/Content/General/Concepts/emissions-management.htm}{docs.oracle.com/iaas/Content/General/Concepts/emissions-management.htm} \\
 Huawei Cloud              & China   & \statusB{Assured GHG}              & \href{https://huawei.com/en/sustainability}{huawei.com/en/sustainability} \\
-Baidu AI Cloud            & China   & \statusB{Self-reported GHG}        & \href{https://home.baidu.com}{home.baidu.com} \\
-JD Cloud                  & China   & \statusB{Self-reported GHG}        & \href{https://ir.jd.com/esgcsr}{ir.jd.com/esgcsr} \\
-Tencent Cloud             & China   & \statusB{Self-reported GHG}        & \href{https://tencentcloud.com/global-infrastructure/sustainability}{tencentcloud.com/global-infrastructure/sustainability} \\
+Tencent Cloud             & China   & \statusB{Self-reported}             & \href{https://tencentcloud.com/global-infrastructure/sustainability}{tencentcloud.com/global-infrastructure/sustainability} \\
 \midrule
-% --- Regional / sovereign IaaS ---
-\multicolumn{4}{@{}l}{\textit{Regional / sovereign IaaS (11)}}\\
+\multicolumn{4}{@{}l}{\textit{Mid-tier and regional IaaS}}\\
 \midrule
 OVHcloud                  & EU-FR   & \statusA{Per-customer tool}        & \href{https://ovhcloud.com/en/about-us/environmental-impact-tracker/}{ovhcloud.com/en/about-us/environmental-impact-tracker/} \\
 Scaleway                  & EU-FR   & \statusA{Per-customer tool}        & \href{https://scaleway.com/en/environmental-footprint-calculator/}{scaleway.com/en/environmental-footprint-calculator/} \\
 T Cloud Public            & EU-DE   & \statusA{Per-customer tool}        & \href{https://t-cloud-public.com/en/blog/product-news/sustainability-dashboard}{t-cloud-public.com/en/blog/product-news/sustainability-dashboard} \\
 Infomaniak                & EU-CH   & \statusB{Assured GHG}              & \href{https://infomaniak.com/en/ecology}{infomaniak.com/en/ecology} \\
-Rackspace                 & US      & \statusB{Assured GHG}              & \href{https://rackspace.com/newsroom/rackspace-technology-releases-2025-sustainability-report}{rackspace.com/newsroom/rackspace-technology-releases-2025-sustainability-report} \\
-Exoscale                  & EU-CH   & \statusB{Self-reported GHG}        & \href{https://exoscale.com/sustainability}{exoscale.com/sustainability} \\
-DigitalOcean              & US      & \statusB{Operational metrics}      & \href{https://digitalocean.com/impact}{digitalocean.com/impact} \\
-Hetzner                   & EU-DE   & \statusC{Marketing claim}          & \href{https://hetzner.com/unternehmen/nachhaltigkeit}{hetzner.com/unternehmen/nachhaltigkeit} \\
+Rackspace                 & US      & \statusB{Assured GHG}              & \href{https://www.rackspace.com/resources/2025-sustainability-report}{rackspace.com/resources/2025-sustainability-report} \\
+Baidu AI Cloud            & China   & \statusB{Self-reported}             & \href{https://home.baidu.com}{home.baidu.com} \\
+Exoscale                  & EU-CH   & \statusB{Self-reported}             & \href{https://exoscale.com/sustainability}{exoscale.com/sustainability} \\
+Hetzner                   & EU-DE   & \statusB{Self-reported}             & \href{https://hetzner.com/unternehmen/nachhaltigkeit}{hetzner.com/unternehmen/nachhaltigkeit} \\
+JD Cloud                  & China   & \statusB{Self-reported}             & \href{https://ir.jd.com/esgcsr}{ir.jd.com/esgcsr} \\
+DigitalOcean              & US      & \statusC{Marketing claim}          & \href{https://digitalocean.com/impact}{digitalocean.com/impact} \\
 STACKIT                   & EU-DE   & \statusC{Marketing claim}          & \href{https://stackit.com/en/learn/knowledge/cloud/sustainability}{stackit.com/en/learn/knowledge/cloud/sustainability} \\
-Vultr                     & US      & \statusC{Marketing claim}          & \href{https://vultr.com/news/vultr-and-sabey-data-centers/}{vultr.com/news/vultr-and-sabey-data-centers/} \\
+Vultr                     & US      & \statusC{No disclosure}            & \na \\
 Yandex Cloud              & Russia  & \statusC{No disclosure}            & \na \\
 \midrule
-% --- Green-by-design specialty ---
-\multicolumn{4}{@{}l}{\textit{Green-by-design specialty (5)}} \\
+\multicolumn{4}{@{}l}{\textit{CDN / edge}} \\
 \midrule
-GleSYS                    & Sweden  & \statusB{Assured GHG}              & \href{https://glesys.com/sustainability}{glesys.com/sustainability} \\
-UpCloud                   & Finland & \statusB{Self-reported GHG}        & \href{https://upcloud.com/2024-year-in-review}{upcloud.com/2024-year-in-review} \\
-Verne                     & Iceland & \statusB{Self-reported GHG}        & \href{https://verne.co/about-us/sustainability}{verne.co/about-us/sustainability} \\
-atNorth                   & Iceland & \statusB{Operational metrics}      & \href{https://atnorth.com/sustainability/sustainability-strategy/}{atnorth.com/sustainability/sustainability-strategy/} \\
-Leafcloud                 & EU-NL   & \statusB{Operational metrics}      & \href{https://leaf.cloud/truly-green}{leaf.cloud/truly-green} \\
-\midrule
-% --- CDN / edge compute ---
-\multicolumn{4}{@{}l}{\textit{CDN / edge compute (3)}} \\
-\midrule
-Akamai                    & US      & \statusA{Per-customer tool}        & \href{https://akamai.com/company/corporate-responsibility/sustainability}{akamai.com/company/corporate-responsibility/sustainability} \\
-Cloudflare                & US      & \statusA{Per-customer tool}        & \href{https://cloudflare.com/impact/}{cloudflare.com/impact/} \\
+Akamai                    & US      & \statusA{Per-customer tool}        & \href{https://akamaisustainability.com/circularity/customer-engagement/}{akamaisustainability.com/circularity/customer-engagement/} \\
+Cloudflare                & US      & \statusA{Per-customer tool}        & \href{https://cf-assets.www.cloudflare.com/slt3lc6tev37/7koyyovVxIqK8zdG1pqo6O/dfcbbde950394c61855befd9bf083a28/Impact-Report-2025-Final.pdf}{Cloudflare Impact Report 2025} \\
 Fastly                    & US      & \statusA{Per-customer tool}        & \href{https://fastly.com/products/sustainability-dashboard}{fastly.com/products/sustainability-dashboard} \\
+Gcore                     & EU-LU   & \statusC{Marketing claim}          & \href{https://gcore.com/about}{gcore.com/about} \\
+Bunny.net                 & EU-SI   & \statusC{No disclosure}            & \na \\
+CDNetworks                & China   & \statusC{No disclosure}            & \na \\
 \midrule
-% --- AI/GPU specialist ---
-\multicolumn{4}{@{}l}{\textit{AI/GPU specialist (neo-cloud) (11)}} \\
+\multicolumn{4}{@{}l}{\textit{Neocloud}} \\
 \midrule
-Crusoe                    & US      & \statusB{Self-reported GHG}        & \href{https://crusoe.ai/resources/blog/crusoe-tallys-law-leading-energy-transition}{crusoe.ai/resources/blog/crusoe-tallys-law-leading-energy-transition} \\
-Nebius                    & EU-NL   & \statusB{Self-reported GHG}        & \href{https://nebius.com/sustainability}{nebius.com/sustainability} \\
-CoreWeave                 & US      & \statusC{Marketing claim}          & \href{https://coreweave.com/about-us}{coreweave.com/about-us} \\
-DataCrunch                & EU      & \statusC{Marketing claim}          & \href{https://datacrunch.io/clusters}{datacrunch.io/clusters} \\
-Hyperstack                & UK      & \statusC{Marketing claim}          & \href{https://hyperstack.cloud}{hyperstack.cloud} \\
-Lambda                    & US      & \statusC{Marketing claim}          & \href{https://lambda.ai}{lambda.ai} \\
+Crusoe                    & US      & \statusB{Self-reported}             & \href{https://www.crusoe.ai/resources/blog/crusoe-2024-impact-report}{crusoe.ai/resources/blog/crusoe-2024-impact-report} \\
+Nebius                    & EU-NL   & \statusB{Self-reported}             & \href{https://nebius.com/sustainability}{nebius.com/sustainability} \\
+Verda                     & Nordic  & \statusC{Marketing claim}        & \href{https://verda.com/}{verda.com} \\
+Hyperstack                & UK      & \statusC{Marketing claim}          & \href{https://www.hyperstack.cloud/why-hyperstack}{hyperstack.cloud/why-hyperstack} \\
+CoreWeave                 & US      & \statusC{No disclosure}            & \na \\
+Lambda                    & US      & \statusC{No disclosure}            & \na \\
 Fireworks AI              & US      & \statusC{No disclosure}            & \na \\
 Paperspace                & US      & \statusC{No disclosure}            & \na \\
 Replicate                 & US      & \statusC{No disclosure}            & \na \\
 RunPod                    & US      & \statusC{No disclosure}            & \na \\
 Together AI               & US      & \statusC{No disclosure}            & \na \\
 \midrule
-% --- PaaS ---
-\multicolumn{4}{@{}l}{\textit{PaaS / application platforms (5)}} \\
+\multicolumn{4}{@{}l}{\textit{PaaS}} \\
 \midrule
-Salesforce / Heroku       & US      & \statusB{Assured GHG}              & \href{https://salesforce.com/company/sustainability}{salesforce.com/company/sustainability} \\
 Netlify                   & US      & \statusC{Marketing claim}          & \href{https://netlify.com/sustainability}{netlify.com/sustainability} \\
 Vercel                    & US      & \statusC{Marketing claim}          & \href{https://vercel.com/kb/guide/what-is-vercel-green-energy-policy}{vercel.com/kb/guide/what-is-vercel-green-energy-policy} \\
 Fly.io                    & US      & \statusC{No disclosure}            & \na \\
+Railway                   & US      & \statusC{No disclosure}            & \na \\
 Render                    & US      & \statusC{No disclosure}            & \na \\
+\midrule
+\multicolumn{4}{@{}l}{\textit{Sustainability-positioned regionals}} \\
+\midrule
+atNorth                   & Nordic  & \statusB{Assured GHG}              & \href{https://www.atnorth.com/wp-content/uploads/2025/04/Sustainability-Report-2024-web.pdf}{atnorth.com/.../Sustainability-Report-2024} \\
+GleSYS                    & Sweden  & \statusB{Assured GHG}              & \href{https://glesys.com/sustainability}{glesys.com/sustainability} \\
+UpCloud                   & Finland & \statusB{Self-reported}             & \href{https://upcloud.com/esg-report-2024/}{upcloud.com/esg-report-2024} \\
+Verne                     & Nordic  & \statusB{Self-reported}             & \href{https://verne.co/about-us/sustainability}{verne.co/about-us/sustainability} \\
+Leafcloud                 & EU-NL   & \statusC{Marketing claim}          & \href{https://leaf.cloud/truly-green}{leaf.cloud/truly-green} \\
 \end{longtable}
 
 \end{document}
