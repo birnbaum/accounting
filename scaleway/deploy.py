@@ -45,7 +45,10 @@ def die(msg: str) -> None:
 
 def user_data(workload: str) -> bytes:
     if workload == "stress":
-        body = "apt-get update -qq && apt-get install -y -qq stress-ng && stress-ng --cpu 0"
+        # Network-independent CPU burner: one `yes` per core, no apt/no egress.
+        # (The earlier apt-get install stress-ng silently failed on instances
+        # without a public IP / Public Gateway, leaving "stress" VMs idle.)
+        body = "for i in $(seq $(nproc)); do yes > /dev/null & done\nwait"
     else:
         body = "sleep infinity"
     return f"#!/bin/bash\necho '=== rsci-exp start (workload={workload}) at '$(date -u --iso-8601=seconds) ===\n{body}\n".encode()
