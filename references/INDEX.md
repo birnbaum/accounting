@@ -4,7 +4,7 @@
 
 This folder is the **source of truth** for any claim in `paper/paper.tex` that cites prior work, a provider methodology, or a standard.
 
-**Hard rule (also in `CLAUDE.md`):** Before writing or repeating any claim about a cited document, open the file in this folder, find the supporting §/page, and cite it. Do not paraphrase from `vision_paper_notes.md` or memory.
+**Hard rule (also in `CLAUDE.md`):** Before writing or repeating any claim about a cited document, open the file in this folder, find the supporting §/page, and cite it. Do not paraphrase from working notebooks or memory.
 If the document is not in this folder, ask the user to add it — do not invent or guess.
 
 **PDF access convention:** Every PDF in this folder has a sibling `.txt` produced by `pdftotext -layout`.
@@ -21,7 +21,6 @@ references/
 ├── cross_provider_synthesis.md         Big-3 GHG-Protocol compliance + gold-standard scorecard + cross-cutting findings
 ├── SCI.md                              GSF SCI Specification v1.1 (markdown)
 ├── SCI_AI.md                           GSF SCI for AI extension (markdown)
-├── SCI_SUNK_CARBON.md                  authoritative short summary of Bashir et al. 2024
 ├── SHARMA_2024_SHAPLEY.md              authoritative short summary of Sharma & Fuerst 2024 (Shapley attribution for FaaS)
 ├── BOAVIZTAPI_2024.md                  authoritative short summary of Simon et al. 2024 (BoaviztAPI bottom-up LCA)
 ├── CINERGY_2025.md                     authoritative short summary of Jacquet et al. 2025 (Cinergy deterministic VM power)
@@ -59,7 +58,7 @@ references/
 ## Academic priors and standards — `sources/`
 
 ### Prior work
-- `sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex` — **Bashir et al. 2024** *"The Sunk Carbon Fallacy"* (arXiv:2410.15087). The central prior we extend. Defines oSCI / SCI / tSCI. **Both oSCI and tSCI avoid the sunk-carbon fallacy; only GSF-standard SCI exhibits it** (confirmed 2026-05-17 by reading §3 and §6 of the TeX source; tSCI formula is on line 374: `tSCI = (tO + tM) per R`). See `SCI_SUNK_CARBON.md` for the corrected taxonomy summary; cite §/line numbers from the TeX source for paper claims.
+- `sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex` — **Bashir et al. 2024** *"The Sunk Carbon Fallacy"* (arXiv:2410.15087). The central prior we extend. Defines oSCI / SCI / tSCI. **Both oSCI and tSCI avoid the sunk-carbon fallacy; only GSF-standard SCI exhibits it** (confirmed 2026-05-17 by reading §3 and §6 of the TeX source; tSCI formula is on line 374: `tSCI = (tO + tM) per R`). Cite §/line numbers from the TeX source for paper claims.
 - `sources/greensku-isca-2024.pdf` — **GreenSKU (ISCA 2024)**. Microsoft research on hardware sustainability / SKU design for carbon reduction.
 - `sources/accountable-carbon-footprints-serverless.pdf` — **Sharma & Fuerst 2024** *"Accountable Carbon Footprints and Energy Profiling For Serverless Functions"* (SoCC '24). Approximated-Shapley fair attribution for FaaS: three allocation rules (usage-proportional, frequency-proportional, even-share-among-active) for three classes of shared cost, with explicit "embodied as static sunk cost" framing that contrasts with SCI. The directly citable prior for rSCI's per-component residual-allocation schema (§4 surgery). See `SHARMA_2024_SHAPLEY.md` for the summary; cite §/eq from the PDF for paper claims. Bib key: `sharma2024accountable_footprint_serverless`.
 - `sources/boaviztapi-hotcarbon-2024.pdf` — **Simon et al. 2024** *"BoaviztAPI: A Bottom-Up Model to Assess the Environmental Impacts of Cloud Services"* (HotCarbon '24). Open-source provider-agnostic bottom-up LCA toolkit; component-level embodied + usage modelling; multi-criteria (GWP, ADP, PE); their Table 1 independently corroborates our §3 provider-methodology critique. Falls under our §2 critique of bottom-up-only metrics — not reconcilable to top-down — but is the natural choice of bottom-up engine that feeds rSCI's $\varepsilon_p$. See `BOAVIZTAPI_2024.md` for the summary. Bib key: **TODO** (only a generic `boavizta-dc-lca` misc entry currently exists).
@@ -73,7 +72,6 @@ references/
 ### Markdown extracts (no PDF available)
 - `SCI.md` — full GSF SCI Specification v1.1. Authoritative for what GSF SCI *is*.
 - `SCI_AI.md` — GSF SCI-for-AI extension.
-- `SCI_SUNK_CARBON.md` — short summary of Bashir et al. 2024 with the **correct** taxonomy.
 
 ## Provider methodologies — `carbon_accounting_methodologies/`
 
@@ -107,9 +105,9 @@ Web-only or paywalled — must be acquired by the user and dropped in:
 ## Verification protocol (mandatory before paper-level prose)
 
 1. Identify the claim. ("Bashir says tSCI re-inherits the sunk-carbon bug.")
-2. Open the relevant file in `references/` (`SCI_SUNK_CARBON.md` first for the taxonomy, then `sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex` for nuance). For provider methodology claims: `carbon_accounting_methodologies/<provider>/`.
+2. Open the relevant file in `references/` (`sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex` for the SCI-variant taxonomy and nuance). For provider methodology claims: `carbon_accounting_methodologies/<provider>/`.
 3. Find the supporting passage. Cite §/page or §/line (e.g., "Bashir 2024 §3 line 374", "Schneider & Mattia 2024 §3.6").
 4. If the supporting passage doesn't exist → the claim is wrong. Stop, ask the user, do not write it.
 5. If the source isn't in `references/` → ask the user to add it. Do not paraphrase from memory or from notes.
 
-This protocol overrides any contradicting summary in `vision_paper_notes.md` — that is a notebook, not an authority.
+This protocol overrides any contradicting summary in a working notebook — those are scratchpads, not authorities.

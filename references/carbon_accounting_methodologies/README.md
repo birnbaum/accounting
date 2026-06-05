@@ -35,4 +35,4 @@ Before quoting any provider methodology claim in the paper:
 3. If the source doesn't support the claim, the claim is wrong — stop, ask the user, do not write it.
 4. If the source isn't in the folder, ask the user to add it. Do not paraphrase from notes.
 
-This overrides any contradicting summary in `vision_paper_notes.md`.
+This overrides any contradicting summary in a working notebook — open the primary source.

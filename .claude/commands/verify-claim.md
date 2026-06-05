@@ -6,7 +6,7 @@ Argument: the claim to verify, e.g. `/verify-claim Bashir says tSCI re-inherits 
 
 1. **Restate** the claim in one sentence. Identify the cited author/doc.
 2. **Locate the source file** — do NOT use memory or working-doc summaries:
-   - Taxonomy / metric claims → `references/SCI_SUNK_CARBON.md` first, then `references/sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex`
+   - Taxonomy / metric claims → `references/SCI.md` (GSF SCI), then `references/sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex` (oSCI / tSCI / sunk-carbon)
    - Provider methodology claims → `references/carbon_accounting_methodologies/<provider>/README.md`, then the `.txt` companion of the relevant PDF
    - Standard / GHG Protocol claims → grep the relevant `references/sources/ghg-protocol-*.txt`
    - Other academic priors → use the `.txt` companion (e.g. `greensku-isca-2024.txt`, `accountable-carbon-footprints-serverless.txt`)

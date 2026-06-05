@@ -8,16 +8,14 @@ Research framework for reconciling bottom-up software carbon intensity (SCI) met
 
 Before writing or repeating **any claim about prior work, a provider methodology, or a standard**:
 
-1. Open the relevant file in `references/`. Start with the README inside the appropriate subfolder. For taxonomy / metric claims: `references/SCI_SUNK_CARBON.md` and `references/SCI.md`. For provider claims: `references/carbon_accounting_methodologies/<provider>/`.
+1. Open the relevant file in `references/`. Start with the README inside the appropriate subfolder. For taxonomy / metric claims: `references/SCI.md` (and `references/sources/bashir-2024-sunk-carbon/` for the sunk-carbon argument). For provider claims: `references/carbon_accounting_methodologies/<provider>/`.
 2. **Grep the `.txt` companion** of the relevant PDF (every PDF in `references/` has a sibling `.txt` produced by `pdftotext -layout`). Use `grep -n` to find the line, then `Read offset=… limit=30` for a narrow window. Only open the PDF itself for figures or tables that the text extraction missed.
 3. Find the supporting §/page. Page numbers are preserved in the `.txt` output.
 4. Cite the §/page in the paper (e.g., "Bashir 2024 §3", "Schneider & Mattia 2024 §3.6", "AWS Model 3.0 methodology §X").
-5. **If the source does not exist in `references/`, ask the user to add it. Do not paraphrase from memory or from any `CLOUD_CARBON_ACCOUNTING_*.md` working doc.**
+5. **If the source does not exist in `references/`, ask the user to add it. Do not paraphrase from memory or from any working notebook.**
 6. **If a claim cannot be supported by an open primary source, do not write it.** Surface the conflict to the user.
 
 Use `/verify-claim <claim>` to run this workflow as a structured slash command.
-
-The `CLOUD_CARBON_ACCOUNTING_*.md` files are **working notebooks and inventories**, not authoritative for claims. Treat them as scratchpads.
 
 This rule overrides convenience. Always open the source.
 
@@ -35,7 +33,7 @@ A useful habit: every time you verify a new fact for the paper, ask "should this
 
 ### Authoritative for prior work and standards
 - `references/INDEX.md` — top-level index. Read this first when entering the project.
-- `references/SCI.md`, `references/SCI_AI.md`, `references/SCI_SUNK_CARBON.md` — GSF SCI spec, AI extension, Bashir summary.
+- `references/SCI.md`, `references/SCI_AI.md` — GSF SCI spec and AI extension. For the sunk-carbon argument, the primary source is `references/sources/bashir-2024-sunk-carbon/`.
 - `references/sources/` — academic priors (Bashir TeX sources, GreenSKU) and GHG Protocol standards.
 - `references/terminology.md` — terminology drift across sources (esp. "usage", embodied scope, SCI variants, S1/2/3, FERA, LBM/MBM).
 - `references/cross_provider_synthesis.md` — Big-3 GHG-Protocol compliance posture, gold-standard scorecard, cross-cutting findings, and the three methodology families used in `paper/paper.tex` §3.

@@ -6,7 +6,7 @@ Use this to orient before reading paper.tex; Claude should read the narrow line 
 | § | Title | Lines | Key references |
 |---|-------|-------|----------------|
 | §1 | Introduction | L54–202 | Bashir 2024, SCI.md, greensku-isca-2024.txt, accountable-carbon-footprints-serverless.txt |
-| §2 | Background: SCI and the Sunk Carbon Fallacy | L314–381 | SCI.md, SCI_SUNK_CARBON.md, sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex |
+| §2 | Background: SCI and the Sunk Carbon Fallacy | L314–381 | SCI.md, sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex |
 | §3 | State of the Art in Cloud Carbon Accounting | L382–546 | cross_provider_synthesis.md, all carbon_accounting_methodologies/<provider>/README.md, terminology.md |
 | §4 | rSCI: Reconciling Bottom-Up and Top-Down | L547–789 | SHARMA_2024_SHAPLEY.md, BOAVIZTAPI_2024.md, CINERGY_2025.md |
 | §5 | rSCI in Practice: Why It Cannot Be Computed Today | L790–915 | provider READMEs (gaps), terminology.md |
