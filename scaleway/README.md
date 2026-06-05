@@ -33,6 +33,11 @@ https://console.scaleway.com/cost-impact-management/environmental-footprint
 Filter by **Project** → see per-cell daily kgCO₂e.
 Single-month selection triggers the daily view (per Scaleway docs §7.2).
 
+## Findings
+
+See **`FINDINGS.md`** for results, the methodology extract, and the open re-pull question.
+Short version (2026-06-05): stress load CPU-verified at 100 %, but the daily footprint report is buggy (phantom/frozen values) and reports idle == stress; decider re-pull pending ~2026-06-06/07.
+
 ## What to look at after 2–3 days
 
 - idle vs stress at the same region — does the daily report differ? (Tests Scaleway's "actual CPU consumption" claim.)
@@ -48,3 +53,6 @@ Single-month selection triggers the daily view (per Scaleway docs §7.2).
 - `experiment.json` — cell definitions
 - `projects.csv` — written by `init`, lists the 5 created Project IDs
 - `deploy.py` — init/run/status/cleanup
+- `pull_impact.py` — reconstruct the daily kgCO₂e/water series via per-day Environmental Footprint API queries
+- `daily_impact_may2026.csv`, `daily_impact_jun2026.csv` — captured pulls
+- `FINDINGS.md` — results, methodology extract, open questions
