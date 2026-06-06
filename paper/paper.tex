@@ -565,14 +565,14 @@ themselves reconcile to the provider report.
 \label{sec:rsci}
 
 % NOTE: framing wrapper depends on §5 experiments. Math is committed; opening list
-% of "four gaps closed" follows the §2 critique structure.
+% of "three gaps closed" follows the §2 critique structure.
 
 We introduce \emph{Reconcilable \SCI} (\RSCI), a class of per-workload metrics designed
-to close four gaps identified in \S\ref{sec:background} and \S\ref{sec:sota}:
+to close three gaps identified in \S\ref{sec:background} and \S\ref{sec:sota}:
 (i) the sunk-carbon fallacy of \SCI;
-(ii) the loss of embodied-carbon incentives in \OSCI;
-(iii) the absence of a peak-shaving / hardware-procurement signal in \OSCI;
-(iv) the disconnect between every \SCI variant and the cloud provider's
+(ii) the loss of embodied-carbon incentives in \OSCI --- and with them the
+peak-shaving / hardware-procurement signal that embodied carbon should provide;
+(iii) the disconnect between every \SCI variant and the cloud provider's
 top-down carbon report.
 \RSCI does so by anchoring a bottom-up energy model to the provider's per-scope
 top-down report via residual bridges, and by allocating each residual component
@@ -730,7 +730,7 @@ that holds under \emph{any} admissible weight choice for \emph{any} residual
 component.
 
 \paragraph{Properties.}
-Under the default mapping, \RSCI closes the four gaps from the section opening as
+Under the default mapping, \RSCI closes the three gaps from the section opening as
 direct consequences of the chosen weights.
 (i) \emph{Sunk-carbon}: \RSCI has no per-server $M$ term. Embodied carbon lives in
 $\Delta^{\text{S3-embodied-IT}}$ and is allocated by the peak-attribution weight
@@ -738,16 +738,16 @@ $\Delta^{\text{S3-embodied-IT}}$ and is allocated by the peak-attribution weight
 energy through $E_{i,s,r}\cdot I_r$ in Eq.~\ref{eq:rsci} and reports a higher \RSCI
 regardless of how embodied is amortised on the provider's books --- the per-request
 operational gradient carries the sunk-carbon-avoidance argument on its own.
-(ii) \emph{Embodied incentive}: under static-share or peak-attribution weights for
-the embodied component, workloads sized to fit actual demand pay less embodied than
-over-reserved ones --- a signal \OSCI structurally cannot supply.
-(iii) \emph{Peak-shaving and procurement deferral}: under peak-attribution weights
-(Eq.~\ref{eq:w-peak}), a workload running at the slice peak draws a larger embodied
-share than one running at the trough, \emph{even at identical energy}. This is the
-incentive structure operators need to defer fleet expansion, and it is a property no
-bottom-up metric (\SCI, \OSCI, \TSCI) can supply because the design surface --- a
-residual to allocate --- does not exist without top-down anchoring.
-(iv) \emph{Reconciliation}: Eq.~\ref{eq:reconcile}.
+(ii) \emph{Embodied incentive, and with it the peak-shaving / procurement signal}:
+under static-share or peak-attribution weights for the embodied component, workloads
+sized to fit actual demand pay less embodied than over-reserved ones --- a signal
+\OSCI structurally cannot supply. Under peak-attribution weights (Eq.~\ref{eq:w-peak})
+specifically, a workload running at the slice peak draws a larger embodied share than
+one running at the trough, \emph{even at identical energy} --- the incentive structure
+operators need to defer fleet expansion. No bottom-up metric (\SCI, \OSCI, \TSCI) can
+supply it, because the design surface --- a residual to allocate --- does not exist
+without top-down anchoring.
+(iii) \emph{Reconciliation}: Eq.~\ref{eq:reconcile}.
 
 \paragraph{Negative residuals are admissible.}
 Eq.~\ref{eq:residual-general} does not constrain the sign of $\Delta^{k}_{s,r}$.
@@ -811,7 +811,7 @@ today's provider reports.
 % granularity, the actionable component of \RSCI is dominated by residual noise. If
 % experiments say otherwise, the framing here must flex --- but §2/§3/§4 are independent.
 
-\S\ref{sec:rsci} showed that \RSCI closes the four gaps from \S\ref{sec:background} in
+\S\ref{sec:rsci} showed that \RSCI closes the three gaps from \S\ref{sec:background} in
 theory. The actionable question is whether today's provider reports supply
 $\Delta^{\text{S1,S2,S3}}$ at a cadence and granularity that lets a workload-level
 signal $\widehat{\RSCI}_i$ be \emph{recovered}. Drawing on the SOTA in
