@@ -44,7 +44,7 @@ A useful habit: every time you verify a new fact for the paper, ask "should this
 - `references/carbon_accounting_methodologies/non-customer-tool-providers.md` — providers without customer tools.
 
 ### Paper artifacts
-- `paper/SECTIONS.md` — **read this first**: maps each §, its line range in `paper.tex`, and its key references. Read the narrow line range rather than the full file.
+- `paper/SECTIONS.md` — **read this first**: maps each § to its `\label` anchor in `paper.tex` and its key references. Grep the anchor (`grep -n '\label{sec:rsci}' paper/paper.tex`) to get the current line, then read that range rather than the full file.
 - `paper/paper.tex` — the SoCC vision-track paper draft (976 lines, 8 sections).
 - `paper/references.bib` — bib entries.
 - `paper/figures/` — figures.

@@ -1,22 +1,29 @@
 # paper.tex Section Map
 
-Living file — update line ranges when sections shift.
-Use this to orient before reading paper.tex; Claude should read the narrow line range, not the whole file.
+Living file — update the **anchor** column only when a section is added/removed/renamed (rare); never maintain line numbers (they rot on every edit).
+Use this to orient before reading paper.tex; read the section's range, not the whole file.
 
-| § | Title | Lines | Key references |
-|---|-------|-------|----------------|
-| §1 | Introduction | L54–202 | Bashir 2024, SCI.md, greensku-isca-2024.txt, accountable-carbon-footprints-serverless.txt |
-| §2 | Background: SCI and the Sunk Carbon Fallacy | L314–381 | SCI.md, sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex |
-| §3 | State of the Art in Cloud Carbon Accounting | L382–546 | cross_provider_synthesis.md, all carbon_accounting_methodologies/<provider>/README.md, terminology.md |
-| §4 | rSCI: Reconciling Bottom-Up and Top-Down | L547–789 | SHARMA_2024_SHAPLEY.md, BOAVIZTAPI_2024.md, CINERGY_2025.md |
-| §5 | rSCI in Practice: Why It Cannot Be Computed Today | L790–915 | provider READMEs (gaps), terminology.md |
-| §6 | Closing the Gap: A Call to Action | L916–954 | cross_provider_synthesis.md §5 |
-| §7 | Future Work | L955–1025 | TODO: Acun 2023, Radovanović, Wiesner et al. (self-citations — not yet in references/) |
-| §8 | Conclusion | L1026–1040 | — |
-| App A | Cloud provider survey universe (48 providers) | L1042–end | carbon_accounting_methodologies/README.md + non-customer-tool-providers.md |
+To jump to a section, grep its anchor to get the current line, then read from there:
+
+```
+grep -n '\label{sec:rsci}' paper/paper.tex   # then Read offset=<line>
+```
+
+| § | Title | Anchor | Key references |
+|---|-------|--------|----------------|
+| §1 | Introduction | `sec:intro` | Bashir 2024, SCI.md, greensku-isca-2024.txt, accountable-carbon-footprints-serverless.txt |
+| §2 | Background: SCI and the Sunk Carbon Fallacy | `sec:background` | SCI.md, sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex |
+| §3 | State of the Art in Cloud Carbon Accounting | `sec:sota` | cross_provider_synthesis.md, all carbon_accounting_methodologies/<provider>/README.md, terminology.md |
+| §4 | rSCI: Reconciling Bottom-Up and Top-Down | `sec:rsci` | SHARMA_2024_SHAPLEY.md, BOAVIZTAPI_2024.md, CINERGY_2025.md |
+| §5 | rSCI in Practice: A Controlled Demonstration | `sec:demo` | `experiments/trace_analysis.py` (live notebook); [[project-experiment2-spine-vision-first]]. Outline/skeleton only — 3 figs (one per gap), prose TBW |
+| §6 | rSCI in Practice: Why It Cannot Be Computed Today | `sec:practice` | provider READMEs (gaps), terminology.md, Scaleway (re-run pending) |
+| §7 | Closing the Gap: A Call to Action | `sec:asks` | cross_provider_synthesis.md §5 |
+| §8 | Future Work | `sec:future-work` | TODO: Acun 2023, Radovanović, Wiesner et al. (self-citations — not yet in references/) |
+| §9 | Conclusion | `sec:conclusion` | — |
+| App A | Cloud provider survey universe (48 providers) | `app:inventory` | carbon_accounting_methodologies/README.md + non-customer-tool-providers.md |
 
 ## Subsection landmarks (§4)
 
-| Subsection | Lines |
-|------------|-------|
-| Weight families: the residual as a design surface | L595– |
+| Subsection | Anchor |
+|------------|--------|
+| Weight families: the residual as a design surface | `sec:rsci-design` |

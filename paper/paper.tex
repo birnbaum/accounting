@@ -60,6 +60,7 @@ Abstract goes here.
 \maketitle
 
 \section{Introduction}
+\label{sec:intro}
 % Framing scaffolding (bullet sketch --- rewrite as prose once framing locks).
 % v3 (2026-05-19): reconcilability stays the headline critique. The vision-
 % paper angle is what becomes possible once a residual exists: residual-
@@ -313,7 +314,7 @@ under limited data (\S\ref{sec:rsci}).
 (energy-share, static-share, peak-attribution) that preserve reconciliation by
 construction and induce sharply different per-workload incentives ---
 including a peak-shaving / procurement-deferral incentive no bottom-up metric
-can supply (\S\ref{sec:rsci-design}).
+can supply (\S\ref{sec:rsci-design}; demonstrated in \S\ref{sec:demo}).
 \item A diagnosis of why \RSCI cannot yet be computed on today's provider
 reports, and a set of concrete asks on provider reporting, customer-side
 estimation, and standards that would close the gap
@@ -804,70 +805,48 @@ reconciliation (Eq.~\ref{eq:reconcile}) holds at any level of data fidelity and
 under any admissible weight choice. The next section confronts the theory with
 today's provider reports.
 
+\section{\RSCI in Practice: A Controlled Demonstration}
+\label{sec:demo}
+
+% Outline only (2026-06-06); prose TBW. Story + structure agreed --- one figure per gap.
+% Controlled example: real load + real grid, KNOWN residual Delta (the ground truth no
+% provider exposes). Report direction/ordering, not magnitudes (Delta is a knob).
+
+\S\ref{sec:rsci} argued that \RSCI closes the three gaps of \S\ref{sec:background} and
+\S\ref{sec:sota} in theory. We demonstrate each on one controlled example: a two-SKU
+fleet (an amortised A100 node and a new H100 node) serving a real LLM-inference trace on a
+real grid-intensity trace, with a \emph{known} slice residual $\Delta^{\text{S3}}$. The
+residual magnitude is an illustrative input --- the quantity no provider exposes, and the
+reason the example must be controlled --- so we report direction and ordering, not absolute
+magnitudes; only the two measured \emph{shapes} (the load swing and the grid-intensity
+swing) drive the qualitative results.
+
+\paragraph{Gap 1 --- no sunk-carbon fallacy.}
+\todo[inline]{Fig: per-token embodied charge by SKU. The fully-amortised A100
+($\text{age}=\text{lifespan}$) carries $M=0$ under \SCI, so \SCI rates the worn GPU the
+\emph{cleanest}; \RSCI routes embodied through the residual (worse efficiency $\to$ more
+energy $\to$ more residual share), so it is structurally fallacy-free.}
+
+\paragraph{Gap 2 --- the embodied/peak incentive.}
+\todo[inline]{Fig: per-token carbon vs.\ fleet utilisation. \OSCI and \SCI are flat
+($\sim$1.1$\times$ idle$\to$busy); \RSCI under peak-share rises ($\sim$7$\times$). Only
+\RSCI makes a busy fleet cost more per token; the energy-share vs.\ peak-share slope is the
+design surface (\S\ref{sec:rsci-design}). No bottom-up metric produces this signal.}
+
+\paragraph{Gap 3 --- reconciliation to the top-down total.}
+\todo[inline]{Fig: stacked attributed-carbon breakdown. \OSCI captures operational only;
+\SCI adds active-server embodied; \RSCI closes to the constructed provider total by
+construction (Eq.~\ref{eq:reconcile}). The bottom-up metrics structurally see only a
+minority of the reported number.}
+
 \section{\RSCI in Practice: Why It Cannot Be Computed Today}
 \label{sec:practice}
 
-% TODO: revise after experiments. Working hypothesis: at monthly cadence + per-service
-% granularity, the actionable component of \RSCI is dominated by residual noise. If
-% experiments say otherwise, the framing here must flex --- but §2/§3/§4 are independent.
-
-\S\ref{sec:rsci} showed that \RSCI closes the three gaps from \S\ref{sec:background} in
-theory. The actionable question is whether today's provider reports supply
-$\Delta^{\text{S1,S2,S3}}$ at a cadence and granularity that lets a workload-level
-signal $\widehat{\RSCI}_i$ be \emph{recovered}. Drawing on the SOTA in
+\S\ref{sec:demo} demonstrated that \RSCI closes the three gaps on a controlled example
+where the residual $\Delta$ is \emph{known}. The actionable question is whether today's
+provider reports supply $\Delta^{\text{S1,S2,S3}}$ at a cadence and granularity that lets a
+workload-level signal $\widehat{\RSCI}_i$ be \emph{recovered}. Drawing on the SOTA in
 \S\ref{sec:sota}, the strong prior is no.
-
-\paragraph{Synthetic experiment (planned).}
-% TODO C3: implement and plot. Experimental design:
-% - Toy fleet: 1000 workloads, 3 SKUs, 2 regions, 12 months.
-% - Ground truth: \xi_{s,r}(t) drifts realistically — PUE seasonality, a hardware
-%   refresh that halves \rho over Q2, hourly grid-intensity variance from Electricity Maps.
-% - Degrade observability to monthly × per-service × per-region (what AWS/Azure/GCP
-%   actually expose) and run the §4 real-time estimator on the degraded reports.
-% - Plot estimation error of \hat{\mu}, \hat{\rho} as a function of (a) reporting
-%   cadence (monthly → weekly → daily → hourly), (b) slice granularity (service-level
-%   → resource-group → resource).
-% Expected finding: at the actual provider cadence/granularity, residual noise
-% dominates the actionable signal --- \widehat{\RSCI}_i collapses toward \OSCI even
-% with a perfect bottom-up energy model.
-
-A controlled experiment shows the gap between \RSCI's theoretical reconciliability and
-its practical computability. We will simulate a toy fleet with realistic drifts in
-$\xi_{s,r}$ (PUE seasonality, hardware refresh, hourly grid intensity), then degrade
-observability to today's provider granularity (monthly $\times$ per-service $\times$
-per-region) and attempt to recover $\hat\mu,\hat\rho$ via the \S\ref{sec:rsci}
-estimator. Under the strong prior we expect estimation error large enough that
-$\widehat{\RSCI}_i$ collapses toward \OSCI --- the bottom-up signal is
-not improved by reconciliation against a report whose cadence is twelve times the
-churn rate of the underlying workload.
-
-\paragraph{A second experiment: attribution matters even when reconciliation holds.}
-\todo[inline]{Worked example for the Shapley/peak-share allocation introduced in
-\S\ref{sec:rsci}. Setup (chat 2026-05-17): one slice $(s,r)$, $\sim$50 workloads
-over 7 days hourly, mix of flat 24$\times$7 services + business-hours peak drivers
-+ shiftable batch jobs; grid CI from a real DE/Electricity Maps trace; known slice
-$\Delta^{\text{S3}}$. Compare three allocations of $\Delta^{\text{S3}}$:
-energy-share / peak-hour-share / sampled Shapley over peak. Two counterfactuals on
-one batch job: (A) runs at 12:00 peak vs.\ (B) runs at 03:00 trough. Plot the
-job's \RSCI as a 2$\times$3 bar chart \{A,B\}$\times$\{energy-share, peak-share,
-Shapley\}; second panel: total fleet \RSCI vs.\ shift fraction across the three
-weightings. Expected message: under energy-share the embodied component is
-identical in A and B; under peak-share / Shapley it drops in B --- so the metric
-rewards trough-filling on both axes (clean grid + no peak contribution) and
-penalises peak-driving workloads. The Shapley value itself must be \emph{estimated}
-(LOO or sampled), which is a second source of non-reconcilability beyond reporting
-cadence: \RSCI under estimated attribution holds in expectation but not pointwise.
-We frame this in \S\ref{sec:future-work} as a move from perfect reconciliation to
-\emph{strong, ideally theoretically bounded, correlation} between bottom-up signal
-and top-down report.}
-A second concern is orthogonal to cadence: even with hourly resource-level reports,
-the embodied attribution we proposed in \S\ref{sec:rsci} requires estimating a
-Shapley value (or a tractable peak-share proxy) over the fleet's peak-capacity game.
-The estimator introduces a residual of its own: \RSCI under estimated attribution is
-reconciliable in expectation but not pointwise. We therefore frame the target not
-as perfect reconciliation but as a strong --- and ideally theoretically bounded ---
-correlation between the workload-level signal and the top-down report
-(\S\ref{sec:future-work}).
 
 \paragraph{Real-world vignettes.}
 % TODO: revise after experiments. Empirical analysis on AWS, GCP, and Azure
@@ -881,6 +860,11 @@ proxies, capping any addressable share that bottom-up optimisation can move.
 On an Azure Frankfurt export the location-based Scope-2 line is effectively
 zero: spatial-shifting and grid-intensity optimisations are structurally
 invisible to the dashboard even when they reduce real physical emissions.
+\todo[inline]{Add Scaleway partial-existence-proof once the re-run lands: daily
+granularity \emph{exists} (the levers are individually feasible), but the reported
+daily number is flat under load and idle$\approx$stress is confounded --- so the union
+needed to recover $\widehat{\RSCI}_i$ is unrealised. Data pending; do not write numbers
+until re-derived.}
 
 \paragraph{\RSCI as a diagnostic: which levers move which provider's number.}
 \todo[inline]{Decision 2026-05-17: promote this paragraph to a named
