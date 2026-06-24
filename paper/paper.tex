@@ -44,7 +44,8 @@
 
 \begin{document}
 
-\title{Accounting for Action: Reconciling Per-Workload Carbon Metrics with Corporate GHG Reporting}
+%\title{Accounting for Action: Reconciling Per-Workload Carbon Metrics with Corporate GHG Reporting}
+\title{Reconciling Bottom-Up Metrics with Top-Down Reporting for Carbon Accounting in the Cloud}
 
 \author{Philipp Wiesner}
 \affiliation{%
@@ -54,13 +55,24 @@
 \email{TBD}
 
 \begin{abstract}
-Abstract goes here.
+Quantifying the carbon footprint of cloud workloads has produced two largely separate responses.
+Bottom-up metrics such as the Software Carbon Intensity (\SCI) provide real-time, actionable signals for energy-efficient and carbon-aware scheduling and optimization.
+Meanwhile, cloud providers have begun publishing top-down corporate GHG reports and customer-facing dashboards that let tenants estimate their footprint from cloud usage.
+Because the two approaches differ in scope and reporting frequency, the current state of the art treats them as decoupled: bottom-up metrics for optimization, top-down numbers for corporate disclosure.
+
+We argue that although the two signals can never be identical, \emph{they must be reconcilable}. 
+If teams cannot trace their bottom-up improvements through to the provider's top-down report, they will lose trust in both. 
+We survey the state of the art in cloud carbon accounting, identify the gaps between the two approaches, and propose a vision for \RSCI: a metric that re-anchors a bottom-up energy estimate to the provider's per-scope report through a residual bridge that absorbs what the bottom-up model misses. 
+\RSCI aligns the two signals by construction, captures all provider-side overheads, and degrades gracefully when a provider does not yet ship reconciliation-grade data.
+The residual can itself be allocated to workloads in ways that incentivize sustainable behavior---for example, penalizing demand peaks that force new hardware procurement---which no bottom-up-only metric can do.
 \end{abstract}
 
 \maketitle
 
 \section{Introduction}
 \label{sec:intro}
+
+
 % Framing scaffolding (bullet sketch --- rewrite as prose once framing locks).
 % v3 (2026-05-19): reconcilability stays the headline critique. The vision-
 % paper angle is what becomes possible once a residual exists: residual-
@@ -321,7 +333,7 @@ estimation, and standards that would close the gap
 (\S\ref{sec:practice}, \S\ref{sec:asks}).
 \end{itemize}
 
-\section{Background: \SCI and the Sunk Carbon Fallacy}
+\section{\SCI and the Sunk Carbon Fallacy}
 \label{sec:background}
 
 The community's per-workload carbon metric is the \emph{Software Carbon Intensity} (\SCI),
