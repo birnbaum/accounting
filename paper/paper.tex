@@ -55,16 +55,17 @@
 \email{TBD}
 
 \begin{abstract}
-Quantifying the carbon footprint of cloud workloads has produced two largely separate responses.
-Bottom-up metrics such as the Software Carbon Intensity (\SCI) provide real-time, actionable signals for energy-efficient and carbon-aware scheduling and optimization.
-Meanwhile, cloud providers have begun publishing top-down corporate GHG reports and customer-facing dashboards that let tenants estimate their footprint from cloud usage.
+There exist two largely separate approaches to quantifying the carbon footprint of cloud workloads.
+Bottom-up metrics such as Software Carbon Intensity (\SCI) provide real-time, actionable signals for energy-efficient and carbon-aware optimization, but are blind to provider-side overheads.
+Top-down corporate GHG reports and customer-facing dashboards provide a comprehensive view of the tenant's carbon footprint from cloud usage, but are coarse, delayed, and methodologically opaque.
 Because the two approaches differ in scope and reporting frequency, the current state of the art treats them as decoupled: bottom-up metrics for optimization, top-down numbers for corporate disclosure.
 
 We argue that although the two signals can never be identical, \emph{they must be reconcilable}. 
 If teams cannot trace their bottom-up improvements through to the provider's top-down report, they will lose trust in both. 
-We survey the state of the art in cloud carbon accounting, identify the gaps between the two approaches, and propose a vision for \RSCI: a metric that re-anchors a bottom-up energy estimate to the provider's per-scope report through a residual bridge that absorbs what the bottom-up model misses. 
-\RSCI aligns the two signals by construction, captures all provider-side overheads, and degrades gracefully when a provider does not yet ship reconciliation-grade data.
-The residual can itself be allocated to workloads in ways that incentivize sustainable behavior---for example, penalizing demand peaks that force new hardware procurement---which no bottom-up-only metric can do.
+In this paper, we survey the state of the art in cloud carbon accounting and propose a vision for \RSCI: a metric that re-anchors a bottom-up energy estimate to the provider's per-scope report through a residual bridge that absorbs what the bottom-up model cannot capture. 
+% \RSCI aligns the two signals by construction: Scheduling metrics contain provider-side overheads, and degrades gracefully when a provider does not yet ship reconciliation-grade data.
+We propose to treat the residual as a design surface: the choice of how to allocate it across workloads determines what the metric incentivizes, and can be used to induce peak-shaving and procurement-deferral behavior that no bottom-up-only metric can supply.
+%The residual can itself be allocated to workloads in ways that incentivize sustainable behavior---for example, penalizing demand peaks that force new hardware procurement---which no bottom-up-only metric can do.
 \end{abstract}
 
 \maketitle
@@ -80,7 +81,7 @@ This signal is straightforward to obtain (workload energy $\times$ carbon intens
 To provide a more comprehensive metric, the Green Software Foundation proposed the Software Carbon Intensity (\SCI) specification~\cite{sci-spec}, codified as ISO/IEC~21031 in 2024, which expresses the carbon emitted per unit of work and folds in an embodied term.
 However, Bashir et al.~\cite{bashir2024} show that \SCI can produce perverse incentives for workload placement and scaling in practice. 
 Furthermore, all bottom-up operational carbon metrics, \SCI
-included, are by construction blind to provider-side overheads (idle power, cooling, the embodied carbon of the datacenter) which a cloud tenant or cluster user cannot even observe.
+included, are by construction blind to provider-side overheads which a cloud tenant or cluster user cannot observe, such as idle power, cooling, the embodied carbon of the datacenter.
 
 Motivated by an increase regulatory pressure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero} for corporate sustainability reporting, major cloud providers have started to publish top-down GHG reports and customer-facing dashboards that allow tenants to estimate and report their carbon footprint from cloud usage.
 They enable tenants to report their carbon footprint in a way that is consistent with the provider's corporate sustainability disclosure, which is critical for regulatory compliance and investor relations.
@@ -274,7 +275,7 @@ AWS's Model~3.0 defines a foundational/non-foundational service split but publis
 The pattern is not three isolated quirks: every customer tool ships a methodologically distinct, thinner subset of what the provider measures internally, and the size of that gap is the residual that \S\ref{sec:rsci} formalises through \RSCI.
 Bottom-up engines such as BoaviztAPI~\cite{simon2024boaviztapi} and Cinergy~\cite{jacquet2025cinergy} reach the same verdict from the opposite side and are the natural feed for the bottom-up term in \RSCI; they do not themselves reconcile to the provider report.
 
-\section{\RSCI: Reconciling Bottom-Up and Top-Down}
+\section{Reconciling Bottom-Up and Top-Down}
 \label{sec:rsci}
 
 % NOTE: framing wrapper depends on §5 experiments. Math is committed; opening list
@@ -340,7 +341,7 @@ The first inner term is the bottom-up operational footprint; the second is the w
 The choice of $w^{k}$ is left open by Eq.~\ref{eq:rsci}: different weight families yield metrics that incentivise different operator behavior, while preserving reconciliation by construction (Eq.~\ref{eq:reconcile}).
 The next subsection makes this design surface explicit.
 
-\subsection{Weight families: the residual as a design surface}
+\subsection{Allocating the Residual}
 \label{sec:rsci-design}
 
 Three weight families cover the residual components today's provider reports
@@ -470,7 +471,7 @@ design surface (\S\ref{sec:rsci-design}). No bottom-up metric produces this sign
 construction (Eq.~\ref{eq:reconcile}). The bottom-up metrics structurally see only a
 minority of the reported number.}
 
-\section{\RSCI in Practice: Why It Cannot Be Computed Today}
+\section{Why \RSCI Cannot Be Computed Today}
 \label{sec:practice}
 
 \S\ref{sec:demo} demonstrated that \RSCI closes the three gaps on a controlled example where the residual $\Delta$ is \emph{known}.
@@ -530,7 +531,7 @@ Architecture / SKU choice & \maybe & \maybe & \maybe \\
 \RSCI is a sound bottom-up/top-down bridge in theory; it cannot be computed in practice on today's provider reports because the top-down side is too coarse, too delayed, and methodologically opaque.
 The next section identifies the specific provider, estimation, and standards changes needed to close the gap.
 
-\section{Closing the Gap: A Call to Action}
+\section{Call to Action}
 \label{sec:asks}
 
 % TODO: revise after experiments. Working hypothesis: the three buckets below
@@ -611,7 +612,7 @@ That is a separate problem.
 \appendix
 \onecolumn
 
-\section{Cloud provider survey universe}
+\section{Cloud Provider Survey}
 \label{app:inventory}
 
 All 48 cloud providers reviewed for §\ref{sec:sota}, clustered by focus and classified by what the provider publishes.
