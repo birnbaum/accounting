@@ -11,3 +11,5 @@ data/AzureLLMInferenceTrace_conv_1week.csv
 data/AzureLLMInferenceTrace_code.csv
 data/AzureLLMInferenceTrace_conv.csv
 
+# Latex
+out

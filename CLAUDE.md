@@ -45,13 +45,13 @@ A useful habit: every time you verify a new fact for the paper, ask "should this
 
 ### Paper artifacts
 - `paper/SECTIONS.md` — **read this first**: maps each § to its `\label` anchor in `paper.tex` and its key references. Grep the anchor (`grep -n '\label{sec:rsci}' paper/paper.tex`) to get the current line, then read that range rather than the full file.
-- `paper/paper.tex` — the SoCC vision-track paper draft (976 lines, 8 sections).
+- `paper/paper.tex` — the SoCC vision-track paper draft (~1010 lines, 9 sections; §5 demonstration + §6 reality-check split 2026-06-06).
 - `paper/references.bib` — bib entries.
 - `paper/figures/` — figures.
 
 ### Working notebooks (NOT authoritative for claims)
 - `README.md` — core framework definition (rSCI). Living research document.
-- `paper/experiments_design.md` — §4 toy-cloud experiment design notes for the SoCC submission. Scratch; paraphrase into `paper.tex` once design is locked.
+- `paper/experiments_design.md` — §5 controlled-demonstration design notes (toy cloud; 3 gaps, one figure each). Scratch; paraphrase into `paper.tex` once design is locked. Implementation: `experiments/trace_analysis.py` (marimo).
 
 ### Data
 - `gcp/` — GCP benchmark experiments.
