@@ -7,10 +7,12 @@
 \usepackage{pifont}
 \usepackage{threeparttable}
 \usepackage[referable]{threeparttablex}
-% Author notes — use \todo[inline]{...} to avoid two-column margin collisions.
+% Author notes — \todo defaults to inline to avoid two-column margin collisions.
 % Toggle off for camera-ready with \usepackage[disable]{todonotes}.
 \usepackage[textsize=footnotesize]{todonotes}
 \setlength{\marginparwidth}{2cm}
+\let\oldtodo\todo
+\renewcommand{\todo}[2][inline]{\oldtodo[#1]{#2}}
 \renewcommand\theadfont{\bfseries}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \newcolumntype{C}{>{\centering\arraybackslash}X}
@@ -112,7 +114,7 @@ The Green Software Foundation explicitly endorses this separation, distinguishin
 \emph{We disagree.}
 Now that regulators require firm-level GHG disclosure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero} and carbon pricing is increasingly implemented, a per-workload metric whose gains never land in official reporting will not be funded, sustained, or trusted at scale.\footnote{We reconcile only against the location-based number. The GHG Protocol's \emph{dual reporting} gives Scope~2 both a location-based figure (grid-average intensity) and a market-based figure (net of procurement instruments like PPAs and RECs), which can differ by an order of magnitude. Market-based reflects instruments an engineering team can neither observe nor control, and that \SCI\ itself excludes~\cite{sci-spec}. Location-based is the basis both sides already share, and the GHG Protocol, ESRS~E1, and SBTi all mandate its disclosure, so a location-based gain still lands in audited reporting.}
 
-\todo[inline]{the footnote should go into Sec 3}
+\todo{the footnote should go into Sec 3}
 
 \parag{Contributions}
 We argue that bottom-up carbon metrics should always \emph{reconcile} with the provider's top-down GHG report by construction.
@@ -516,19 +518,19 @@ We demonstrate each on one controlled example: a two-SKU fleet (an amortised A10
 The residual magnitude is an illustrative input --- the quantity no provider exposes, and the reason the example must be controlled --- so we report direction and ordering, not absolute magnitudes; only the two measured \emph{shapes} (the load swing and the grid-intensity swing) drive the qualitative results.
 
 \paragraph{Gap 1 --- no sunk-carbon fallacy.}
-\todo[inline]{Fig: per-token embodied charge by SKU. The fully-amortised A100
+\todo{Fig: per-token embodied charge by SKU. The fully-amortised A100
 ($\text{age}=\text{lifespan}$) carries $M=0$ under \SCI, so \SCI rates the worn GPU the
 \emph{cleanest}; \RSCI routes embodied through the residual (worse efficiency $\to$ more
 energy $\to$ more residual share), so it is structurally fallacy-free.}
 
 \paragraph{Gap 2 --- the embodied/peak incentive.}
-\todo[inline]{Fig: per-token carbon vs.\ fleet utilisation. \OSCI and \SCI are flat
+\todo{Fig: per-token carbon vs.\ fleet utilisation. \OSCI and \SCI are flat
 ($\sim$1.1$\times$ idle$\to$busy); \RSCI under peak-share rises ($\sim$7$\times$). Only
 \RSCI makes a busy fleet cost more per token; the energy-share vs.\ peak-share slope is the
 design surface (\S\ref{sec:rsci-design}). No bottom-up metric produces this signal.}
 
 \paragraph{Gap 3 --- reconciliation to the top-down total.}
-\todo[inline]{Fig: stacked attributed-carbon breakdown. \OSCI captures operational only;
+\todo{Fig: stacked attributed-carbon breakdown. \OSCI captures operational only;
 \SCI adds active-server embodied; \RSCI closes to the constructed provider total by
 construction (Eq.~\ref{eq:reconcile}). The bottom-up metrics structurally see only a
 minority of the reported number.}
@@ -552,14 +554,14 @@ Drawing on the SOTA in \S\ref{sec:sota}, the strong prior is no.
 The same structural failure shows up in two of our case studies.
 On an AWS Frankfurt account over nine months, $\sim$70\,\% of reported emissions fall into the revenue-allocated ``Other'' bucket (the non-foundational tier of AWS's allocation; see \S\ref{sec:sota}); only $\sim$30\,\% is allocated by physical proxies, capping any addressable share that bottom-up optimisation can move.
 On an Azure Frankfurt export the location-based Scope-2 line is effectively zero: spatial-shifting and grid-intensity optimisations are structurally invisible to the dashboard even when they reduce real physical emissions.
-\todo[inline]{Add Scaleway partial-existence-proof once the re-run lands: daily
+\todo{Add Scaleway partial-existence-proof once the re-run lands: daily
 granularity \emph{exists} (the levers are individually feasible), but the reported
 daily number is flat under load and idle$\approx$stress is confounded --- so the union
 needed to recover $\widehat{\RSCI}_i$ is unrealised. Data pending; do not write numbers
 until re-derived.}
 
 \paragraph{\RSCI as a diagnostic: which levers move which provider's number.}
-\todo[inline]{Decision 2026-05-17: promote this paragraph to a named
+\todo{Decision 2026-05-17: promote this paragraph to a named
 \texttt{\textbackslash subsection} once \S\ref{sec:practice} stabilises, and call it
 out in the intro as the paper's second contribution (the first being the \RSCI
 decomposition itself). The matrix is what turns the \S\ref{sec:sota} methodology
@@ -656,7 +658,7 @@ A unified attribution layer would let the community extend reconciliable metrics
 
 On the attribution side, the energy-share weighting in \S\ref{sec:rsci} is a deliberately simple default that is only incentive-aligned for $\Delta^{\text{S2}}$.
 Kalman filtering for $\hat\mu$ state-estimation and Shapley-value attribution (or tractable proxies --- peak-hour share, leave-one-out marginals) for $\Delta^{\text{S3}}$ are the two concrete refinements we see most leverage in --- the latter sharpens the peak-shaving / hardware-procurement incentive in a way energy-share weighting cannot, and crucially avoids penalising clean-grid trough usage with an embodied burden it did not cause.
-\todo[inline]{Open theoretical question (chat 2026-05-17): once $\varphi_i$ is
+\todo{Open theoretical question (chat 2026-05-17): once $\varphi_i$ is
 estimated rather than computed exactly, reconciliation holds only in expectation.
 Can we give a \emph{bounded-correlation} guarantee --- a worst-case bound on
 $|\sum_i \widehat{\RSCI}_i R_i - C^{\downarrow}_{s,r}|$ as a function of
@@ -693,7 +695,7 @@ That is a separate problem.
 
 \endgroup
 
-\todo[inline]{Tenant vs customer terminology}
+\todo{Tenant vs customer terminology}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
