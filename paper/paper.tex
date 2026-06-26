@@ -351,7 +351,7 @@ across workloads with a weight chosen to match its physical driver. The choice o
 weight is itself a design surface --- the central vision contribution of this
 paper.
 
-\paragraph{Setup.}
+\parag{Setup}
 Let $i$ index \emph{workload instances} --- one evaluation of a workload over period
 $t_i$. The provider issues a top-down report broken into Scope-1, Scope-2, and
 Scope-3 totals at the level of a \emph{reporting slice} indexed by service $s$ and
@@ -359,7 +359,7 @@ region $r$ (the finest granularity providers publish: per-month, per-project, pe
 Let $C_{s,r}^{\downarrow\text{S1}}$, $C_{s,r}^{\downarrow\text{S2}}$, and
 $C_{s,r}^{\downarrow\text{S3}}$ denote the reported per-scope emissions of slice $(s,r)$.
 
-\paragraph{Bottom-up energy.}
+\parag{Bottom-up energy}
 For workload $i$ in slice $(s,r)$ we estimate energy from per-resource quantities:
 \begin{equation}
 E_{i,s,r} \;=\; \sum_{p} q_p \cdot \varepsilon_p \quad [\text{Wh}],
@@ -369,14 +369,14 @@ where $p$ indexes resource types (vCPU-hours, GPU-hours, GB-hours of storage, I/
 Concrete instantiations of $\varepsilon_p$ are available from open-data projects such as BoaviztAPI~\cite{simon2024boaviztapi} (per-component LCA factors and CPU power curves) and per-VM deterministic models such as Cinergy~\cite{jacquet2025cinergy} (production-validated on OVHcloud); \RSCI is orthogonal to the choice of bottom-up engine.
 Unobservable resource types simply enlarge the residuals defined below.
 
-\paragraph{Residual bridges.}
+\parag{Residual bridges}
 For each top-down component $k$ reported by the provider, the residual is the gap between what the provider reports and what the bottom-up model accounts for:
 \begin{equation}
 \Delta^{k}_{s,r} \;=\; C^{\downarrow k}_{s,r} \;-\; O^{k}_{s,r},
 \label{eq:residual-general}
 \end{equation}
 where $O^{k}_{s,r}$ is the bottom-up estimate of that same quantity (zero for components the bottom-up model does not address).
-At the coarsest decomposition --- one residual per scope ---
+At the coarsest decomposition (one residual per scope)
 \begin{equation}
 \Delta^{\text{S1}}_{s,r} = C^{\downarrow\text{S1}}_{s,r}, \;\;
 \Delta^{\text{S2}}_{s,r} = C^{\downarrow\text{S2}}_{s,r} - \!\sum_i\! E_{i,s,r} I_r, \;\;
@@ -385,9 +385,9 @@ At the coarsest decomposition --- one residual per scope ---
 \end{equation}
 with $I_r$ the location-based grid intensity of region $r$.
 $\Delta^{\text{S1}}$ absorbs diesel and refrigerant emissions; $\Delta^{\text{S2}}$ absorbs PUE, idle capacity, market-vs-location adjustments, and energy-model error; $\Delta^{\text{S3}}$ absorbs embodied hardware, building embodied, FERA, upstream transport, and the other Scope-3 categories of \S\ref{sec:sota}.
-Where the provider reports finer-grained sub-categories --- and where the operator finds it useful --- the same definition (Eq.~\ref{eq:residual-general}) admits further splitting; we will use a minimal split of $\Delta^{\text{S3}}$ into FERA, embodied IT, and non-IT (building, freight, end-of-life) below.
+Where the provider reports finer-grained sub-categories (and where the operator finds it useful) the same definition (Eq.~\ref{eq:residual-general}) admits further splitting; we will use a minimal split of $\Delta^{\text{S3}}$ into FERA, embodied IT, and non-IT (building, freight, end-of-life) below.
 
-\paragraph{Definition.}
+\parag{Reconciliation}
 Reconciliation is performed per slice $(s,r)$.
 Each residual component $k$ is allocated across workloads by a weight $w^{k}_{i,s,r}$ satisfying $\sum_i w^{k}_{i,s,r} = 1$, and the per-workload metric is
 \begin{equation}
@@ -397,6 +397,7 @@ Each residual component $k$ is allocated across workloads by a weight $w^{k}_{i,
 The first inner term is the bottom-up operational footprint; the second is the workload's share of each residual component under the chosen weight.
 The choice of $w^{k}$ is left open by Eq.~\ref{eq:rsci}: different weight families yield metrics that incentivise different operator behavior, while preserving reconciliation by construction (Eq.~\ref{eq:reconcile}).
 The next subsection makes this design surface explicit.
+\todo{shorten}
 
 \subsection{Allocating the Residual}
 \label{sec:rsci-design}
