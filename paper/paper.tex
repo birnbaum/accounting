@@ -7,12 +7,11 @@
 \usepackage{pifont}
 \usepackage{threeparttable}
 \usepackage[referable]{threeparttablex}
-% Author notes — \todo defaults to inline to avoid two-column margin collisions.
-% Toggle off for camera-ready with \usepackage[disable]{todonotes}.
-\usepackage[textsize=footnotesize]{todonotes}
 \setlength{\marginparwidth}{2cm}
-\let\oldtodo\todo
-\renewcommand{\todo}[2][inline]{\oldtodo[#1]{#2}}
+
+\usepackage[textsize=footnotesize]{todonotes}
+\presetkeys{todonotes}{inline,backgroundcolor=yellow}{}
+
 \renewcommand\theadfont{\bfseries}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \newcolumntype{C}{>{\centering\arraybackslash}X}
@@ -167,7 +166,6 @@ This means that improving \SCI or \OSCI does not necessarily move the audited nu
 \section{State of the Art in Cloud GHG Reporting}
 \label{sec:sota}
 
-\todo[inline]{explain MBM and LBM, and why they are relevant to the residual.}
 
 For a per-workload metric to reconcile with a provider's report (\S\ref{sec:background}), such a report must first exist --- and, encouragingly, it increasingly does.
 Under regulatory pressure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero}, cloud providers have moved beyond corporate sustainability reports to \emph{customer-facing} carbon tools that attribute emissions to individual tenants, and several publish methodologies detailed enough to reproduce.
@@ -696,6 +694,8 @@ That is a separate problem.
 \endgroup
 
 \todo{Tenant vs customer terminology}
+\todo{explain MBM and LBM, and why they are relevant to the residual.}
+
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
