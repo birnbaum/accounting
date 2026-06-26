@@ -166,29 +166,27 @@ This means that improving \SCI or \OSCI does not necessarily move the audited nu
 \section{State of the Art in Cloud GHG Reporting}
 \label{sec:sota}
 
+% For a per-workload metric to reconcile with a provider's report, such a report must first exist---and, encouragingly, it increasingly does.
+Under increasing regulatory presure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero}, cloud providers have been moving beyond corporate sustainability reports to \emph{customer-facing} carbon tools that attribute emissions to individual tenants, enabling Scope-3 reporting from cloud usage.
+We surveyed 48 providers in May~2026 (full enumeration and disclosure classification in Appendix~\ref{app:inventory}): twelve ship a first-party, per-customer dashboard, and many publish methodologies detailed enough to detailed enough to understand and evaluate the reporting boundaries and allocation rules.
 
-For a per-workload metric to reconcile with a provider's report (\S\ref{sec:background}), such a report must first exist --- and, encouragingly, it increasingly does.
-Under regulatory pressure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero}, cloud providers have moved beyond corporate sustainability reports to \emph{customer-facing} carbon tools that attribute emissions to individual tenants, and several publish methodologies detailed enough to reproduce.
-We surveyed 48 providers in May~2026 (full enumeration and disclosure classification in Appendix~\ref{app:inventory}): twelve ship a first-party, per-customer dashboard, and eight of those document compute in enough detail to formalize.
-This section distills these methodologies into a single computational model of the customer-facing number --- and, with it, the notation for the top-down report that \S\ref{sec:rsci} reconciles against.
-We accentuate the positive here and defer our grievances --- the coarse cadence, the blind spots, the silent allocations --- to \S\ref{sec:practice}; for the span of one section, with roughly one provider in four now giving customers a carbon number, we choose to see the glass as a quarter full.
-
-\paragraph{The reported number.}
-Over a reporting period, a provider attributes its measured datacenter emissions to a \emph{reporting slice} indexed by service $s$ and region $r$ --- the finest granularity it discloses, typically per month --- and reports, following the GHG Protocol's three scopes, the per-scope slice totals $C^{\downarrow\text{S1}}_{s,r}$, $C^{\downarrow\text{S2}}_{s,r}$, and $C^{\downarrow\text{S3}}_{s,r}$.
-The ``$\downarrow$'' marks a \emph{top-down} quantity --- a number the provider measures and the customer reads off --- as opposed to the bottom-up quantities a tenant estimates (\S\ref{sec:rsci}).
+\parag{High-level methodology}
+For this section, we focussed on the methodologies of the three largest providers (AWS, GCP, Azure), that all have comparable per-customer dashboards and publish detailed methodologies, to define a common notation for top-down reports.
+Over a reporting period, a provider attributes its measured datacenter emissions to a \emph{reporting slice} indexed by service $s$ and region $r$ (the finest granularity it discloses, typically per month) and reports, following the GHG Protocol's three scopes, the per-scope slice totals $\mathtt{C}^{\downarrow\mathtt{S1}}_{s,r}$, $\mathtt{C}^{\downarrow\mathtt{S2}}_{s,r}$, and $\mathtt{C}^{\downarrow\mathtt{S3}}_{s,r}$.
+The ``$\downarrow$'' marks a \emph{top-down} quantity, a number the provider measures and allocates, as opposed to the bottom-up quantities a tenant estimates.
 The customer tool allocates each slice total to an account $a$ in proportion to that account's share of an activity unit:
 \begin{equation}
-\hat C^{k}_{a} \;=\; \sum_{s,r}\, \frac{u_{a,s,r}}{\sum_{a'} u_{a',s,r}}\; C^{\downarrow k}_{s,r},
-\qquad k\in\{\text{S1},\text{S2},\text{S3}\},
+\mathtt{\hat C}^{k}_{a} \;=\; \sum_{s,r}\, \frac{u_{a,s,r}}{\sum_{a'} u_{a',s,r}}\; \mathtt{C}^{\downarrow k}_{s,r},
+\qquad k\in\{\mathtt{S1},\mathtt{S2},\mathtt{S3}\},
 \label{eq:provider-alloc}
 \end{equation}
-where $u_{a,s,r}$ tallies an activity unit --- vCPU-hours, instance-hours, GB-month, bytes, CPU-time, or \$-spend.
-Equivalently, the tool publishes a per-unit factor $f_{s,r}=C^{\downarrow}_{s,r}/\sum_{a}u_{a,s,r}$ and charges the account $\sum_{s,r}u_{a,s,r}\,f_{s,r}$.
-The slice totals $C^{\downarrow k}_{s,r}$ are the anchor the residual bridge of \S\ref{sec:rsci} binds to; Eq.~\ref{eq:provider-alloc} is the provider's \emph{own} allocation of that anchor across customers --- and, as \S\ref{sec:rsci} shows, only one of many admissible choices.
+where $u_{a,s,r}$ tallies an activity unit, like vCPU-hours, instance-hours, GB-month, bytes, CPU-time, or \$-spend.
+Equivalently, the tool publishes a per-unit factor $f_{s,r}=\mathtt{C}^{\downarrow}_{s,r}/\sum_{a}u_{a,s,r}$ and charges the account $\sum_{s,r}u_{a,s,r}\,f_{s,r}$.
+The slice totals $\mathtt{C}^{\downarrow k}_{s,r}$ are the anchor the residual bridge of \S\ref{sec:rsci} binds to; Eq.~\ref{eq:provider-alloc} is the provider's \emph{own} allocation of that anchor across customers --- and, as \S\ref{sec:rsci} shows, only one of many admissible choices.
 
 \paragraph{What the slice total contains.}
 The published methodologies build each slice total from an operational and an embodied part spanning the three scopes.
-Scope~2 folds whole-facility electricity, $C^{\downarrow\text{S2}}_{s,r} = \mathrm{PUE}_r\cdot E^{\text{IT}}_{s,r}\cdot I_r$: the IT energy $E^{\text{IT}}$ scaled by power-usage effectiveness $\mathrm{PUE}$ and multiplied by the region's grid intensity $I_r$.
+Scope~2 folds whole-facility electricity, $\mathtt{C}^{\downarrow\mathtt{S2}}_{s,r} = \mathrm{PUE}_r\cdot \mathtt{E}^{\text{IT}}_{s,r}\cdot \mathtt{I}_r$: the IT energy $\mathtt{E}^{\text{IT}}$ scaled by power-usage effectiveness $\mathrm{PUE}$ and multiplied by the region's grid intensity $\mathtt{I}_r$.
 Scope~3 folds amortized cradle-to-gate hardware (embodied LCA over an assumed lifetime) and, provider depending, building embodied, upstream fuel-and-transmission losses (FERA), freight, and end-of-life.
 Scope~1 folds on-site combustion (backup diesel) and refrigerant leakage.
 This decomposition is the anatomy of the residual: each term is a component a bottom-up model either estimates (operational electricity) or cannot see (PUE overhead, embodied, FERA), and \S\ref{sec:rsci} defines one residual per term.
