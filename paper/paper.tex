@@ -151,16 +151,15 @@ To capture the missing hardware lever, the Software Carbon Intensity (\SCI) spec
 \]
 where $\M$ is the workload's amortized share of the hardware's embodied carbon, allocated according to its reserved time and resource share as described by Gupta et al.~\cite{gupta2022act}.
 
-However, Bashir et al.~\cite{bashir2024} show that \SCI is subject to a \emph{sunk-carbon fallacy}: because \M is amortized flat over the hardware's expected lifespan, \M/\R does not respond to declining hardware efficiency. As a server ages and its energy use \E rises, the embodied component remains unchanged, so a scheduler minimizing \SCI can drift toward older, less efficient hardware, increasing total carbon emissions.
-They therefore recommend using \OSCI for operational decisions such as scheduling and scaling. 
-We argue, however, that \OSCI is also incomplete: it does not reward reserving less hardware (beyond the energy savings), purchasing lower-embodied hardware, or avoiding peak-hour demand, which ultimately determines when additional capacity must be procured.
+However, Bashir et al.~\cite{bashir2024} show that \SCI is subject to a \emph{sunk-carbon fallacy}: because \M is amortized flat over the hardware's expected lifespan, \M/\R does not respond to declining hardware efficiency. As a server ages and its energy use \E rises, the embodied component (a sunk cost) remains unchanged, so a scheduler minimizing \SCI can drift toward older, less efficient hardware, increasing total carbon emissions.
+They therefore recommend sticking to \OSCI for operational decisions such as scheduling and scaling. 
+We argue, however, that \OSCI is incomplete: it does not reward reserving less hardware (beyond the energy savings), purchasing lower-embodied hardware, or avoiding peak-hour demand, which ultimately determines when additional capacity must be procured.
 
 Moreover, independent of the embodied term, \emph{any bottom-up-only metric is structurally blind to provider-side overheads} that are not explicitly modeled, and therefore cannot reconcile to the provider's top-down GHG report.
-This means that improving \SCI or \OSCI does not necessarily move the audited number, and vice versa.
-% This gap is empirical: Jacquet et al.~\cite{jacquet2025cinergy} find per-VM provider attribution can under-estimate operational CO$_2$ by up to 3$\times$ for high-utilization workloads on production OVHcloud servers, since static quantity-based allocation misses the logarithmic load-dependence of server efficiency.\todo{verify again}
+This means that improving \SCI or \OSCI does not necessarily move the audited number, and vice versa.\todo{it could be made clearer why this is an issue. We must make clear that bottom-up are structurally insufficient to reconcile to top-down, and that this is a problem for trust and adoption.}
 
 
-\section{State of the Art in Cloud Carbon Accounting}
+\section{State of the Art in Cloud GHG Reporting}
 \label{sec:sota}
 
 \todo[inline]{explain MBM and LBM, and why they are relevant to the residual.}
@@ -495,7 +494,8 @@ flow through $\mu_{s,r}$, the providers expose nothing utilisation-shaped, there
 the residual swallows the signal. Reconsider promotion to its own section if
 experiments show this is the strongest finding.}
 % TODO: revise after experiments
-Aggregating the per-provider methodology details from \S\ref{sec:sota} along engineering levers gives the matrix in Table~\ref{tab:levers}.
+Aggregating the per-provider methodology details from \S\ref{sec:sota} along engineering levers gives the matrix in Table~\ref{tab:levers
+}.
 The pattern is asymmetric: compute-efficiency improvements (utilisation, perf tuning) are \emph{structurally invisible} across all three Big-3 providers because none of their customer surfaces reflects compute utilisation~\cite[\S15]{schneider-mattia-2024}.
 Right-sizing reduces vCPU-hours and therefore moves all three; spatial shifting works on AWS and GCP but breaks on Azure due to the LBM=0 export; temporal shifting only approximates on GCP via its hourly carbon-free-energy percentage and is structurally blocked elsewhere.
 
@@ -600,6 +600,8 @@ A caveat: current carbon accounting is imperfect and does not always incentivize
 That is a separate problem.
 \RSCI is defined against the \emph{structure} of GHG-Protocol-style accounting, not any particular vintage, so future revisions slot into the same framework.
 
+\todo[inline]{Tenant vs customer terminology}
+
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
 
@@ -625,7 +627,7 @@ URLs last verified 2026-05-26.
 \paragraph{Status taxonomy.} Five mutually-exclusive disclosure clusters:
 \begin{itemize}\setlength{\itemsep}{1pt}
 \item \statusA{Per-customer tool}: first-party dashboard or API exposing workload-level emissions per tenant.
-\item \statusB{Assured GHG report}: Scope~1/2/3 corporate inventory with external assurance --- SBTi-validated, third-party-audited, CSRD-baselined, or ISO~14064-certified. The corporate number is reliable enough to inherit downstream as Scope~3.
+\item \statusB{Assured GHG report}: Scope~1/2/3 corporate inventory with external assurance (SBTi-validated, CSRD-baselined, ISO~14064-certified, or otherwise third-party-audited). The corporate number is reliable enough to inherit downstream as Scope~3.
 \item \statusB{Self-reported}: published Scope~1/2/3 inventory, \emph{or} substantive quantitative operational disclosure (per-DC carbon intensity, PUE, energy mix, EMAS environmental statement), without external GHG assurance.
 \item \statusC{Marketing claim}: forward net-zero pledge, ``100\,\% renewable'' / REC-backed statement, or qualitative sustainability strategy, but no quantified disclosure.
 \item \statusC{No disclosure}: nothing surfaced through our search.
