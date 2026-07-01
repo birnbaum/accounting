@@ -137,6 +137,52 @@ Towards this, we make the following contributions:
 % The stated intent is a single per-workload number that ranges from a function call to a datacenter, is real-time sensitive, and is meant to drive engineering optimisation.
 
 
+\section{State of the Art in Cloud Carbon Reporting}
+\label{sec:sota}
+
+Under regulatory pressure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero}, cloud providers have moved beyond annual corporate sustainability reports toward customer-facing carbon tools that attribute emissions to individual tenants, enabling Scope-3 accounting for cloud usage.
+We surveyed 48 cloud service providers in May~2026 (full enumeration and disclosure classification in Appendix~\ref{app:inventory}): twelve ship a first-party, per-customer dashboard, and most of these publish methodologies detailed enough to evaluate their reporting boundaries and allocation rules.
+
+In this section, we focus on the three largest providers (AWS, GCP, and Azure) which offer comparable per-customer dashboards and detailed public methodologies.
+
+\parag{How hyperscalers report a customer's footprint}
+Despite differing in detail, the three hyperscalers follow the same two steps.
+
+First, they measure their total datacenter emissions over a reporting period and decompose them along the GHG Protocol's three scopes: 
+direct emissions (Scope~1), indirect emissions from purchased electricity (Scope~2), and all other indirect emissions across the value chain, including embodied emissions from hardware (Scope~3).
+
+Second, they allocate this total to each tenant in proportion to that tenant's share of an activity unit.
+AWS uses instance-hours, and equivalent revenue for services without dedicated server racks~\cite{aws-ccft-model3}; GCP uses per-SKU usage (vCPU-hours, GiB-months, etc), distributing each product's energy across its SKUs in proportion to list price~\cite{schneider-mattia-2024}; Azure uses metered compute, storage, and data-transfer time~\cite{azure-methodology-2026}.
+None of the providers actuall use measured/estimated energy as an allocation key.
+As a result, two identical VMs of the same type and duration, one idle and one fully loaded, are attributed the same emissions.
+\todo{maybe tell this later}
+
+For all providers, the reported numbers are coarse: the report contains Scope 1, 2, and 3 totals per
+$$\text{project} \;\times\; \text{service} \;\times\; \text{region} \;\times\; \text{month},$$
+published 14 to 21 days after the period closes.
+
+\paragraph{Scope 1} is usually small, covering only on-site combustion (like backup diesel) and refrigerant leakage. It remains negligible for most tenants today, though the increasing deployment of behind-the-meter gas generation at datacenters may change this in future.
+
+\paragraph{Scope 2} covers the tenant's allocated share of the datacenter's monthly electricity bill multiplied by the region's location-based grid carbon intensity. 
+GCP is the only provider to use hourly carbon intensity in customer-facing reporting; AWS and Azure use monthly averages.
+A bottom-up model can estimate the electricity consumed by a workload's hardware, with facility overhead approximated by multiplying by the datacenter's power usage effectiveness (PUE). However, actual overhead is not observable from the tenant side and varies with, for instance, seasonal cooling load. 
+Idle power is even less visible: a bottom-up model captures only a workload's own draw, not the power of reserved but underused capacity, so energy saved by consolidating load onto fewer active machines is invisible to such estimates.
+
+The GHG Protocol's \emph{dual reporting} requirement for Scope~2 mandates both a location-based figure and a market-based figure net of procurement instruments like power purchase agreements (PPAs) and renewable energy certificates (RECs), which in practice often moves the reported number to near zero. 
+Since engineering teams have no control over the provider's procurement choices, the market-based figure is not actionable for workload optimization---which is why \SCI explicitly excludes it~\cite{sci-spec} and why we only consider location-based figure.
+
+\todo{should we move details and examples to a later section?}
+
+\paragraph{Scope~3} covers amortized cradle-to-gate hardware and, depending on the provider, building embodied carbon, upstream fuel-and-transmission losses (FERA), freight, and end-of-life; the set of categories included differs across the three providers (\S\ref{sec:practice}).
+Each term is a component that a bottom-up model either estimates (operational electricity) or cannot observe (PUE overhead, embodied carbon, FERA).
+
+\todo{rework}
+
+These methodologies provide what \S\ref{sec:background} found bottom-up metrics to lack: a per-scope number, produced by a public and decomposable procedure, against which a per-workload estimate can be measured.
+\S\ref{sec:rsci} builds \RSCI on this number.
+That it is monthly rather than hourly, blind to compute utilization, and in places allocated by revenue rather than energy does not by itself prevent reconciliation; it only bounds how far the bottom-up residual can be compressed, which we examine in \S\ref{sec:practice}.
+
+
 
 \section{The Issue with Bottom-Up Carbon Metrics}
 \label{sec:background}
@@ -161,70 +207,13 @@ They therefore recommend sticking to \OSCI for operational decisions such as sch
 We argue, however, that \OSCI is incomplete: it does not reward reserving less hardware (beyond the energy savings), purchasing lower-embodied hardware, or avoiding peak-hour demand, which ultimately determines when additional capacity must be procured.
 
 Moreover, independent of the embodied term, \emph{any bottom-up-only metric is structurally blind to provider-side overheads} that are not explicitly modeled, and therefore cannot reconcile to the provider's top-down GHG report.
-This means that improving \SCI or \OSCI does not necessarily move the audited number, and vice versa.\todo{it could be made clearer why this is an issue. We must make clear that bottom-up are structurally insufficient to reconcile to top-down, and that this is a problem for trust and adoption.}
+This means that improving \SCI or \OSCI does not necessarily move the audited number, and vice versa.
+\todo{it could be made clearer why this is an issue: bottom-up-only are structurally insufficient to reconcile to top-down, and that this is a problem for trust and adoption. We can also give provider side overhead examples here: PUE, idle and over-provisioned capacity, upstream fuel-and-transmission losses, building embodied carbon, refrigerant leakage, water, and end-of-life}
+
+\todo{Maybe flip Secs 2 and 3: first show the SOTA in cloud carbon reporting, then show the gaps that bottom-up metrics cannot close.}
 
 
-\section{State of the Art in Cloud GHG Reporting}
-\label{sec:sota}
 
-% For a per-workload metric to reconcile with a provider's report, such a report must first exist---and, encouragingly, it increasingly does.
-Under increasing regulatory presure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero}, cloud providers have been moving beyond corporate sustainability reports to \emph{customer-facing} carbon tools that attribute emissions to individual tenants, enabling Scope-3 reporting from cloud usage.
-We surveyed 48 providers in May~2026 (full enumeration and disclosure classification in Appendix~\ref{app:inventory}): twelve ship a first-party, per-customer dashboard, and many publish methodologies detailed enough to detailed enough to understand and evaluate the reporting boundaries and allocation rules.
-
-\parag{High-level methodology}
-For this section, we focussed on the methodologies of the three largest providers (AWS, GCP, Azure), that all have comparable per-customer dashboards and publish detailed methodologies, to define a common notation for top-down reports.
-Over a reporting period, a provider attributes its measured datacenter emissions to a \emph{reporting slice} indexed by service $s$ and region $r$ (the finest granularity it discloses, typically per month) and reports, following the GHG Protocol's three scopes, the per-scope slice totals $\mathtt{C}^{\downarrow\mathtt{S1}}_{s,r}$, $\mathtt{C}^{\downarrow\mathtt{S2}}_{s,r}$, and $\mathtt{C}^{\downarrow\mathtt{S3}}_{s,r}$.
-The ``$\downarrow$'' marks a \emph{top-down} quantity, a number the provider measures and allocates, as opposed to the bottom-up quantities a tenant estimates.
-The customer tool allocates each slice total to an account $a$ in proportion to that account's share of an activity unit:
-\begin{equation}
-\mathtt{\hat C}^{k}_{a} \;=\; \sum_{s,r}\, \frac{u_{a,s,r}}{\sum_{a'} u_{a',s,r}}\; \mathtt{C}^{\downarrow k}_{s,r},
-\qquad k\in\{\mathtt{S1},\mathtt{S2},\mathtt{S3}\},
-\label{eq:provider-alloc}
-\end{equation}
-where $u_{a,s,r}$ tallies an activity unit, like vCPU-hours, instance-hours, GB-month, bytes, CPU-time, or \$-spend.
-Equivalently, the tool publishes a per-unit factor $f_{s,r}=\mathtt{C}^{\downarrow}_{s,r}/\sum_{a}u_{a,s,r}$ and charges the account $\sum_{s,r}u_{a,s,r}\,f_{s,r}$.
-The slice totals $\mathtt{C}^{\downarrow k}_{s,r}$ are the anchor the residual bridge of \S\ref{sec:rsci} binds to; Eq.~\ref{eq:provider-alloc} is the provider's \emph{own} allocation of that anchor across customers --- and, as \S\ref{sec:rsci} shows, only one of many admissible choices.
-
-\paragraph{What the slice total contains.}
-The published methodologies build each slice total from an operational and an embodied part spanning the three scopes.
-Scope~2 folds whole-facility electricity, $\mathtt{C}^{\downarrow\mathtt{S2}}_{s,r} = \mathrm{PUE}_r\cdot \mathtt{E}^{\text{IT}}_{s,r}\cdot \mathtt{I}_r$: the IT energy $\mathtt{E}^{\text{IT}}$ scaled by power-usage effectiveness $\mathrm{PUE}$ and multiplied by the region's grid intensity $\mathtt{I}_r$.
-Scope~3 folds amortized cradle-to-gate hardware (embodied LCA over an assumed lifetime) and, provider depending, building embodied, upstream fuel-and-transmission losses (FERA), freight, and end-of-life.
-Scope~1 folds on-site combustion (backup diesel) and refrigerant leakage.
-This decomposition is the anatomy of the residual: each term is a component a bottom-up model either estimates (operational electricity) or cannot see (PUE overhead, embodied, FERA), and \S\ref{sec:rsci} defines one residual per term.
-
-\paragraph{Four documented choices.}
-Where methodologies differ, they differ on four explicit choices: (A1)~the activity unit $u$; (A2)~how the factor $f$ is derived --- internal power telemetry bucketed to SKUs, component-LCA $\times$ hardware inventory, or list-price / revenue proportional; (A3)~whether embodied carbon is bundled into $f$, carried as a separate LCA term, or excluded; and (A4)~how idle and shared-capacity overhead is allocated.
-Table~\ref{tab:methodologies} places the eight compute-covering tools on these axes.
-The methodological detail is real: GCP's allocation is peer-reviewed~\cite{schneider-mattia-2024}, AWS's Model~3.0 specifies rack-level allocation equations~\cite{aws-ccft-model3}, and OVHcloud and Scaleway publish per-component LCA factors.
-
-\begin{table}[t]
-\centering
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\caption{The eight per-customer tools that cover compute, on the documented methodology axes (A1~activity unit, A2~factor source, A3~embodied treatment) plus customer-facing cadence. Per-provider detail and the full 48-provider survey are in Appendix~\ref{app:inventory}.}
-\label{tab:methodologies}
-\begin{tabularx}{\columnwidth}{@{}l L L l l@{}}
-\toprule
-Provider & Activity unit (A1) & Factor source (A2) & Embodied (A3) & Cadence \\
-\midrule
-AWS      & NIH, GB-month            & meter$\to$bucket; revenue   & bundled        & monthly \\
-GCP      & vCPU-h, GiB-month        & meter$\to$bucket; list-price & bundled       & monthly \\
-Azure    & usage-time               & meter$\to$bucket (opaque)   & bundled        & monthly \\
-Oracle   & kWh / \$-spend           & meter$\to$bucket / spend    & excluded       & monthly \\
-IBM      & per-service kWh          & meter$\to$bucket            & excluded$^{*}$ & mo/qtr/yr \\
-Alibaba  & resource sales           & meter$\to$bucket            & excluded       & --- \\
-OVHcloud & server-h, inst-h         & LCA $\times$ inventory      & separate term  & monthly \\
-Scaleway & per-product (actual CPU) & LCA $\times$ inventory      & separate term  & daily \\
-\bottomrule
-\end{tabularx}
-\\[2pt]
-{\scriptsize $^{*}$ IBM's v5 (Apr~2026) claims embodied and end-of-life via Cloud Carbon Footprint; not yet independently documented.}
-\end{table}
-
-\paragraph{From methodology to anchor.}
-Together these methodologies supply precisely what \S\ref{sec:background} found bottom-up metrics lack: a per-scope, per-slice top-down number $C^{\downarrow k}_{s,r}$, produced by a public and decomposable procedure, against which a per-workload estimate can be measured.
-\S\ref{sec:rsci} builds \RSCI on this object.
-That the number is monthly rather than hourly, blind to compute utilization, and in places allocated by revenue rather than physics does not block reconciliation \emph{by construction} --- it only bounds how far the residual can be compressed, the subject of \S\ref{sec:practice}.
 
 \iffalse % ===== OLD SEC 3 --- preserved for salvage (provider quotes -> Sec 6, Scope-3 coverage table -> appendix) =====
 
