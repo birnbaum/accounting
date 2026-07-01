@@ -339,35 +339,29 @@ Bottom-up engines such as BoaviztAPI~\cite{simon2024boaviztapi} and Cinergy~\cit
 % NOTE: framing wrapper depends on §5 experiments. Math is committed; opening list
 % of "three gaps closed" follows the §2 critique structure.
 
-We introduce \emph{Reconcilable \SCI} (\RSCI), a class of per-workload metrics designed
-to close three gaps identified in \S\ref{sec:background} and \S\ref{sec:sota}:
-(i) the sunk-carbon fallacy of \SCI;
-(ii) the loss of embodied-carbon incentives in \OSCI --- and with them the
-peak-shaving / hardware-procurement signal that embodied carbon should provide;
-(iii) the disconnect between every \SCI variant and the cloud provider's
-top-down carbon report.
-\RSCI does so by anchoring a bottom-up energy model to the provider's per-scope
-top-down report via residual bridges, and by allocating each residual component
-across workloads with a weight chosen to match its physical driver. The choice of
-weight is itself a design surface --- the central vision contribution of this
-paper.
+We introduce \emph{Reconcilable \SCI} (\RSCI), a class of actionable, per-workload metrics designed to close three gaps:
+\begin{enumerate}
+  \item the sunk-carbon fallacy of \SCI
+  \item the loss of embodied-carbon incentives in \OSCI
+  \item the disconnect between every bottom-up-only \SCI variant and the cloud provider's top-down carbon report
+\end{enumerate}
+\RSCI does so by anchoring a bottom-up energy model to the provider's per-scope top-down report via residual bridges, and by allocating each residual component across workloads with a weight chosen to match its physical driver.
 
 \parag{Setup}
-Let $i$ index \emph{workload instances} --- one evaluation of a workload over period
-$t_i$. The provider issues a top-down report broken into Scope-1, Scope-2, and
-Scope-3 totals at the level of a \emph{reporting slice} indexed by service $s$ and
-region $r$ (the finest granularity providers publish: per-month, per-project, per-service).
+Let $i$ index \emph{workload instances}: one evaluation of a workload over period $t_i$. 
+The provider issues a top-down report broken into Scope-1, Scope-2, and Scope-3 totals at the level of a \emph{reporting slice} indexed by service $s$ and region $r$ (the finest granularity providers publish: per-month, per-project, per-service).
+\todo{Revise notation.}
 Let $C_{s,r}^{\downarrow\text{S1}}$, $C_{s,r}^{\downarrow\text{S2}}$, and
 $C_{s,r}^{\downarrow\text{S3}}$ denote the reported per-scope emissions of slice $(s,r)$.
 
 \parag{Bottom-up energy}
 For workload $i$ in slice $(s,r)$ we estimate energy from per-resource quantities:
 \begin{equation}
-E_{i,s,r} \;=\; \sum_{p} q_p \cdot \varepsilon_p \quad [\text{Wh}],
+E_{i,s,r} \;=\; \sum_{p} q_p \cdot \varepsilon_p,
 \label{eq:bu-energy}
 \end{equation}
 where $p$ indexes resource types (vCPU-hours, GPU-hours, GB-hours of storage, I/O ops, network GB) and $\varepsilon_p$ is a per-type energy coefficient.
-Concrete instantiations of $\varepsilon_p$ are available from open-data projects such as BoaviztAPI~\cite{simon2024boaviztapi} (per-component LCA factors and CPU power curves) and per-VM deterministic models such as Cinergy~\cite{jacquet2025cinergy} (production-validated on OVHcloud); \RSCI is orthogonal to the choice of bottom-up engine.
+Concrete instantiations of $\varepsilon_p$ are available from open-data projects such as BoaviztAPI~\cite{simon2024boaviztapi} (per-component LCA factors and CPU power curves) and per-VM deterministic models such as Cinergy~\cite{jacquet2025cinergy} (production-validated on OVHcloud). \RSCI is orthogonal to the choice of bottom-up engine.
 Unobservable resource types simply enlarge the residuals defined below.
 
 \parag{Residual bridges}
@@ -501,7 +495,7 @@ Its precision is bounded by three axes: bottom-up model quality (coverage and ac
 As each improves, $\Delta$ shrinks and the residual-allocation choice matters less; reconciliation (Eq.~\ref{eq:reconcile}) holds at any level of data fidelity and under any admissible weight choice.
 The next section confronts the theory with today's provider reports.
 
-\section{\RSCI in Practice: A Controlled Demonstration}
+\section{Evaluation}
 \label{sec:demo}
 
 \outdatedbanner
@@ -642,7 +636,7 @@ A cloud-specific gold standard must close these and require independent assuranc
 % refinements, (iv) \TSCI parallel, (v) multi-tenant/serverless,
 % (vi) energy-coefficient standardisation.
 
-\paragraph{Beyond internal scheduling: user reporting and customer Scope-3.}
+\paragraph{User reporting and customer Scope-3.}
 \S\ref{sec:rsci} frames \RSCI as an operator- and scheduler-facing signal, but reconciliation by construction (Eq.~\ref{eq:reconcile}) enables two further roles worth flagging.
 First, \RSCI is the only metric in the family that can be \emph{honestly reported to end users} of a cloud-hosted service: \OSCI shows a slice of operational electricity decoupled from the embodied, peak-driven, and overhead costs the user's request actually triggers, whereas an \RSCI number reflects all of these and therefore admits behavioral adaptation (load-shifting, request shaping, volume reduction) on grounds that match what the provider will ultimately report.
 A practical concern is routing-invariance --- two identical user requests should not get different numbers because of operator placement decisions the user cannot see.
@@ -695,6 +689,7 @@ That is a separate problem.
 
 \todo{Tenant vs customer terminology}
 \todo{explain MBM and LBM, and why they are relevant to the residual.}
+\todo{GHG vs carbon vs CO2e terminology.}
 
 
 \bibliographystyle{ACM-Reference-Format}
@@ -744,7 +739,7 @@ URLs last verified 2026-05-26.
 AWS                       & US      & \statusA{Per-customer tool}        & \href{https://aws.amazon.com/sustainability/tools/console/}{aws.amazon.com/sustainability/tools/console/} \\
 Alibaba Cloud             & China   & \statusA{Per-customer tool}        & \href{https://alibabacloud.com/en/product/energy-expert}{alibabacloud.com/en/product/energy-expert} \\
 Azure                     & US      & \statusA{Per-customer tool}        & \href{https://microsoft.com/en-us/sustainability/emissions-impact-dashboard}{microsoft.com/en-us/sustainability/emissions-impact-dashboard} \\
-GCP                       & US      & \statusA{Per-customer tool}        & \href{https://cloud.google.com/carbon-footprint}{cloud.google.com/carbon-footprint} \\
+GCP                       & US      & \statusA{Per-customer tool}        & \href{https://docs.cloud.google.com/carbon-footprint/docs/methodology}{docs.cloud.google.com/carbon-footprint/docs/methodology} \\
 IBM Cloud                 & US      & \statusA{Per-customer tool}        & \href{https://ibm.com/cloud/carbon-calculator}{ibm.com/cloud/carbon-calculator} \\
 Oracle (OCI)              & US      & \statusA{Per-customer tool}        & \href{https://docs.oracle.com/iaas/Content/General/Concepts/emissions-management.htm}{docs.oracle.com/iaas/Content/General/Concepts/emissions-management.htm} \\
 Huawei Cloud              & China   & \statusB{Assured GHG}              & \href{https://huawei.com/en/sustainability}{huawei.com/en/sustainability} \\
