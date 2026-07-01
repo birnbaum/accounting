@@ -23,7 +23,7 @@
 \newcommand{\parag}[1]{\vspace{2mm}\noindent\textbf{#1.}\hspace{2mm}}
 
 % Draft scaffolding: mark stale, pending-rewrite content in blue. Remove for camera-ready.
-\newcommand{\outdatedbanner}{\par\noindent\textcolor{blue}{\textbf{[OUTDATED --- pending rewrite; ignore in this pass.]}}\par\medskip}
+\newcommand{\outdatedbanner}{\par\noindent\textcolor{blue}{\textbf{[OUTDATED]}}\par\medskip}
 
 
 % Metrics
@@ -69,16 +69,16 @@
 
 \begin{abstract}
 There exist two largely separate approaches to quantifying the carbon footprint of cloud workloads.
-Bottom-up metrics such as Software Carbon Intensity (\SCI) provide real-time, actionable signals for energy-efficient and carbon-aware optimization, but are blind to provider-side overheads.
-Top-down corporate GHG reports and customer-facing dashboards provide a comprehensive view of the tenant's carbon footprint from cloud usage, but are coarse, delayed, and methodologically opaque.
+Bottom-up metrics such as Software Carbon Intensity (\SCI) provide real-time signals for energy-efficient and carbon-aware optimization, but are blind to provider-side overheads.
+Top-down corporate carbon reports and customer-facing dashboards provide a comprehensive view of the tenant's carbon footprint from cloud usage, but are coarse, delayed, and methodologically opaque.
 Because the two approaches differ in scope and reporting frequency, the current state of the art treats them as decoupled: bottom-up metrics for optimization, top-down numbers for corporate disclosure.
 
-We argue that although the two signals can never be identical, \emph{they must be reconcilable}. 
-If teams cannot trace their bottom-up improvements through to the provider's top-down report, they will lose trust in both. 
-In this paper, we survey the state of the art in cloud carbon accounting and propose a vision for \RSCI: a metric that re-anchors a bottom-up energy estimate to the provider's per-scope, location-based report through a residual bridge that absorbs what the bottom-up model cannot capture. 
+We argue that although the two signals can never be identical, \emph{they should be reconcilable}. 
+If organizations cannot trace their bottom-up improvements through to the audited top-down report, they will lose trust in both metrics. 
+In this paper, we survey the state of the art in cloud carbon accounting and propose a vision for \RSCI: a metric that re-anchors a bottom-up energy estimate to the cloud provider's per-scope, location-based report through a residual bridge, which can be allocated to workloads in a way that incentivizes sustainable behavior.
 % \RSCI aligns the two signals by construction: Scheduling metrics contain provider-side overheads, and degrades gracefully when a provider does not yet ship reconciliation-grade data.
-We propose to treat the residual as a design surface: the choice of how to allocate it across workloads determines what the metric incentivizes, and can be used to induce peak-shaving and procurement-deferral behavior that no bottom-up-only metric can supply.
 %The residual can itself be allocated to workloads in ways that incentivize sustainable behavior---for example, penalizing demand peaks that force new hardware procurement---which no bottom-up-only metric can do.
+\RSCI reveals methodological gaps in current provider reporting and we set out concrete asks for closing them, so that future bottom-up metrics can be trusted to reflect real-world carbon reductions.
 \end{abstract}
 
 \maketitle
@@ -88,41 +88,42 @@ We propose to treat the residual as a design surface: the choice of how to alloc
 
 A major challenge in sustainable computing is quantifying the carbon footprint of workloads. 
 It is a prerequisite for determining the effectiveness of carbon-reduction strategies, for reporting to regulators and investors, and for making informed decisions about workload scheduling and adaptation. 
-Two largely separate approaches exist: bottom-up estimates of operational and embodied carbon, and top-down corporate greenhouse gas (GHG) reporting based on provider-wide measurements and downstream allocation to tenants.
+Two largely separate approaches exist: bottom-up estimates of operational and embodied carbon, and top-down corporate greenhouse gas (GHG) reporting. % based on provider-wide measurements and downstream allocation to tenants.
 
 \parag{Bottom-up metrics}
 Most carbon-aware computing research has focused on optimizing bottom-up metrics like operational carbon: the estimated emissions from a workload's marginal increase in energy consumption. 
 This signal is straightforward to obtain (workload energy $\times$ carbon intensity) but does, for example, not capture the embodied carbon of the hardware running the workload.
 To provide a more comprehensive metric, the Green Software Foundation proposed the Software Carbon Intensity (\SCI) specification~\cite{sci-spec}, codified as ISO/IEC~21031 in 2024, which expresses the carbon emitted per unit of work and folds in an embodied term.
 However, Bashir et al.~\cite{bashir2024} show that \SCI can produce perverse incentives for workload placement and scaling in practice. 
-Furthermore, every bottom-up metric, \SCI included, is bounded by what a tenant can observe and model.
+Furthermore, every bottom-up metric, \SCI included, can only capture what a tenant can observe and model.
 
 \parag{Top-down reporting}
-Due to regulatory pressure, cloud providers increasingly not only publish yearly sustainability reports but also customer-facing dashboards and reports that allow tenants to estimate and report their carbon footprint from cloud usage.
+Due to regulatory pressure, cloud providers increasingly offer customer-facing dashboards and reports enabling tenants to estimate and disclose their cloud carbon footprint in line with the GHG Protocol~\cite{ghg-protocol-corp}.
 While the reporting boundaries and allocation methods can differ significantly by provider, the general methodology is usually public and sometimes even externally audited.
-However, the reported numbers are highly aggregated: Most dashboards report only a single number per month, region, customer, and scope\footnote{The GHG Protocol distinguishes three scopes: Scope~1 covers direct emissions, Scope~2 covers indirect emissions from purchased electricity, and Scope~3 covers all other indirect emissions across the value chain.}, sometimes coarsely categorized further into, for example, ``Compute'', ``Storage'', and ``Other''.
-The reports are usually published about 14-21 days after the end of each month, which makes them comprehensive but unsuitable for any type of real-time optimization.
+However, the reported numbers are highly aggregated: 
+reports mostly contain a single number per month, region, customer, and GHG Protocol scope, sometimes coarsely categorized further into service types like ``Compute'', ``Storage'', and ``Other''.
+The reports are published about 14-21 days after the end of each month, which makes them comprehensive but unsuitable for any type of real-time optimization.
 
 \parag{The need for reconcilability}
 Today, when an engineering team improves the bottom-up metric of an internal workload, it is entirely unclear whether that improvement reaches the provider's top-down report.
 The two can diverge in both directions.
-The report contains overheads no bottom-up model can see without provider-internal data, such as PUE, idle and over-provisioned capacity, upstream fuel-and-transmission losses, building embodied carbon, refrigerant leakage, water, and end-of-life.
+The top-down report contains overheads no bottom-up model can cover without provider-internal data.
 And conversely, the levers a bottom-up metric does capture---such as lowering a VM's utilization and thus its power draw---may not move the reported number at all, if the provider allocates carbon to tenants by usage-hours or revenue instead of measured energy.
+\todo{maybe switch order and make this more general}
 
 The Green Software Foundation explicitly endorses this separation, distinguishing ``measuring for action'' (per-workload signals that drive engineering) from ``measuring for reporting'' (organization-level inventories that satisfy regulators) and arguing that the two serve different goals and should not be conflated~\cite{gsf-measuring}.
 \emph{We disagree.}
-Now that regulators require firm-level GHG disclosure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero} and carbon pricing is increasingly implemented, a per-workload metric whose gains never land in official reporting will not be funded, sustained, or trusted at scale.\footnote{We reconcile only against the location-based number. The GHG Protocol's \emph{dual reporting} gives Scope~2 both a location-based figure (grid-average intensity) and a market-based figure (net of procurement instruments like PPAs and RECs), which can differ by an order of magnitude. Market-based reflects instruments an engineering team can neither observe nor control, and that \SCI\ itself excludes~\cite{sci-spec}. Location-based is the basis both sides already share, and the GHG Protocol, ESRS~E1, and SBTi all mandate its disclosure, so a location-based gain still lands in audited reporting.}
+Now that regulators require firm-level GHG disclosure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero} and carbon pricing is increasingly implemented, a per-workload metric whose gains never land in official reporting will not be funded, sustained, or trusted at scale.
 
-\todo{the footnote should go into Sec 3}
 
 \parag{Contributions}
-We argue that bottom-up carbon metrics should always \emph{reconcile} with the provider's top-down GHG report by construction.
+We argue that bottom-up carbon metrics should \emph{reconcile} with the provider's top-down GHG report by construction.
 Towards this, we make the following contributions:
 
 \begin{itemize}\setlength{\itemsep}{1pt}
 \item We review the state of the art in cloud carbon accounting, including a survey of 48 providers and a lever-by-provider diagnostic matrix showing which engineering actions actually move which provider's reported number.
 \item We introduce \RSCI, which anchors a bottom-up energy estimate to the provider's per-scope, location-based report through a \emph{residual bridge}, so per-workload numbers sum to the reported total by construction.
-\item We show that the residual itself can be allocated across workloads in a way that incentivizes sustainable behavior, such as peak-shaving and procurement-deferral incentives.
+\item We show that the residual bridge can be allocated to workloads in a way that incentivizes sustainable behavior, such as peak-shaving and procurement-deferral incentives.
 \item We diagnose why \RSCI cannot yet be computed on today's provider reports, and set out concrete asks on provider reporting, customer-side estimation, and standards that would close the gap.
 \end{itemize}
 
