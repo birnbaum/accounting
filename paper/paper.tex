@@ -284,34 +284,6 @@ Headline numbers are therefore not directly comparable.
 Third-party assurance is similarly shallow: AWS's Apex statement covers Scope-3 Cat~2/3/4 \emph{methodology} only, GCP's Fraunhofer review covers the LCA methodology only, Azure's WSP statement covers the Scope-3 \emph{document} only; \textbf{no Big-3 customer tool has been audited end-to-end}, and only Alibaba's Energy~Expert carries third-party \emph{data} assurance (Bureau Veritas, ISO~14064-3) of the per-customer numbers.
 The temporal surface is similarly thin: \textbf{only Scaleway and Fastly publish daily customer-facing data}; the other nine, including all of the Big-3, are monthly; \emph{no} customer tool publishes hourly customer-allocated emissions, so any carbon-aware-scheduling claim today rests on signals outside the customer tool itself.
 
-\begin{table}[H]
-\centering
-\color{blue}
-\caption{Scope-3 category coverage in the Big-3 customer tools, by GHG-Protocol
-category. Cat~2 is split into IT hardware vs.\ building embodied. Lifetime amortization
-differs: AWS 6\,yr IT~+~50\,yr buildings; GCP \textbf{4\,yr} IT (acknowledged shorter
-than actual); Azure 6\,yr IT, buildings excluded. All three zero out past amortization.}
-\label{tab:bigthree-s3}
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}l c c c@{}}
-\toprule
-GHG-Protocol Scope-3 category & AWS & GCP & Azure \\
-\midrule
-Cat~1 --- Purchased goods \& services & \na & \na & \yes \\
-Cat~2 --- IT hardware (cradle-to-gate) & \yes & \yes & \yes \\
-Cat~2 --- Building embodied & \yes & \yes & \no \\
-Cat~3 --- FERA (upstream fuel + T\&D losses) & \yes & \yes & \no \\
-Cat~4 --- Upstream transport & \yes & \maybe & \yes \\
-Cat~5 --- Waste in operations & \no & \no & \yes \\
-Cat~6 --- Business travel & \no & \yes & \no \\
-Cat~7 --- Employee commuting & \no & \yes & \no \\
-Cat~9 --- Downstream transport & \no & \no & \yes \\
-Cat~12 --- End-of-life treatment & \no & \no & \yes \\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \paragraph{The internal/external gap is structural --- and is the \RSCI residual.}
 Three providers say this out loud.
 Microsoft's 2021 Scope-3 transparency whitepaper, attached to its own description of the customer-facing tool, states that ``\emph{the underlying methodologies and emissions findings generated from the calculator will differ from those reflected in Microsoft's corporate disclosure}''~\cite[p.~2, fn.~2]{microsoft-s3-2021}, and the January~2026 Azure methodology page repeats the point in operational terms: ``\emph{usage for emissions calculations might not match your Microsoft usage for billing purposes}''~\cite{azure-methodology-2026}.
@@ -657,28 +629,11 @@ Finally, standardising the bottom-up energy coefficients $\varepsilon_p$ so \RSC
 
 \endgroup
 
-
-\section{Conclusion}
-\label{sec:conclusion}
-
-\outdatedbanner
-\begingroup\color{blue}
-
-% TODO: written last, after the experiments. One paragraph: theory closes the gap,
-% practice does not yet, here is what to do about it.
-
-% TODO(refs): add citations for the critique of GHG-Protocol-style carbon accounting
-% (market-based instruments, RECs/PPAs, location- vs. market-based divergence,
-% ongoing Scope 2 revision, etc.).
-A caveat: current carbon accounting is imperfect and does not always incentivize the right downstream behavior, and the standards are under continuous revision.
-That is a separate problem.
-\RSCI is defined against the \emph{structure} of GHG-Protocol-style accounting, not any particular vintage, so future revisions slot into the same framework.
-
-\endgroup
-
+% Do not yet touch these
 \todo{Tenant vs customer terminology}
 \todo{explain MBM and LBM, and why they are relevant to the residual.}
 \todo{GHG vs carbon vs CO2e terminology.}
+\todo{current carbon accounting is imperfect and does not always incentivize the right downstream behavior, and the standards are under continuous revision. That is a separate problem. \RSCI is defined against the \emph{structure} of GHG-Protocol-style accounting, not any particular vintage, so future revisions slot into the same framework. add citations for the critique of GHG-Protocol-style carbon accounting (market-based instruments, RECs/PPAs, location- vs. market-based divergence, ongoing Scope 2 revision, etc.)}
 
 
 \bibliographystyle{ACM-Reference-Format}
@@ -789,5 +744,38 @@ UpCloud                   & Finland & \statusB{Self-reported}             & \hre
 Verne                     & Nordic  & \statusB{Self-reported}             & \href{https://verne.co/about-us/sustainability}{verne.co/about-us/sustainability} \\
 Leafcloud                 & EU-NL   & \statusC{Marketing claim}          & \href{https://leaf.cloud/truly-green}{leaf.cloud/truly-green} \\
 \end{longtable}
+
+\section{Scope-3 Category Coverage in the Big-3 Customer Tools}
+\label{app:bigthree-s3}
+
+No two of the three hyperscaler customer tools count the same set of Scope-3 categories (\S\ref{sec:sota}), so even their headline totals are not directly comparable.
+
+\begin{table}[h]
+\centering
+\caption{Scope-3 category coverage in the Big-3 customer tools, by GHG-Protocol
+category. Cat~2 is split into IT hardware vs.\ building embodied. Lifetime amortization
+differs: AWS 6\,yr IT~+~50\,yr buildings; GCP \textbf{4\,yr} IT (acknowledged shorter
+than actual); Azure 6\,yr IT, buildings excluded. All three zero out past amortization.
+\yes\ included, \no\ excluded, \maybe\ partial, \na\ not applicable.}
+\label{tab:bigthree-s3}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}l c c c@{}}
+\toprule
+GHG-Protocol Scope-3 category & AWS & GCP & Azure \\
+\midrule
+Cat~1 --- Purchased goods \& services & \na & \na & \yes \\
+Cat~2 --- IT hardware (cradle-to-gate) & \yes & \yes & \yes \\
+Cat~2 --- Building embodied & \yes & \yes & \no \\
+Cat~3 --- FERA (upstream fuel + T\&D losses) & \yes & \yes & \no \\
+Cat~4 --- Upstream transport & \yes & \maybe & \yes \\
+Cat~5 --- Waste in operations & \no & \no & \yes \\
+Cat~6 --- Business travel & \no & \yes & \no \\
+Cat~7 --- Employee commuting & \no & \yes & \no \\
+Cat~9 --- Downstream transport & \no & \no & \yes \\
+Cat~12 --- End-of-life treatment & \no & \no & \yes \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}
