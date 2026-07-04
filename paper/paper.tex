@@ -388,17 +388,16 @@ We estimate $\E_{i,s}$ from per-resource quantities,
 where $p$ indexes resource types (vCPU-hours, GPU-hours, GB-hours of storage, I/O ops, network GB) and $\varepsilon_p$ is a per-type energy coefficient, from open-data engines such as BoaviztAPI~\cite{simon2024boaviztapi} or Cinergy~\cite{jacquet2025cinergy} (\RSCI is orthogonal to the choice).
 
 \parag{Residual bridges}
-A bottom-up model estimates part of what the provider reports.
-The provider reports one number per scope per slice (finer, where it breaks a scope into sub-categories); for each such component $k$, the residual is the unexplained gap
+For each scope $k$ and slide $s$, we define the residual as the unexplained gap between what the provider reports and what a bottom-up model $C^{\uparrow k}_{s}$ estimates:
 \begin{equation}
-\Delta^{k}_{s} = C^{\downarrow k}_{s} - B^{k}_{s},
+\Delta^{k}_{s} = C^{\downarrow k}_{s} - C^{\uparrow k}_{s}.
 \label{eq:residual-general}
 \end{equation}
-where $B^{k}_{s}$ is the bottom-up estimate of that component.
-A more comprehensive model shrinks the residual: adding a PUE term, or a seasonal-PUE model, moves overhead out of $\Delta^{\text{S2}}$ and into $B^{\text{S2}}$; modelling embodied hardware moves mass out of $\Delta^{\text{S3}}$.
-What is residual today can be modelled tomorrow.
 
-For the rest of the paper we anchor on the most common scheduling metric, \OSCI: a bottom-up \emph{energy} model that estimates only operational Scope-2 carbon, $B^{\text{S2}}_{s} = \sum_i \E_{i,s}\,\I_s$, and nothing else ($B^{\text{S1}}=B^{\text{S3}}=0$).
+A more comprehensive bottom-up model shrinks the residual. For example, adding a PUE term (or even a seasonal-PUE model) moves overhead out of $\Delta^{\text{S2}}$.
+%What is residual today can be modelled tomorrow.
+
+For the rest of the paper we anchor on the most common scheduling metric, \OSCI: a bottom-up \emph{energy} model that estimates only operational Scope 2 carbon, $C^{\uparrow \text{S2}}_{s} = \sum_i \E_{i,s}\,\I_s$, and nothing else ($C^{\uparrow \text{S1}}=C^{\uparrow \text{S3}}=0$).
 The three scope residuals are then
 \begin{equation}
 \Delta^{\text{S1}}_{s} = C^{\downarrow\text{S1}}_{s}, \qquad
@@ -406,8 +405,10 @@ The three scope residuals are then
 \Delta^{\text{S3}}_{s} = C^{\downarrow\text{S3}}_{s}.
 \label{eq:residual-scopes}
 \end{equation}
-$\Delta^{\text{S2}}$ absorbs PUE, idle capacity, and energy-model error; $\Delta^{\text{S1}}$ diesel and refrigerants; $\Delta^{\text{S3}}$ embodied hardware and the rest of Scope~3.
-A provider reporting sub-categories admits a finer split; below we split $\Delta^{\text{S3}}$ into FERA, embodied-IT, and non-IT (building, freight, end-of-life).
+$\Delta^{\text{S1}}$ absorbs diesel and refrigerants;
+$\Delta^{\text{S2}}$ idle capacity and energy-model error;
+$\Delta^{\text{S3}}$ embodied hardware and the rest of Scope~3.
+% A provider reporting sub-categories admits a finer split; below we split $\Delta^{\text{S3}}$ into FERA, embodied-IT, and non-IT (building, freight, end-of-life).
 
 \parag{Reconciliation}
 Each residual component $k$ is split across the workloads active in slice $s$ by a weight $w^{k}_{i,s}$ with $\sum_i w^{k}_{i,s} = 1$.
