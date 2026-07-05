@@ -85,26 +85,7 @@
 }
 \email{wiesner@tu-berlin.de}
 
-\author{Loïc Lannelongue}
-\affiliation{%
-  \institution{University of Cambridge}
-  \country{United Kingdom}
-}
-\email{ll582@cam.ac.uk}
-
-\author{Alexander Acker}
-\affiliation{%
-  \institution{Logsight AI}
-  \country{Germany}
-}
-\email{alexander.acker@logsight.ai}
-
-\author{Odej Kao}
-\affiliation{%
-  \institution{TU Berlin}
-  \country{Germany}
-}
-\email{odej.kao@tu-berlin.de}
+% ...
 
 \begin{abstract}
 There exist two largely separate approaches to quantifying the carbon footprint of cloud workloads.
@@ -187,7 +168,7 @@ Towards this, we make the following contributions:
 \renewcommand{\arraystretch}{1.2}
 \begin{tabular}{@{}l ccccccccc@{}}
 \toprule
-\textbf{Carbon reduction lever} & \textbf{AWS} & \textbf{GCP} & \textbf{Azure} & \textbf{Alibaba} & \textbf{IBM} & \textbf{OVH} & \textbf{Oracle} & \textbf{Scaleway} & \textbf{T~Cloud} \\
+\textbf{Operational carbon reduction lever} & \textbf{AWS} & \textbf{GCP} & \textbf{Azure} & \textbf{Alibaba} & \textbf{IBM} & \textbf{OVH} & \textbf{Oracle} & \textbf{Scaleway} & \textbf{T~Cloud} \\
 \midrule
 Selecting a more energy-efficient resource       & \partialresp & \proxyonly & \partialresp & \partialresp & \partialresp & \faithful & \faithful & \faithful & \partialresp \\
 Right-sizing resources    & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful \\
@@ -211,7 +192,6 @@ Despite differing in detail, every provider follows the same pipeline: it decide
 In practice, methodologies of providers can diverge at every stage.
 Table~\ref{tab:levers} makes the divergence concrete for the nine providers whose methodologies are detailed enough to trace: it scores each against five carbon reduction \emph{levers}, i.e., actions an operator would expect to lower a workload's real-world carbon.
 In particular, (i) selecting a more efficient SKU (e.g. cloud instance), (ii) right-sizing infrastructure, (iii) reducing the utilization of reserven infrastructure like a cloud instance, (iv) shifting load to a cleaner region, and (v) shifting load to a cleaner time of day.
-% We walk through the pipeline using the three largest providers (AWS, GCP, Azure) as the running example, referring to the table where the smaller providers diverge.
 
 
 \parag{What cloud providers cover}
@@ -266,6 +246,8 @@ However, Bashir et al.~\cite{bashir2024} show that \SCI is subject to a \emph{su
 They therefore recommend sticking to \OSCI for operational decisions such as scheduling and scaling. 
 We argue, however, that \OSCI is incomplete: it does not reward reserving less hardware (beyond the energy savings), purchasing lower-embodied hardware, or avoiding peak-hour demand, which ultimately determines when additional capacity must be procured.
 
+\todo{add tSCI}
+
 Moreover, independent of the embodied term, \emph{any bottom-up-only metric is structurally blind to provider-side overheads} that are not explicitly modeled, and therefore cannot reconcile to the provider's top-down GHG report.
 This means that improving \SCI or \OSCI does not necessarily move the audited number, and vice versa.
 \todo{it could be made clearer why this is an issue: bottom-up-only are structurally insufficient to reconcile to top-down, and that this is a problem for trust and adoption. We can also give provider side overhead examples here: PUE, idle and over-provisioned capacity, upstream fuel-and-transmission losses, building embodied carbon, refrigerant leakage, water, and end-of-life}
@@ -275,7 +257,7 @@ This means that improving \SCI or \OSCI does not necessarily move the audited nu
 
 
 
-\iffalse % ===== OLD SEC 3 --- preserved for salvage (provider quotes -> Sec 6, Scope-3 coverage table -> appendix) =====
+\iffalse % ===== OLD SEC 3 =====
 
 \paragraph{Customer-facing tools are rare.}
 We surveyed 48 cloud providers in May~2026, covering hyperscalers, mid-tier and regional IaaS, CDN/edge, AI-specialised neoclouds, application-PaaS, and sustainability-positioned regional operators (full enumeration with disclosure classification in Appendix~\ref{app:inventory}).
@@ -285,8 +267,8 @@ Most starkly, the fastest-growing segment --- AI/GPU clouds (CoreWeave, Lambda, 
 Compute capacity for AI training and inference is being built at the fastest pace in cloud history with the \emph{least} customer carbon transparency.
 The rest of this section focuses on the twelve per-customer tools.
 
-\paragraph{One shared template, four axes of variation.}
-Strip the marketing and every customer tool computes the same shape:
+\paragraph{Four axes of variation.}
+Every customer tool computes the same shape:
 \[
 \mathrm{customer\,carbon} \;=\;
 \textstyle\sum_{r}\, u_{r}\,\cdot\,f_{r} \;+\; \mathrm{overheads},
@@ -296,39 +278,11 @@ Provider variation lives on four orthogonal axes: (A1)~which activity unit, (A2)
 Eleven of the twelve customer tools differ on the two most discriminating axes (A1, A2); T Cloud Public is the twelfth (launched 2026-02-23) but has not disclosed its per-resource allocation rule.
 The prior literature's three-family taxonomy (usage-time / traffic / component-LCA) puts AWS-foundational and OVHcloud-dedicated in different families even though both reduce to $\sum u_{r} f_{r}$, and we replace it with the per-axis decomposition below.
 
-% [DROPPED 2026-06-26] Former Figure 1 (axes A1xA2 mapping) removed --- unclear payload.
-% Preserved here in case the axis decomposition is reused in the rewritten Sec 3.
-% \begin{figure}[t]
-% \centering
-% \footnotesize
-% \setlength{\tabcolsep}{4pt}
-% \renewcommand{\arraystretch}{1.15}
-% \begin{tabularx}{\columnwidth}{@{}l L L L L@{}}
-% \toprule
-% & \multicolumn{4}{c}{\textbf{A2 --- per-unit-factor source}} \\
-% \cmidrule(l){2-5}
-% \textbf{A1 --- unit} & price/rev. & LCA $\times$ inv. & meter $\rightarrow$ bucket & benchmark \\
-% \midrule
-% vCPU-h        & GCP-cust    &              & AWS-FS, Azure, IBM, Ali & \\
-% instance-h    & AWS-nFS     &              &                         & \\
-% CPU-time      &             &              &                         & Fastly-C \\
-% bytes         &             &              & Akamai$^{\dagger}$       & CF, Fastly-D \\
-% GB-month      &             &              & (same as compute)       & \\
-% server-h      &             & OVH, Scaleway$^{\ddagger}$ &              & \\
-% \$-spend      & AWS-nFS, Oracle-sp, Azure'21 & &                      & \\
-% \bottomrule
-% \end{tabularx}
-% \\[2pt]
-% {\scriptsize\textit{$\dagger$ Akamai claims per-server kWh metering $\times$ byte/machine-utilization share.}}\\
-% {\scriptsize\textit{$\ddagger$ Scaleway's monthly report combines per-component LCA with actual measured CPU consumption.}}
-% \caption{Per-customer carbon tools on the activity-unit (A1) $\times$ factor-source (A2) axes.}
-% \label{fig:axes}
-% \end{figure}
 
-\paragraph{The ideal weighting is measured energy --- almost no one delivers it.}
-The right question is not which usage unit a provider uses but how well that unit tracks the customer's actual energy draw.
+\paragraph{Measured energy.}
+How well _that unit tracks the customer's actual energy draw.
 For network, bytes are approximately linear in energy, so byte-share allocation is structurally sound (Cloudflare, Fastly-Delivery, Akamai's byte component).
-For compute the relationship is highly non-linear --- an idle server still draws on the order of half its full-load power --- so vCPU-hours, instance-hours, and \$-spend systematically misweight idle and busy workloads.
+For compute the relationship is highly non-linear (an idle server still draws on the order of half its full-load power) so vCPU-hours, instance-hours, and \$-spend systematically misweight idle and busy workloads.
 Four customer-surface allocations approach energy-direct, in decreasing concreteness: \emph{Scaleway} combines per-component LCA with actual measured CPU consumption and published Boavizta consumption profiles for the monthly report, so an idle and a fully-loaded VM at the same SKU receive different allocations;\footnote{\url{https://www.scaleway.com/en/docs/environmental-footprint/}; per-product calculation pages compiled in our reference set.}
 \emph{Akamai} meters kWh per server and per network device in its colocations\footnote{Akamai 2025 emissions-reporting policy and customer-reporting blog series.} and allocates DC-total energy by ``byte utilization and machine utilization'';
 \emph{Oracle}'s power-based mode tracks kWh by service workload (LBM~+~MBM) but does not disclose the shared-hardware allocation algorithm;\footnote{\url{https://docs.oracle.com/en-us/iaas/releasenotes/governance/carbon-analysis-powercalculation.htm}, June~2025.}
@@ -344,8 +298,7 @@ Headline numbers are therefore not directly comparable.
 Third-party assurance is similarly shallow: AWS's Apex statement covers Scope-3 Cat~2/3/4 \emph{methodology} only, GCP's Fraunhofer review covers the LCA methodology only, Azure's WSP statement covers the Scope-3 \emph{document} only; \textbf{no Big-3 customer tool has been audited end-to-end}, and only Alibaba's Energy~Expert carries third-party \emph{data} assurance (Bureau Veritas, ISO~14064-3) of the per-customer numbers.
 The temporal surface is similarly thin: \textbf{only Scaleway and Fastly publish daily customer-facing data}; the other nine, including all of the Big-3, are monthly; \emph{no} customer tool publishes hourly customer-allocated emissions, so any carbon-aware-scheduling claim today rests on signals outside the customer tool itself.
 
-\paragraph{The internal/external gap is structural --- and is the \RSCI residual.}
-Three providers say this out loud.
+\paragraph{The internal/external gap is structural.}
 Microsoft's 2021 Scope-3 transparency whitepaper, attached to its own description of the customer-facing tool, states that ``\emph{the underlying methodologies and emissions findings generated from the calculator will differ from those reflected in Microsoft's corporate disclosure}''~\cite[p.~2, fn.~2]{microsoft-s3-2021}, and the January~2026 Azure methodology page repeats the point in operational terms: ``\emph{usage for emissions calculations might not match your Microsoft usage for billing purposes}''~\cite{azure-methodology-2026}.
 GCP measures machine-level power via Borg hourly but re-projects to a monthly \emph{list-price-proportional} SKU factor at the customer surface, and Schneider \& Mattia note (\S3.6) that ``\emph{customers do not receive a signal about how switching from SKU~A to SKU~B can reduce their actual emissions, but rather their allocated emissions based on list prices}''~\cite{schneider-mattia-2024}.
 AWS's Model~3.0 defines a foundational/non-foundational service split but publishes neither the service list nor the share of emissions allocated by equivalent revenue~\cite{aws-ccft-model3}.
@@ -366,16 +319,15 @@ This way, per-workload numbers sum to the reported total by construction, so a b
 
 \parag{Notation}
 Let $i$ index a \emph{workload}: a distinct billable unit a tenant runs, like a service, job, or function.
-Let $C_{s}^{\downarrow\text{S1}}$, $C_{s}^{\downarrow\text{S2}}$, $C_{s}^{\downarrow\text{S3}}$ denote the top-down reported per-scope emissions of slice $s$.
-A slide describes the provider's finest published granularity (service $\times$ region $\times$ month).
-A workload's emissions can span one or more slices (e.g., by touching multiple cloud services or regions).
+A reporting \emph{slice} is the provider's finest published granularity (service $\times$ region $\times$ month).
+Let $C_{s}^{\downarrow\text{S1}}$, $C_{s}^{\downarrow\text{S2}}$, $C_{s}^{\downarrow\text{S3}}$ denote the top-down reported per-slice, per-scope emissions.
 
 Formalizing \OSCI using this per-workload notation, we get:
 \begin{equation}
 \OSCI_i \;=\; \frac{\E_{i,s}\cdot\I_s}{\R_i},
 \label{eq:osci-i}
 \end{equation}
-where $\E_{i,s}$ is the workload's energy within the slice, $\I_s$ the slice's location-based grid intensity, and $\R_i$ its functional unit. %---whatever unit of work it is measured in, totalled over the period (requests, tokens, GB).
+where $\E_{i,s}$ is the workload's energy within the slice, $\I_s$ the slice's location-based carbon intensity, and $\R_i$ the functional unit. %---whatever unit of work it is measured in, totalled over the period (requests, tokens, GB).
 %Time enters only \emph{within} $\E_{i,s}\cdot\I_s$, which abbreviates the hourly sum $\sum_t \E_i(t)\,\I_{s,t}$; the residual is anchored at the provider's coarser cadence.
 %\OSCI is all a tenant can observe without provider-internal data, and the only bottom-up input \RSCI uses.
 
@@ -388,17 +340,8 @@ We estimate $\E_{i,s}$ from per-resource quantities,
 where $p$ indexes resource types (vCPU-hours, GPU-hours, GB-hours of storage, I/O ops, network GB) and $\varepsilon_p$ is a per-type energy coefficient, from open-data engines such as BoaviztAPI~\cite{simon2024boaviztapi} or Cinergy~\cite{jacquet2025cinergy} (\RSCI is orthogonal to the choice).
 
 \parag{Residual bridges}
-For each scope $k$ and slide $s$, we define the residual as the unexplained gap between what the provider reports and what a bottom-up model $C^{\uparrow k}_{s}$ estimates:
-\begin{equation}
-\Delta^{k}_{s} = C^{\downarrow k}_{s} - C^{\uparrow k}_{s}.
-\label{eq:residual-general}
-\end{equation}
-
-A more comprehensive bottom-up model shrinks the residual. For example, adding a PUE term (or even a seasonal-PUE model) moves overhead out of $\Delta^{\text{S2}}$.
-%What is residual today can be modelled tomorrow.
-
-For the rest of the paper we anchor on the most common scheduling metric, \OSCI: a bottom-up \emph{energy} model that estimates only operational Scope 2 carbon, $C^{\uparrow \text{S2}}_{s} = \sum_i \E_{i,s}\,\I_s$, and nothing else ($C^{\uparrow \text{S1}}=C^{\uparrow \text{S3}}=0$).
-The three scope residuals are then
+For the rest of the paper we anchor on, \OSCI, a bottom-up energy model that estimates only operational Scope~2 carbon, $\sum_i \E_{i,s}\,\I_s$, and is thereby free of the sunk carbon fallacy.
+For each scope and slice $s$, the residual is the unexplained gap between what the provider reports and what this bottom-up model estimates:
 \begin{equation}
 \Delta^{\text{S1}}_{s} = C^{\downarrow\text{S1}}_{s}, \qquad
 \Delta^{\text{S2}}_{s} = C^{\downarrow\text{S2}}_{s} - \sum_i \E_{i,s}\,\I_s, \qquad
@@ -408,36 +351,46 @@ The three scope residuals are then
 $\Delta^{\text{S1}}$ absorbs diesel and refrigerants;
 $\Delta^{\text{S2}}$ idle capacity and energy-model error;
 $\Delta^{\text{S3}}$ embodied hardware and the rest of Scope~3.
-% A provider reporting sub-categories admits a finer split; below we split $\Delta^{\text{S3}}$ into FERA, embodied-IT, and non-IT (building, freight, end-of-life).
+A more comprehensive bottom-up model shrinks the Scope 2 residual.
+For example, adding a PUE term (or even a seasonal-PUE model) moves overhead out of $\Delta^{\text{S2}}$.
 
 \parag{Reconciliation}
-Each residual component $k$ is split across the workloads active in slice $s$ by a weight $w^{k}_{i,s}$ with $\sum_i w^{k}_{i,s} = 1$.
+We first develop \RSCI assuming each workload runs within a single slice $s$.
+Each scope residual of slice $s$ is split across the workloads running in it by weights $w^{\text{S1}}_{i,s}, w^{\text{S2}}_{i,s}, w^{\text{S3}}_{i,s}$, each normalized over those workloads:
+\begin{equation}
+\sum_{i \in s} w^{\text{S1}}_{i,s} \;=\; \sum_{i \in s} w^{\text{S2}}_{i,s} \;=\; \sum_{i \in s} w^{\text{S3}}_{i,s} \;=\; 1 .
+\label{eq:weights-normalized}
+\end{equation}
 \RSCI adds each workload's reconciled residual shares to its operational metric:
 \begin{equation}
-\RSCI_i \;=\; \OSCI_i \;+\; \frac{1}{\R_i}\sum_{k} w^{k}_{i,s}\cdot\Delta^{k}_{s}.
+\RSCI_i \;=\; \OSCI_i \;+\; \frac{w^{\text{S1}}_{i,s}\Delta^{\text{S1}}_{s} + w^{\text{S2}}_{i,s}\Delta^{\text{S2}}_{s} + w^{\text{S3}}_{i,s}\Delta^{\text{S3}}_{s}}{\R_i}.
 \label{eq:rsci}
 \end{equation}
-For a workload spanning several slices, both terms sum over the slices it touches.
-Because the weights sum to one, summing attributed carbon over the slice recovers the reported total:
+Attributed carbon then reconciles by construction: the slice's \RSCI values, each scaled back to carbon by its functional unit, sum to the reported total,
 \begin{equation}
-\sum_i \Bigl[\, \E_{i,s}\cdot \I_s + \sum_{k} w^{k}_{i,s}\cdot\Delta^{k}_{s} \,\Bigr] \;=\; C^{\downarrow\text{S1}}_{s} + C^{\downarrow\text{S2}}_{s} + C^{\downarrow\text{S3}}_{s}.
+\sum_{i \in s} \RSCI_i\,\R_i \;=\; C^{\downarrow\text{S1}}_{s} + C^{\downarrow\text{S2}}_{s} + C^{\downarrow\text{S3}}_{s}.
 \label{eq:reconcile}
 \end{equation}
-This is a structural property and holds for \emph{any} weights that sum to one.
-The weights are otherwise free, and different families incentivise different behavior, as we explain in the next section.
+This identity holds for \emph{any} weights that sum to one.
+The weights are otherwise free, and different choices incentivise different behavior.
 
-\subsection{Allocating the Residual}
-\label{sec:rsci-design}
+A workload touching several slices (i.e., multiple services or regions) contributes to each an energy term and a residual share
+\begin{equation}
+a_{i,s} \;=\; \E_{i,s}\I_s + w^{\text{S1}}_{i,s}\Delta^{\text{S1}}_{s} + w^{\text{S2}}_{i,s}\Delta^{\text{S2}}_{s} + w^{\text{S3}}_{i,s}\Delta^{\text{S3}}_{s},
+\label{eq:fragment}
+\end{equation}
+its attributed carbon in that slice, and $\RSCI_i = \tfrac{1}{\R_i}\sum_s a_{i,s}$ sums these over the slices it touches (Eq.~\ref{eq:rsci} is the single-slice case).
+The weights still normalize within each slice (Eq.~\ref{eq:weights-normalized}), so each slice balances on its own, $\sum_{i \in s} a_{i,s} = C^{\downarrow\text{S1}}_{s} + C^{\downarrow\text{S2}}_{s} + C^{\downarrow\text{S3}}_{s}$.
+Each $a_{i,s}$ belongs to exactly one workload--slice pair, so summing this per-slice identity over all slices recovers the fleet total: reconciliation composes.
 
-The mapping below is one reasonable default.
-We split each residual across the slice's workloads by a weight chosen to match its physical driver; as established above, any weight summing to one reconciles equally well.
-We walk the three scopes.
+\parag{Allocating the residual}
+We split each residual across the workloads by a weight chosen to match its physical driver.
 
 \paragraph{Scope 1 --- static-share.}
 Diesel backup and refrigerant leakage are costs of the facility existing, with no per-workload driver.
 We split them evenly over the $N_s$ active workloads,
 \begin{equation}
-w^{k}_{i,s} = 1/N_s ,
+w^{\text{S1}}_{i,s} = 1/N_s ,
 \label{eq:w-static}
 \end{equation}
 a convention we adopt because nothing physical distinguishes the workloads here.
@@ -446,39 +399,60 @@ Sharma and Fuerst adopt the same rule for idle power and embodied carbon~\cite{s
 \paragraph{Scope 2 --- energy-share.}
 PUE, idle capacity, and energy-model error scale with electricity drawn, so we allocate by energy share,
 \begin{equation}
-w^{k}_{i,s} = \E_{i,s} / \E_s , \qquad \E_s = \sum_i \E_{i,s}.
+w^{\text{S2}}_{i,s} = \E_{i,s} / \E_s , \qquad \E_s = \sum_i \E_{i,s}.
 \label{eq:w-energy}
 \end{equation}
 
-\paragraph{Scope 3 --- sub-driver split, data permitting.}
-Scope~3 is heterogeneous: server-embodied IT hardware, upstream fuel and transmission losses (FERA), and non-IT (building, freight, end-of-life), each with a different driver.
-Splitting one reported figure among them, however, needs information the aggregate does not carry.
-\emph{Where the provider reports these sub-categories, or a bottom-up model estimates them}, we allocate each by its driver: FERA by energy-share (proportional to kWh), non-IT by static-share, and embodied IT by peak-attribution,
+\paragraph{Scope 3 --- peak-attribution.}
+Providers report a single Scope-3 number, so the whole residual carries one weight.
+We allocate it by peak-attribution, the driver of its dominant component, server embodied carbon:%
+\footnote{\todo{cite a source establishing embodied IT hardware as the dominant share of hyperscaler Scope~3.}}
 \begin{equation}
-w^{k}_{i,s} = \varphi_i / \sum_j \varphi_j ,
+w^{\text{S3}}_{i,s} = \varphi_i / \sum_j \varphi_j ,
 \label{eq:w-peak}
 \end{equation}
 where $\varphi_i$ is workload $i$'s Shapley share~\cite{shapley1953value} of the slice's peak capacity --- the workload at the peak forces the next server purchase, the one at the trough does not.
 Exact Shapley is exponential; a best-effort proxy (peak-hour energy share, leave-one-out marginals, sampled permutations~\cite{castro2009polynomial}) keeps the ordering.
 Han et al.~\cite{HotCarbon2024GameTheoretic} make this argument for a single server; the residual lifts it to the slice.
-\emph{Absent that finer data}, today's providers report a single Scope-3 number and the whole residual carries one weight; we default to peak-attribution, the driver of its dominant component, server embodied carbon.
-A bottom-up Scope-3 model would both shrink the residual and let the allocation follow each sub-driver.
 
-\paragraph{Properties.}
-Reconciliation constrains only the slice total, which leaves the weights free to reward behavior the report ignores.
-Three consequences follow.
+Should providers ever report Scope-3 sub-categories---e.g., embodied hardware, upstream fuel and transmission losses (FERA), and non-IT (building, freight, end-of-life)---each could carry its own weight by its driver (FERA by energy-share, non-IT by static-share, embodied by peak-attribution), and a bottom-up Scope-3 model would further shrink the residual.
 
-(i) \emph{No sunk-carbon fallacy.}
+\parag{Properties}
+\RSCI is an actionable metric for per-workload carbon accounting and optimization.
+Table~\ref{tab:properties} contrasts it with \SCI and \OSCI on five properties; only \RSCI satisfies all of them.
+
+\begin{table}[t]
+\centering
+\caption{Properties of per-workload carbon metrics.}
+\vspace{-2mm}
+\label{tab:properties}
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}l ccc@{}}
+\toprule
+\textbf{Property} & \textbf{\SCI}~\cite{sci-spec} & \textbf{\OSCI}~\cite{bashir2024} & \textbf{\RSCI} \\
+\midrule
+Rewards operational levers         & \faithful & \faithful & \faithful \\
+Prices embodied carbon             & \faithful & \notrefl  & \faithful \\
+Avoids the sunk-carbon fallacy~\cite{bashir2024}     & \notrefl  & \faithful & \faithful \\
+Can incentivize procurement deferral  & \notrefl  & \notrefl  & \faithful \\
+Reconciles to cloud provider's report         & \notrefl  & \notrefl  & \faithful \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{enumerate}
+  \item \emph{\RSCI contains embodied incentives.} The residual term increases under static- or peak-attribution weights. Workloads that are sized to demand or run off-peak pay less than over-reserved ones, which are incentives that \OSCI intentionally drops.
+  \item \emph{\RSCI avoids the sunk-carbon fallacy.}
 \RSCI has no per-server $M$ term, so aging hardware cannot game it: a workload on older, less efficient hardware draws more energy through $\E_{i,s}\I_s$ and reports a higher \RSCI regardless of how embodied is amortised.
-Embodied instead rides the residual under static- or peak-attribution weights, where workloads sized to demand, or run off-peak, pay less than over-reserved ones --- the right-sizing and procurement-deferral incentives \OSCI drops.
-
-(ii) \emph{Reconciliation holds by construction} (Eq.~\ref{eq:reconcile}), for any weights summing to one and at any data fidelity.
-As the bottom-up model and the report's granularity improve, $\Delta$ shrinks and the allocation choice matters less; when no residual can be recovered, \RSCI degrades gracefully to \OSCI.
-
-(iii) \emph{Tenant levers are rewarded.}
+  \item \emph{\RSCI reconciles by construction.} (Eq.~\ref{eq:reconcile}), for any weights summing to one and at any data fidelity.
+As the bottom-up model and the report's granularity improve, $\Delta$ shrinks and the allocation choice matters less. When no residual can be recovered, \RSCI degrades gracefully to \OSCI.
+  \item \emph{\RSCI rewards all operational carbon reduction levers.}
 A load-shifter that moves energy to a cleaner hour reabsorbs only its own share $\E_i/\E_s$ of the $\Delta^{\text{S2}}$ it thereby creates, so its \RSCI still falls; a workload at the slice peak pays a larger embodied share than one at the trough.
+\end{enumerate}
 
-\emph{Negative residuals} are admissible: when a credible bottom-up model attributes more than the provider reports --- Jacquet et al.~\cite{jacquet2025cinergy} find up to 3$\times$ under-estimation for busy VMs --- the residual $\Delta^{k}_{s}$ turns negative, the metric still reconciles, and the negative value itself flags that the report under-counts.
+\emph{Negative residuals} are admissible: when a credible bottom-up model attributes more than the provider reports --- Jacquet et al.~\cite{jacquet2025cinergy} find up to 3$\times$ under-estimation for busy VMs --- the residual $\Delta^{\text{S2}}_{s}$ turns negative, the metric still reconciles, and the negative value itself flags that the report under-counts.
 
 % TODO (2026-05-19): refresh the Real-time estimation block below under the
 % per-component weight schema. The xi = mu*\I_s + rho collapse assumed energy-share
@@ -510,7 +484,7 @@ A load-shifter that moves energy to a cleaner hour reabsorbs only its own share 
 % gracefully to the prior-art operational metric when reconciliation data is
 % unavailable.
 
-\section{Evaluation}
+\section{Example}
 \label{sec:demo}
 
 \todo{in progress}
@@ -531,11 +505,9 @@ Fallacy-freedom and reconciliation hold by construction (\S\ref{sec:rsci}).
 
 \todo{in progress}
 
-% ===== SEC 6 SCAFFOLD (2026-07-03) — argument skeleton only; prose TBW in a later pass.
-% Terminology (lever / response / residual / weight) and Table 1 in Sec 2 are NOT final,
-% so keep references to them abstract until they lock. Case-study numbers are from prior
-% internal analyses and must be re-derived in one consistent pass before camera-ready.
-% Argument arc: conditional promise -> what recovery requires -> evidence -> diagnostic -> bridge.
+% ===== SEC 6 SCAFFOLD argument skeleton only.
+% Terminology (lever / response / residual / weight) and Table 1 in Sec 2 are NOT final, so keep references to them abstract until they lock. Case-study numbers are from prior internal analyses and must be re-derived.
+% Argument arc: conditional promise -> what recovery requires -> evidence -> diagnostic -> bridge
 
 \paragraph{Setup: the \RSCI column is a conditional promise.}
 \S\ref{sec:demo} showed \RSCI closes the gaps when the residual is \emph{known}, and Table~\ref{tab:levers} claims \RSCI responds faithfully to every lever by construction.
@@ -543,7 +515,7 @@ That claim is conditional: it holds only if the operator can recover the residua
 This section asks whether today's reports meet that condition; drawing on \S\ref{sec:sota}, the prior is no.
 
 \begin{itemize}
-\item \textbf{What recovery requires.} State the criterion as one requirement per weight family (\S\ref{sec:rsci-design}): the residual must be \emph{decomposed} into components; it needs a \emph{physical} (energy-based) allocation basis, or the energy-share weight cannot be formed; and it needs \emph{resource-level, billing-frequency} granularity, or the peak and temporal weights have nothing to attach to. Today's report supplies none of the three cleanly.
+\item \textbf{What recovery requires.} State the criterion as one requirement per weight family (\S\ref{sec:rsci}): the residual must be \emph{decomposed} into components; it needs a \emph{physical} (energy-based) allocation basis, or the energy-share weight cannot be formed; and it needs \emph{resource-level, billing-frequency} granularity, or the peak and temporal weights have nothing to attach to. Today's report supplies none of the three cleanly.
 \item \textbf{Evidence: real exports, each defeating one requirement.}
   \begin{itemize}
     \item \emph{AWS Frankfurt} --- allocation basis: most of the reported total sits in the revenue-allocated ``Other'' bucket, an undifferentiated lump with no physical driver to weight against. \todo{re-derive the $\sim$70\,\% figure in the consistent pass.}
@@ -558,7 +530,11 @@ This section asks whether today's reports meet that condition; drawing on \S\ref
 \section{Call to Action}
 \label{sec:asks}
 
-\todo{in progress, just dumped ideas here for now.}
+\todo{tbd}
+
+\iffalse
+
+% LLM generated blabla, rework
 
 Reconciliation by construction is structurally available, yet \S\ref{sec:practice} shows it is empirically unrealised on today's reports.
 Closing that gap is a shared task for providers and standards bodies, and it opens further roles for the metric.
@@ -581,7 +557,7 @@ The same decomposition supports a customer's own \emph{Scope-3 Cat-1} accounting
 It extends past carbon, too: swap the carbon report for a provider's water disclosure and the construction yields a reconcilable ``water per unit of work'' metric, with Bashir's \TSCI available as the provider-side anchor for \RSCI on the customer side.
 
 \paragraph{Toward a real-time signal.}
-As defined, \RSCI is a \emph{retrospective} metric: the residual $\Delta^k_s$ and the weight denominators ($E_s$, the slice peak) are known only once the provider's report lands, weeks to months late.
+As defined, \RSCI is a \emph{retrospective} metric: the scope residuals $\Delta_s$ and the weight denominators ($E_s$, the slice peak) are known only once the provider's report lands, weeks to months late.
 Its native use is therefore \emph{accounting} --- faithful allocation of an audited total --- and its incentives bite at reporting cadence, like a carbon chargeback, rather than in a closed scheduling loop.
 Turning it into a real-time signal is an open problem: predict each residual component ahead of the report.
 This is plausible precisely because a good bottom-up model leaves a residual dominated by \emph{slow-moving, methodology-driven} overheads (PUE, embodied intensity, allocation constants) rather than workload dynamics, so it should be learnable from the sequence of reconciled months.
@@ -598,6 +574,8 @@ Two narrower questions remain: allocating the residual across tenants sharing se
 \todo{current carbon accounting is imperfect and does not always incentivize the right downstream behavior, and the standards are under continuous revision. That is a separate problem. \RSCI is defined against the \emph{structure} of GHG-Protocol-style accounting, not any particular vintage, so future revisions slot into the same framework. add citations for the critique of GHG-Protocol-style carbon accounting (market-based instruments, RECs/PPAs, location- vs. market-based divergence, ongoing Scope 2 revision, etc.)}
 % 2. Cuts I made in the §7 merge (so you can veto any): the (a)(b)(c) Kalman/pooling enumeration collapsed to one clause; the \hat\mu/\hat\rho references dropped entirely (they were dangling anyway, only defined in the commented-out real-time block); the "Scaleway/OVHcloud already publish water" detail and the energy-coefficient-standardization future-work item removed; the routing-invariance mechanism (the φ_i marginalization argument) compressed to just the claim. The bounded-correlation open problem survived as a paper-strengthener.
 % 3. Two references now lean on things not yet solid: the §4 footnote points at a "notation pass" (your existing \todo{Revise notation} at the §4 setup), and §7's provider ask reuses the GCP-collapse claim from §2 line 181 — both already sourced, just noting the coupling.
+
+\fi
 
 
 \bibliographystyle{ACM-Reference-Format}
