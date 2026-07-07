@@ -184,6 +184,7 @@ Shifting load to a cleaner time of day      & \notrefl  & \notrefl  & \notrefl  
 \label{sec:sota}
 
 \todo{Re-verify every cell in Table~\ref{tab:levers}. Open issues: (1)~Oracle shown in its \emph{power-based} mode (Compute/Storage/DB); its default spend-based mode allocates by revenue, like AWS's non-foundational tier. (2)~AWS foundational allocation is \emph{described} as utilization-based, but the billed unit is instance-hours and whether telemetry feeds the factor is undisclosed, so utilization=\notrefl{} rests on non-disclosure. (3)~Alibaba region=\notrefl{} is inferred from a market-style energy model; no location-based figure is explicitly disclosed (softest cell). (4)~T~Cloud excludes Scope~3 (embodied) today. (5)~Pricing tier normalized out everywhere: spot and on-demand of the same SKU receive identical emissions.}
+\todo{should the table be operational only?}
 
 Under regulatory pressure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero}, cloud providers have moved beyond annual corporate sustainability reports toward customer-facing carbon tools that attribute emissions to individual tenants, enabling Scope-3 accounting for cloud usage.
 We surveyed 48 cloud service providers in May~2026 (full classification in Appendix~\ref{app:inventory}): 12 ship a first-party, per-customer dashboard, and most of these publish methodologies detailed enough to evaluate their reporting boundaries and allocation rules.
@@ -235,6 +236,12 @@ The de facto choice in most research papers is operational carbon, which we writ
 the workload's energy $\E$ times its region's carbon intensity $\I$ (in gCO$_2$/kWh), per functional unit of work $\R$ (an API call, a training run, a GB stored per month).
 It is straightforward, transparent, and it tracks the two levers a tenant controls directly: energy efficiency and carbon-aware timing or placement.
 But it says nothing about hardware efficiency.
+
+\todo{acknowledge "It is a score rather than a total; lower numbers are better than higher numbers"}
+\todo{the SCI defines "action
+explicit outcome taken, or change avoided, depending on the quantifiable emissions measured by this specification
+
+Note to entry: Actions generally relate to using less electricity, using electricity more intelligently, or using less hardware."}
 
 To capture the missing hardware lever, the Software Carbon Intensity (\SCI) specification (ISO/IEC~21031~\cite{sci-spec}) adds an embodied term:
 \[
@@ -317,6 +324,8 @@ This way, per-workload numbers sum to the reported total by construction, so a b
 %Second, an embodied term is either perverse (\SCI's sunk-carbon fallacy~\cite{bashir2024}) or absent (\OSCI), and routing embodied through the residual escapes both.
 % Because reconciliation pins only the slice total and not the allocation, the weights are free to reward peak-shaving, procurement deferral, and load-shifting that no bottom-up-only metric expresses.
 
+\todo{rethink slice terminology}
+
 \parag{Notation}
 Let $i$ index a \emph{workload}: a distinct billable unit a tenant runs, like a service, job, or function.
 A reporting \emph{slice} is the provider's finest published granularity (service $\times$ region $\times$ month).
@@ -363,7 +372,8 @@ Each scope residual of slice $s$ is split across the workloads running in it by 
 \end{equation}
 \RSCI adds each workload's reconciled residual shares to its operational metric:
 \begin{equation}
-\RSCI_i \;=\; \OSCI_i \;+\; \frac{w^{\text{S1}}_{i,s}\Delta^{\text{S1}}_{s} + w^{\text{S2}}_{i,s}\Delta^{\text{S2}}_{s} + w^{\text{S3}}_{i,s}\Delta^{\text{S3}}_{s}}{\R_i}.
+% \RSCI_i \;=\; \OSCI_i \;+\; \frac{w^{\text{S1}}_{i,s}\Delta^{\text{S1}}_{s} + w^{\text{S2}}_{i,s}\Delta^{\text{S2}}_{s} + w^{\text{S3}}_{i,s}\Delta^{\text{S3}}_{s}}{\R_i}. \\
+\RSCI_i \;=\; \frac{\overbrace{\vphantom{w^{\text{S1}}_{i,s}\Delta^{\text{S1}}_{s}} \E_{i,s}\cdot\I_s}^\text{operational term} +\;\; \overbrace{w^{\text{S1}}_{i,s}\Delta^{\text{S1}}_{s} + w^{\text{S2}}_{i,s}\Delta^{\text{S2}}_{s} + w^{\text{S3}}_{i,s}\Delta^{\text{S3}}_{s}}^\text{residual term}}{\R_i}.
 \label{eq:rsci}
 \end{equation}
 Attributed carbon then reconciles by construction: the slice's \RSCI values, each scaled back to carbon by its functional unit, sum to the reported total,
@@ -381,12 +391,17 @@ a_{i,s} \;=\; \E_{i,s}\I_s + w^{\text{S1}}_{i,s}\Delta^{\text{S1}}_{s} + w^{\tex
 \end{equation}
 its attributed carbon in that slice, and $\RSCI_i = \tfrac{1}{\R_i}\sum_s a_{i,s}$ sums these over the slices it touches (Eq.~\ref{eq:rsci} is the single-slice case).
 The weights still normalize within each slice (Eq.~\ref{eq:weights-normalized}), so each slice balances on its own, $\sum_{i \in s} a_{i,s} = C^{\downarrow\text{S1}}_{s} + C^{\downarrow\text{S2}}_{s} + C^{\downarrow\text{S3}}_{s}$.
-Each $a_{i,s}$ belongs to exactly one workload--slice pair, so summing this per-slice identity over all slices recovers the fleet total: reconciliation composes.
+Each $a_{i,s}$ belongs to exactly one workload+slice pair, so summing this per-slice identity over all slices recovers the fleet total: reconciliation composes.
 
 \parag{Allocating the residual}
+\todo{MAJOR REWORK of this whole allocation subsection (weights + equations), do before finalizing:
+(1) Collapse to \emph{two} weight families, not three --- energy-share (Scope~2) and peak-attribution (Scope~1$+$3, reported together); drop the static-share/$1/N_s$ family (eq:w-static) as a perverse incentive for a minor fraction (charges idle workloads more per unit work).
+(2) Revisit the Shapley peak-attribution (eq:w-peak): is $\varphi_i$ (Shapley share of peak capacity) the right primitive, or over-engineered? The \S\ref{sec:demo} figure uses a \emph{smooth} proxy (hourly-load $\times$ tokens), and allocates across \emph{time}, not workloads --- reconcile the formalism with what the demo actually computes, and don't overclaim exact Shapley.
+(3) Re-derive/renumber any equations the collapse touches (eq:residual-scopes, eq:w-static, eq:w-energy, eq:w-peak, eq:rsci) and check the Properties list + Table~\ref{tab:properties} still hold.}
 We split each residual across the workloads by a weight chosen to match its physical driver.
 
 \paragraph{Scope 1 --- static-share.}
+\todo{Reconsider: attribute Scope 1 by peak-attribution too (fold into Scope 3 and report them together), not static-share. The flat $1/N_s$ allocation is a weird incentive for a minor fraction --- in per-unit-work terms it charges idle workloads \emph{more} --- and S1 rides the same fixed-capacity driver as embodied. Rewrite this paragraph + eq:w-static accordingly; the \S\ref{sec:demo} figure already merges S1 into the peak band.}
 Diesel backup and refrigerant leakage are costs of the facility existing, with no per-workload driver.
 We split them evenly over the $N_s$ active workloads,
 \begin{equation}
@@ -493,8 +508,8 @@ One controlled example makes \RSCI's incentive response concrete: a two-SKU flee
 Its magnitude is an illustrative input (the quantity no provider exposes), so we report direction and ordering, not absolute magnitudes; only the measured load and grid-intensity shapes drive the result.
 \begin{figure}[t]
 \centering
-\todo{Plot: per-token carbon vs.\ fleet utilisation; \OSCI/\SCI flat, \RSCI (peak-share) rising.}
-\caption{Only \RSCI makes a busy fleet cost more per token: under peak-attribution weights, per-token carbon rises with fleet utilisation, while \OSCI and \SCI stay flat.}
+\includegraphics[width=\columnwidth]{figures/sec5_example.pdf}
+\caption{Illustrative two-SKU fleet (amortised A100 + new H100) serving a real LLM-inference trace under a real grid-intensity trace, with a \emph{known} slice residual. Grid CI and token demand (top) drive per-node \OSCI and \SCI, which the tenant can state only \emph{per hardware}; \RSCI is reported at the fleet level as operational term $+$ per-scope residual bands (Scope~2 by energy-share, Scope~3 by peak-attribution, with the minor Scope~1 folded in), sidestepping the per-server attribution \SCI needs. The peak-attributed band rises with load: a busy fleet costs more per token. The right-column gauges compare each metric's aggregated bottom-up total (Agg.) against the provider's top-down report (Top-down), which differentiates Scope~2 and Scope~3 but not operational from residual within them: only \RSCI reaches it. Magnitudes are illustrative---the residual is the quantity no provider exposes---so only direction and ordering are claimed.}
 \label{fig:demo}
 \end{figure}
 As utilisation rises (Figure~\ref{fig:demo}), \RSCI under peak-attribution climbs while \OSCI and \SCI stay flat: a busy fleet costs more per token because peak load forces the next server purchase, and the slope is set by the weight family (flat under energy-share, steep under peak-share).
@@ -532,9 +547,7 @@ This section asks whether today's reports meet that condition; drawing on \S\ref
 
 \todo{tbd}
 
-\iffalse
-
-% LLM generated blabla, rework
+\todo{LLM generated blabla, rework}
 
 Reconciliation by construction is structurally available, yet \S\ref{sec:practice} shows it is empirically unrealised on today's reports.
 Closing that gap is a shared task for providers and standards bodies, and it opens further roles for the metric.
@@ -574,8 +587,6 @@ Two narrower questions remain: allocating the residual across tenants sharing se
 \todo{current carbon accounting is imperfect and does not always incentivize the right downstream behavior, and the standards are under continuous revision. That is a separate problem. \RSCI is defined against the \emph{structure} of GHG-Protocol-style accounting, not any particular vintage, so future revisions slot into the same framework. add citations for the critique of GHG-Protocol-style carbon accounting (market-based instruments, RECs/PPAs, location- vs. market-based divergence, ongoing Scope 2 revision, etc.)}
 % 2. Cuts I made in the §7 merge (so you can veto any): the (a)(b)(c) Kalman/pooling enumeration collapsed to one clause; the \hat\mu/\hat\rho references dropped entirely (they were dangling anyway, only defined in the commented-out real-time block); the "Scaleway/OVHcloud already publish water" detail and the energy-coefficient-standardization future-work item removed; the routing-invariance mechanism (the φ_i marginalization argument) compressed to just the claim. The bounded-correlation open problem survived as a paper-strengthener.
 % 3. Two references now lean on things not yet solid: the §4 footnote points at a "notation pass" (your existing \todo{Revise notation} at the §4 setup), and §7's provider ask reuses the GCP-collapse claim from §2 line 181 — both already sourced, just noting the coupling.
-
-\fi
 
 
 \bibliographystyle{ACM-Reference-Format}
