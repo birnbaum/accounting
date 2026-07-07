@@ -131,7 +131,7 @@ The reports are published about 14-21 days after the end of each month, which ma
 \parag{The need for reconcilability}
 Today, when an engineering team improves the bottom-up metric of an internal workload, it is entirely unclear whether that improvement reaches the provider's top-down report.
 The two can diverge in both directions.
-The top-down report contains overheads no bottom-up model can cover without provider-internal data.
+The top-down report contains overheads no bottom-up model can cover without internal provider data.
 And conversely, the levers a bottom-up metric does capture---such as lowering a VM's utilization and thus its power draw---may not move the reported number at all, if the provider allocates carbon to tenants by usage-hours or revenue instead of measured energy.
 
 The Green Software Foundation explicitly endorses this separation, distinguishing ``measuring for action'' (per-workload signals that drive engineering) from ``measuring for reporting'' (organization-level inventories that satisfy regulators) and arguing that the two serve different goals and should not be conflated~\cite{gsf-measuring}.
@@ -417,6 +417,9 @@ Han et al.~\cite{HotCarbon2024GameTheoretic} make this argument for a single ser
 
 Should providers ever report Scope-3 sub-categories---e.g., embodied hardware, upstream fuel and transmission losses (FERA), and non-IT (building, freight, end-of-life)---each could carry its own weight by its driver (FERA by energy-share, non-IT by static-share, embodied by peak-attribution), and a bottom-up Scope-3 model would further shrink the residual.
 
+\emph{Negative residuals} are admissible: when a credible bottom-up model attributes more than the provider reports --- Jacquet et al.~\cite{jacquet2025cinergy} find up to 3$\times$ under-estimation for busy VMs --- the residual $\Delta^{\text{S2}}_{s}$ turns negative, the metric still reconciles, and the negative value itself flags that the report under-counts.
+
+
 \parag{Properties}
 \RSCI is an actionable metric for per-workload carbon accounting and optimization.
 Table~\ref{tab:properties} contrasts it with \SCI and \OSCI on five properties; only \RSCI satisfies all of them.
@@ -451,8 +454,6 @@ As the bottom-up model and the report's granularity improve, $\Delta$ shrinks an
   \item \emph{\RSCI rewards all operational carbon reduction levers.}
 A load-shifter that moves energy to a cleaner hour reabsorbs only its own share $\E_i/\E_s$ of the $\Delta^{\text{S2}}$ it thereby creates, so its \RSCI still falls; a workload at the slice peak pays a larger embodied share than one at the trough.
 \end{enumerate}
-
-\emph{Negative residuals} are admissible: when a credible bottom-up model attributes more than the provider reports --- Jacquet et al.~\cite{jacquet2025cinergy} find up to 3$\times$ under-estimation for busy VMs --- the residual $\Delta^{\text{S2}}_{s}$ turns negative, the metric still reconciles, and the negative value itself flags that the report under-counts.
 
 % TODO (2026-05-19): refresh the Real-time estimation block below under the
 % per-component weight schema. The xi = mu*\I_s + rho collapse assumed energy-share
