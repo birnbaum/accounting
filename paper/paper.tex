@@ -83,9 +83,33 @@
   \institution{TU Berlin}
   \country{Germany}
 }
+\affiliation{%
+  \institution{Logsight.ai}
+  \country{Germany}
+}
 \email{wiesner@tu-berlin.de}
 
-% ...
+\author{Loïc Lannelongue}
+\affiliation{%
+  \institution{University of Cambridge}
+  \country{United Kingdom}
+}
+\email{ll582@medschl.cam.ac.uk}
+
+\author{Alexander Acker}
+\affiliation{%
+  \institution{Logsight.ai}
+  \country{Germany}
+}
+\email{alexander.acker@logsight.ai}
+
+\author{Odej Kao}
+\affiliation{%
+  \institution{TU Berlin}
+  \country{Germany}
+}
+\email{odej.kao@tu-berlin.de}
+
 
 \begin{abstract}
 There exist two largely separate approaches to quantifying the carbon footprint of cloud workloads.
@@ -111,7 +135,7 @@ Two largely separate approaches exist: bottom-up estimates of operational and em
 \begin{figure*}[t]
   \centering
   \includegraphics[width=.9\textwidth]{figures/carbon_accounting_tension.pdf}
-  \caption{A provider's top-down carbon report and a tenant's bottom-up estimate rarely match. We call for \emph{reconciling} the two totals and allocating the residual across workloads to reward those that actually lowered carbon.}
+  \caption{A provider's top-down carbon report and a tenant's bottom-up estimate rarely match. We call for \emph{reconciling} the two totals and allocating the residual back to workloads.}
 \end{figure*}
 
 \parag{Bottom-up metrics}
@@ -238,6 +262,7 @@ It is straightforward, transparent, and it tracks the two levers a tenant contro
 But it says nothing about hardware efficiency.
 
 \todo{acknowledge "It is a score rather than a total; lower numbers are better than higher numbers"}
+\todo{lever vs SCI action}
 \todo{the SCI defines "action
 explicit outcome taken, or change avoided, depending on the quantifiable emissions measured by this specification
 
@@ -412,6 +437,7 @@ a convention we adopt because nothing physical distinguishes the workloads here.
 Sharma and Fuerst adopt the same rule for idle power and embodied carbon~\cite{sharma2024accountable_footprint_serverless}.
 
 \paragraph{Scope 2 --- energy-share.}
+\todo{better differentiate operational and emboddied}
 PUE, idle capacity, and energy-model error scale with electricity drawn, so we allocate by energy share,
 \begin{equation}
 w^{\text{S2}}_{i,s} = \E_{i,s} / \E_s , \qquad \E_s = \sum_i \E_{i,s}.
@@ -419,6 +445,7 @@ w^{\text{S2}}_{i,s} = \E_{i,s} / \E_s , \qquad \E_s = \sum_i \E_{i,s}.
 \end{equation}
 
 \paragraph{Scope 3 --- peak-attribution.}
+\todo[options]{mention that we could also use a bottom-up model for Scope 3. E.g. a major fraction of Scope 3 is actually FERA, which scales with load. If we e.g. say we expect and additional x percent of Scope 2 to be reflected in Scope 3, we reduce the residual that is allocated peak-aware}
 Providers report a single Scope-3 number, so the whole residual carries one weight.
 We allocate it by peak-attribution, the driver of its dominant component, server embodied carbon:%
 \footnote{\todo{cite a source establishing embodied IT hardware as the dominant share of hyperscaler Scope~3.}}
@@ -503,23 +530,32 @@ A load-shifter that moves energy to a cleaner hour reabsorbs only its own share 
 \section{Example}
 \label{sec:demo}
 
-\todo{in progress}
-
-One controlled example makes \RSCI's incentive response concrete: a two-SKU fleet --- an amortised A100 node and a new H100 node --- serving a real LLM-inference trace on a real grid-intensity trace, with a \emph{known} slice residual $\Delta^{\text{S3}}$.
-Its magnitude is an illustrative input (the quantity no provider exposes), so we report direction and ordering, not absolute magnitudes; only the measured load and grid-intensity shapes drive the result.
+\parag{Setup}
+We construct a minimal two-SKU fleet: an older, less-efficient DGX~A100 and a newer DGX~H100 (datasheet power and throughput), serving a three-day window of a real LLM-inference trace under CAISO grid intensity.
+Requests dispatch H100-first, spilling to the A100 only at peak load, so the A100 is marginal peak capacity that mostly idles.
+Bottom-up operational carbon (\OSCI) is marginal GPU energy, scaled by a data-centre PUE of $1.2$, times the hourly grid intensity.
+On top of this the provider reports a top-down total the bottom-up model cannot see: a Scope-2 residual of about $30$\,kg (idle capacity) and about $50$\,kg of Scope~3 (embodied hardware and upstream supply chain).
+Magnitudes are illustrative, the residual being the quantity no provider exposes, so we claim only direction and ordering.
+\todo{cite: DGX A100/H100 datasheet; Azure LLM-inference trace; CAISO grid-intensity source; Scope-3 basis (embodied LCA + FERA).}
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/sec5_example.pdf}
-\caption{Illustrative two-SKU fleet (amortised A100 + new H100) serving a real LLM-inference trace under a real grid-intensity trace, with a \emph{known} slice residual. Grid CI and token demand (top) drive per-node \OSCI and \SCI, which the tenant can state only \emph{per hardware}; \RSCI is reported at the fleet level as operational term $+$ per-scope residual bands (Scope~2 by energy-share, Scope~3 by peak-attribution, with the minor Scope~1 folded in), sidestepping the per-server attribution \SCI needs. The peak-attributed band rises with load: a busy fleet costs more per token. The right-column gauges compare each metric's aggregated bottom-up total (Agg.) against the provider's top-down report (Top-down), which differentiates Scope~2 and Scope~3 but not operational from residual within them: only \RSCI reaches it. Magnitudes are illustrative---the residual is the quantity no provider exposes---so only direction and ordering are claimed.}
+\caption{Illustrative two-SKU fleet (an older, less-efficient DGX A100 and a newer DGX H100) serving a real LLM-inference trace under a real grid-intensity trace, with a \emph{known} slice residual. Grid CI and token demand (top) drive per-node \OSCI and \SCI, which the tenant can state only \emph{per hardware}; \RSCI is reported at the fleet level as operational term $+$ per-scope residual bands (Scope~2 by energy-share, Scope~3 by peak-attribution), sidestepping the per-server attribution \SCI needs. The peak-attributed band rises with load: a busy fleet costs more per token. The right-column gauges compare each metric's aggregated bottom-up total (Agg.) against the provider's top-down report (Top-down), which differentiates Scope~2 and Scope~3 but not operational from residual within them: only \RSCI reaches it. Magnitudes are illustrative (the residual is the quantity no provider exposes), so only direction and ordering are claimed.}
 \label{fig:demo}
 \end{figure}
-As utilisation rises (Figure~\ref{fig:demo}), \RSCI under peak-attribution climbs while \OSCI and \SCI stay flat: a busy fleet costs more per token because peak load forces the next server purchase, and the slope is set by the weight family (flat under energy-share, steep under peak-share).
-Fallacy-freedom and reconciliation hold by construction (\S\ref{sec:rsci}).
+\parag{Result}
+\OSCI and \SCI can be stated only per node (Figure~\ref{fig:demo}, upper rows), and both fall well short of the provider's reported total: \OSCI captures under half of it (reconciliation gauges, right), while \SCI adds only a small embodied term that still needs per-server data the tenant cannot observe.
+Read at the fleet level, \RSCI closes the gap by construction: its operational term plus the energy-share and peak-attribution residual bands sum to the reported total (\S\ref{sec:rsci}).
+The two residual bands carry different incentives.
+The energy-share band (idle capacity) is roughly flat per token, whereas the peak-attribution band (embodied hardware) rises with load, so a busy fleet costs more per token: the workload at the peak forces the next server purchase.
+\RSCI thus prices procurement without any per-server embodied model, and reconciles for any weights summing to one.
 
 \section{Why \RSCI Cannot Be Computed Today}
 \label{sec:practice}
 
 \todo{in progress}
+\todo{what about real-time}
+
 
 % ===== SEC 6 SCAFFOLD argument skeleton only.
 % Terminology (lever / response / residual / weight) and Table 1 in Sec 2 are NOT final, so keep references to them abstract until they lock. Case-study numbers are from prior internal analyses and must be re-derived.
