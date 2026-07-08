@@ -2781,7 +2781,7 @@
     \or  % 3=three authors per row
        \divide\author@bx@wd by \num@authorgroups\relax
     \or  % 4=two authors per row (!)
-       \divide\author@bx@wd by 2\relax
+       \divide\author@bx@wd by \num@authorgroups\relax
     \else % three authors per row
        \divide\author@bx@wd by 3\relax
     \fi
