@@ -128,6 +128,8 @@ We show that current provider reporting is too coarse and methodologically incon
 \section{Introduction}
 \label{sec:intro}
 
+\todo{more storytelling in first abstract paragraph? Is "trust" the right framing? maybe more into the direction of structural impossibility, adoption, and funding?}
+
 A major challenge in sustainable computing is quantifying the carbon footprint of workloads. 
 It is a prerequisite for determining the effectiveness of carbon-reduction strategies, for reporting to regulators and investors, and for making informed decisions about workload scheduling and adaptation. 
 Two largely separate approaches exist: bottom-up estimates of operational and embodied carbon, and top-down corporate greenhouse gas (GHG) reporting. % based on provider-wide measurements and downstream allocation to tenants.
@@ -408,6 +410,7 @@ Attributed carbon then reconciles by construction: the slice's \RSCI values, eac
 \end{equation}
 This identity holds for \emph{any} weights that sum to one.
 The weights are otherwise free, and different choices incentivise different behavior.
+\todo{Add a remark on the degenerate baseline: Eq.~\ref{eq:reconcile} means the $\R$-weighted mean of \RSCI equals the reported total divided by total $\R$, so a ``monthly SCI'' defined as $(C^{\downarrow\text{S1}}+C^{\downarrow\text{S2}}+C^{\downarrow\text{S3}})/\R$ is just the fleet-average case of \RSCI. It is only well-defined when $\R$ is a single homogeneous functional unit (one cannot divide by a sum of tokens $+$ requests $+$ GB), and only informative when there is effectively one workload; differentiating heterogeneous workloads is exactly what the weights buy. So reported-total$/\R$ is the zero-information baseline and \RSCI is that same audited total, allocated. Also state that the accounting period is load-bearing for peak-attribution: $\varphi_i$ is the Shapley share of the period's peak, so the period choice defines the weight (and the embodied amortization).}
 
 A workload touching several slices (i.e., multiple services or regions) contributes to each an energy term and a residual share
 \begin{equation}
@@ -444,8 +447,17 @@ w^{\text{S2}}_{i,s} = \E_{i,s} / \E_s , \qquad \E_s = \sum_i \E_{i,s}.
 \label{eq:w-energy}
 \end{equation}
 
+\todo{
+Clarify:
+- Operational intensity $\gamma$·I(t) is scale-free in time. You can evaluate it hourly, daily, monthly; it's a genuine instantaneous per-token intensity. An operator can report an hourly operational SCI (your point last turn).
+- Fixed-cost terms (embodied M, residual $\Delta$) are period quantities. Their per-token value is (period fixed cost) / (period R). There is no "instantaneous embodied rate" without choosing an allocation weight, and any finer-grained rate is only meaningful because it integrates (R-weighted) back to the period number. That's exactly why reconciliation is defined at the period level and the weights are free.
+
+Maybe we should add smth like:
+These metrics are defined over an accounting period (the slice's month). The operational term is the hourly sum $\Sigma$\_t E\_i(t)·I\_(s,t); the residual $\Delta$\_s is the period total; R\_i is totalled over the period. rSCI is therefore a per-functional-unit value for that period, and Figure 2's time series is its within-period decomposition, whose token-weighted integral recovers it.
+}
+
 \paragraph{Scope 3 --- peak-attribution.}
-\todo[options]{mention that we could also use a bottom-up model for Scope 3. E.g. a major fraction of Scope 3 is actually FERA, which scales with load. If we e.g. say we expect and additional x percent of Scope 2 to be reflected in Scope 3, we reduce the residual that is allocated peak-aware}
+\todo{mention that we could also use a bottom-up model for Scope 3. E.g. a major fraction of Scope 3 is actually FERA, which scales with load. If we e.g. say we expect and additional x percent of Scope 2 to be reflected in Scope 3, we reduce the residual that is allocated peak-aware}
 Providers report a single Scope-3 number, so the whole residual carries one weight.
 We allocate it by peak-attribution, the driver of its dominant component, server embodied carbon:%
 \footnote{\todo{cite a source establishing embodied IT hardware as the dominant share of hyperscaler Scope~3.}}
@@ -463,7 +475,9 @@ Should providers ever report Scope-3 sub-categories---e.g., embodied hardware, u
 
 
 \parag{Properties}
-\RSCI is an actionable metric for per-workload carbon accounting and optimization.
+\RSCI is a \emph{retrospective} metric: since $\Delta$ is only known once the provider publishes its report, it cannot be computed in real time.
+This does not weaken its incentives.
+Because the weights are fixed in advance, the effect of an action on \RSCI is known at decision time even though the value settles later, just as a peak demand charge shapes electricity consumption long before the bill arrives.
 Table~\ref{tab:properties} contrasts it with \SCI and \OSCI on five properties; only \RSCI satisfies all of them.
 
 \begin{table}[t]
@@ -554,7 +568,7 @@ The energy-share band (idle capacity) is roughly flat per token, whereas the pea
 \label{sec:practice}
 
 \todo{in progress}
-\todo{what about real-time}
+% real-time: covered in §4 Properties (retrospective by design) and §7 (estimator sketch)
 
 
 % ===== SEC 6 SCAFFOLD argument skeleton only.
