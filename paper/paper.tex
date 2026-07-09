@@ -351,7 +351,7 @@ The \RSCI numbers sums to the reported totals by construction, which makes impro
 %Second, an embodied term is either perverse (\SCI's sunk-carbon fallacy~\cite{bashir2024}) or absent (\OSCI), and routing embodied through the residual escapes both.
 % Because reconciliation pins only the slice total and not the allocation, the weights are free to reward peak-shaving, procurement deferral, and load-shifting that no bottom-up-only metric expresses.
 
-\parag{Notation}
+\parag{Setup}
 Let $i$ index a \emph{workload}: a distinct billable unit a tenant runs, like a service or a batch job.
 A reporting \emph{slice} is the provider's finest published granularity (service $\times$ region $\times$ month).
 For example, writing \OSCI using this per-workload notation, we get:
@@ -366,34 +366,24 @@ where $\E_{i,s}$ is the workload's energy within the slice, $\I_s$ the slice's l
 % The provider publishes only one such figure per slice, but \RSCI refines it into per-workload values.
 % While the operational term can be evaluated at any finer cadence, whereas the residual is known only per period.
 
-
-\parag{Bottom-up energy}
 \OSCI, \SCI and \RSCI all build on a bottom-up energy estimate.
-For example, we can derive $\E_{i,s}$ from per-resource quantities,
+We can, for example, derive $\E_{i,s}$ from per-resource quantities,
 \begin{equation}
 \E_{i,s} \;=\; \mathrm{PUE}\cdot\sum_{p} q_p \cdot \varepsilon_p,
 \label{eq:bu-energy}
 \end{equation}
 where $p$ indexes resource types (vCPU-hours, GPU-hours, GB-hours of storage, I/O ops, network GB), $\varepsilon_p$ is a per-type energy coefficient from open-data engines such as BoaviztAPI~\cite{simon2024boaviztapi} or Cinergy~\cite{jacquet2025cinergy}.
 $\mathrm{PUE}$ (power usage effectiveness) is an optional factor for modeling facility overhead.
-However, \emph{a bottom-up model cannot capture all energy usage}: coefficients are approximate, idle energy cannot be modeled, and a fixed PUE ignores that real facility overhead varies with season and weather.
-
-\parag{Computing residuals}
-Let $C_{s}^{\downarrow\text{S1}}$, $C_{s}^{\downarrow\text{S2}}$, $C_{s}^{\downarrow\text{S3}}$ denote the top-down reported per-slice, per-scope emissions.
-Our bottom-up model estimates only operational Scope~2 carbon, $\sum_i \E_{i,s}\,\I_s$, so the residual is the unexplained gap it leaves in each scope:
-\begin{equation}
-\Delta^{\text{S1}}_{s} = C^{\downarrow\text{S1}}_{s}, \qquad
-\Delta^{\text{S2}}_{s} = C^{\downarrow\text{S2}}_{s} - \sum_i \E_{i,s}\,\I_s, \qquad
-\Delta^{\text{S3}}_{s} = C^{\downarrow\text{S3}}_{s}.
-\label{eq:residual-scopes}
-\end{equation}
-$\Delta^{\text{S1}}$ absorbs diesel and refrigerants;
-$\Delta^{\text{S2}}$ idle capacity and energy-model error;
-$\Delta^{\text{S3}}$ embodied hardware and the rest of Scope~3.
-Their sum $\Delta_s = \Delta^{\text{S1}}_s + \Delta^{\text{S2}}_s + \Delta^{\text{S3}}_s$ is the total carbon the bottom-up model leaves unexplained.
 
 \parag{Reconciliation}
-\RSCI distributes the residual across the slice's workloads by weights.
+A bottom-up model cannot capture all energy usage within Scope 2: coefficients are approximate, idle energy cannot be modeled, and a fixed PUE ignores that real facility overhead varies with season and weather.
+Emissions in Scope 1 and 3 are even less observable.
+For each slice, we define the \emph{residual} emissions as the difference between the provider's top-down reported total carbon footprint $C^{\downarrow}_{s}$ and the bottom-up estimate:
+\begin{equation}
+\Delta_{s} \;=\; C^{\downarrow}_{s} \;-\; \sum_i \E_{i,s}\,\I_s .
+\label{eq:residual-total}
+\end{equation}
+\RSCI distributes this residual across the slice's workloads by weights.
 It uses the same operational term as \OSCI, but adds a residual term, taken over one or more components $\Delta^{c}_s$ (with $\sum_c \Delta^{c}_s = \Delta_s$), each distributed across the slice's workloads by a weight $w^{c}_{i,s}$ that sums to one over them ($\sum_{i \in s} w^{c}_{i,s} = 1$):
 \begin{equation}
 \RSCI_i \;=\; \frac{\overbrace{\E_{i,s}\cdot\I_s}^\text{operational term} \;+\; \overbrace{\textstyle\sum_c w^{c}_{i,s}\,\Delta^{c}_{s}}^\text{residual term}}{\R_i}.
@@ -401,49 +391,66 @@ It uses the same operational term as \OSCI, but adds a residual term, taken over
 \end{equation}
 Attributed carbon then reconciles by construction: scaling each score back to carbon by its $\R_i$, the slice's \RSCI values sum to the reported total,
 \begin{equation}
-\sum_{i \in s} \RSCI_i\,\R_i \;=\; \sum_i \E_{i,s}\,\I_s \;+\; \Delta_s \;=\; C^{\downarrow\text{S1}}_{s} + C^{\downarrow\text{S2}}_{s} + C^{\downarrow\text{S3}}_{s}.
+\sum_{i \in s} \RSCI_i\,\R_i \;=\; \sum_i \E_{i,s}\,\I_s \;+\; \Delta_s \;=\; \textstyle\sum_k C^{\downarrow k}_{s}.
 \label{eq:reconcile}
 \end{equation}
 A workload spanning several slices (e.g., multiple services or regions) sums its per-slice attributions, and since each balances on its own, reconciliation composes to the fleet total.
+
 This identity holds for \emph{any} partition of the residual into components and \emph{any} normalized weights.
 Both are free, and different choices incentivise different behavior.
 
 
-\parag{Allocating the residual}
+\parag{Decomposing the residual}
 The simplest allocation choice would be to split the full residual $\Delta_s$ evenly, giving each of the slice's $N_s$ workloads a share $w_i = 1/N_s$.
 This reconciles, but creates no incentives.
-We instead match each part of the residual to its two physical drivers: one part scales with energy usage, the other is a static cost of provisioned capacity.
-Writing $\beta^{k}\in[0,1]$ for the energy-driven fraction of scope $k$'s residual, we regroup the three scope residuals into an energy-driven $\Delta^{\text{E}}_{s}$ and a static $\Delta^{\text{K}}_{s}$ term:
+To improve this, we first decompose the residual the way the provider reports it, by GHG scope.
+Let $C_{s}^{\downarrow\text{S1}}$, $C_{s}^{\downarrow\text{S2}}$, $C_{s}^{\downarrow\text{S3}}$ denote the top-down reported per-slice, per-scope emissions.
+Since our bottom-up model estimates only operational Scope~2 carbon, the per-scope residuals (summing to $\Delta_s$) are
 \begin{equation}
-\Delta^{\text{E}}_{s} = \sum_{k} \beta^{k}\,\Delta^{k}_{s}, \qquad
-\Delta^{\text{K}}_{s} = \sum_{k} (1-\beta^{k})\,\Delta^{k}_{s}.
+\Delta^{\text{S1}}_{s} = C^{\downarrow\text{S1}}_{s}, \qquad
+\Delta^{\text{S2}}_{s} = C^{\downarrow\text{S2}}_{s} - \sum_i \E_{i,s}\,\I_s, \qquad
+\Delta^{\text{S3}}_{s} = C^{\downarrow\text{S3}}_{s},
+\label{eq:residual-scopes}
+\end{equation}
+$\Delta^{\text{S1}}$ absorbs diesel and refrigerants;
+$\Delta^{\text{S2}}$ idle capacity and energy-model error;
+$\Delta^{\text{S3}}$ embodied hardware and the rest of Scope~3.
+
+The scope split mirrors the provider's reporting but not the levers a tenant controls. 
+What matters for incentives is a second axis, whether an emission scales with energy usage or with provisioned capacity.
+We therefore propose regrouping the three scope residuals into an energy-driven $\Delta^{\text{en}}_{s}$ and a capacity-driven $\Delta^{\text{cap}}_{s}$ term, writing $\beta^{k}\in[0,1]$ for the energy-driven fraction of scope $k$'s residual:
+\begin{equation}
+\Delta^{\text{en}}_{s} = \sum_{k} \beta^{k}\,\Delta^{k}_{s}, \qquad
+\Delta^{\text{cap}}_{s} = \sum_{k} (1-\beta^{k})\,\Delta^{k}_{s}.
 \label{eq:residual-levers}
 \end{equation}
-Scope~1 is essentially static ($\beta^{\text{S1}}=0$).
-Scope~2 mixes energy-driven terms (unmodeled overhead, energy-model error) with static ones (idle power), so $\beta^{\text{S2}}$ depends on how well the bottom-up model captures the energy-driven part.
-Scope~3 is mostly static (embodied hardware and buildings), with a smaller energy-driven part (electricity upstream, i.e.\ FERA).
-Since $\Delta^{\text{E}}_s + \Delta^{\text{K}}_s = \Delta_s$, any $\beta$ preserves reconciliation; it only tunes the incentive structure, so rough estimates suffice.
-We then match each component to a weight.
+Scope~1 carries no energy-driven part ($\beta^{\text{S1}}=0$).
+Scope~2 mixes energy-driven terms (unmodeled overhead, energy-model error) with capacity-driven ones (idle power), so $\beta^{\text{S2}}$ depends on how well the bottom-up model captures the energy-driven part.
+Scope~3 is mostly capacity-driven (embodied hardware and buildings), with a smaller energy-driven part (electricity upstream, i.e.\ FERA).
 
-\paragraph{Energy-share ($\Delta^{\text{E}}$).}
-The energy-driven residual scales with electricity drawn, so we split it by energy share,
+Since $\Delta^{\text{en}}_s + \Delta^{\text{cap}}_s = \Delta_s$, any $\beta$ preserves reconciliation. 
+It only tunes the incentive structure, so rough estimates suffice.
+
+\parag{Allocating the residual}
+The energy-driven residual $\Delta^{\text{en}}$ scales with electricity drawn, so we split it by energy share,
 \begin{equation}
-w^{\text{E}}_{i,s} = \frac{\E_{i,s}}{\E_s} , \qquad \E_s = \sum_i \E_{i,s}.
+w^{\text{en}}_{i,s} = \frac{\E_{i,s}}{\E_s} , \qquad \E_s = \sum_i \E_{i,s}.
 \label{eq:w-energy}
 \end{equation}
 
-\paragraph{Peak-attribution ($\Delta^{\text{K}}$).}
-The capacity-driven residual is a cost of provisioned capacity, not of running a workload, yet it must still be allocated.
+The capacity-driven residual $\Delta^{\text{cap}}$ is not a direct cost of running a workload, yet it must still be allocated.
 Sharma and Fuerst split such shared costs evenly across workloads~\cite{sharma2024accountable_footprint_serverless}.
-We instead attribute by peak capacity, following Shapley-based accounting for shared datacentre power~\cite{islam2016energyaccounting} and the peak-provisioning argument of Han et al.~\cite{HotCarbon2024GameTheoretic}: the workload running at the peak drives the next server purchase, the one at the trough does not.
+We instead attribute by peak capacity, following Shapley-based accounting for shared datacentre power~\cite{islam2016energyaccounting} and the peak-provisioning argument of Han et al.~\cite{HotCarbon2024GameTheoretic}: the workloads running during peak times drive the next server purchase.
 The residual then takes the weight
 \begin{equation}
-w^{\text{K}}_{i,s} = \frac{\varphi_i}{\sum_j \varphi_j} ,
+w^{\text{cap}}_{i,s} = \frac{\varphi_i}{\sum_j \varphi_j} ,
 \label{eq:w-peak}
 \end{equation}
-where $\varphi_i$ is workload $i$'s Shapley share~\cite{shapley1953value} of the period's peak capacity.
-This weight is inherently retrospective: $\varphi_i$ depends on the whole period's load profile, so it can only be computed once the period closes, which also fixes the embodied amortization.
-Exact Shapley is exponential, but a smooth proxy (peak-hour energy share, sampled permutations~\cite{castro2009polynomial}) preserves the ordering and is what \S\ref{sec:demo} uses.
+
+where $\varphi_i$ is workload $i$'s Shapley share~\cite{shapley1953value} of the period's peak capacity. 
+Computing exact Shapley is expensive, but proxies (peak-hour energy share or sampled permutations~\cite{castro2009polynomial}) can approximate the ordering and incentive well.
+As $\varphi_i$ depends on the whole period's load profile, the weight is inherently retrospective and can only be computed once the period closes.
+Section~\ref{sec:asks} discusses estimating it ahead of the report to provide a real-time metric.
 
 
 % TODO (2026-05-19): refresh the Real-time estimation block below under the
@@ -479,42 +486,36 @@ Exact Shapley is exponential, but a smooth proxy (peak-hour energy share, sample
 \section{Example}
 \label{sec:demo}
 
-To illustrate \RSCI's reconciliation and incentives, we construct an minimal example with a single workload, modeling a real LLM-inference trace under a real grid-intensity trace.
+To illustrate \RSCI's reconciliation and incentives, we construct a minimal example: a single workload on a single node, driven by a real LLM-inference trace under a real grid-intensity trace.
 
 \parag{Setup}
 A tenant reserves a bare-metal 8$\times$H100 node and runs decode for an internal inference service over a three-day window.
-Each H100 draws on the order of $100$\,W idle and up to its $700$\,W TDP under load, so the node's GPU power swings between roughly $0.8$ and $5.6$\,kW as request volume varies.
+At the node level the machine draws about $2.5$\,kW idle and up to $10.2$\,kW at full load, so its power tracks request volume.
 We drive utilization from a real Azure LLM-inference trace~\cite{azure-llm-trace} and price energy with a real CAISO grid-intensity trace~\cite{caiso-grid-intensity}.
-The bottom-up operational term (\OSCI) counts only the \emph{marginal} GPU energy the decode work adds above idle, scaled by a datacentre PUE of $1.2$ and the hourly grid intensity; idle draw between bursts is excluded by construction.
+The bottom-up operational term (\OSCI) counts only the \emph{marginal} energy the decode work adds above idle, scaled by a datacentre PUE of $1.2$ and the hourly grid intensity; idle draw between bursts is excluded by construction.
 
-
-\parag{Setup}
-A cloud customer reserves a bare-metal 8XH100 GPU machine to run decode for an internal inference service for three days. [Mention min max GPU power. Bottom-up operational carbon (\OSCI) is marginal GPU energy, scaled by a datacentre PUE of $1.2$, times the hourly grid intensity.]
-We simulate the workload's energy and carbon using a real LLM-inference trace from Azure~\cite{azure-llm-trace} and a real CAISO grid-intensity trace~\cite{caiso-grid-intensity}.
-...serving a three-day window of a real LLM-inference trace under CAISO grid intensity.
-
-The provider reports a top-down $C^{\downarrow\text{S2}}=100$\,kg and $C^{\downarrow\text{S3}} = 50$\,kg (we omit Scope~1 in this example for simplicity).
-
-On top of this the provider reports a top-down total the bottom-up model cannot see: a Scope-2 residual of about $30$\,kg (idle capacity)
-Scope~3 all residual (embodied hardware and upstream supply chain).
-
+The provider reports a top-down total the bottom-up model cannot see.
+Its Scope~2 report exceeds the operational estimate by a residual of about $20$\,kg (idle capacity and energy-model error), and its Scope~3 report adds about $35$\,kg (embodied hardware and upstream supply chain); we omit Scope~1 for simplicity.
+Following \S\ref{sec:rsci} we regroup these into an energy-driven residual (about $9$\,kg: energy-model error and upstream electricity) and a capacity-driven residual (about $46$\,kg: idle and embodied).
 Magnitudes are illustrative, the residual being the quantity no provider exposes, so we claim only direction and ordering.
 
-
-\todo{cite: DGX A100/H100 datasheet; Azure LLM-inference trace; CAISO grid-intensity source; Scope-3 basis (embodied LCA + FERA).}
+\todo{cite: DGX H100 datasheet; Azure LLM-inference trace; CAISO grid-intensity source; Scope-3 basis (embodied LCA + FERA).}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/sec5_example.pdf}
-\caption{Illustrative two-SKU fleet (an older, less-efficient DGX A100 and a newer DGX H100) serving a real LLM-inference trace under a real grid-intensity trace, with a \emph{known} slice residual. Grid CI and token demand (top) drive per-node \OSCI and \SCI, which the tenant can state only \emph{per hardware}; \RSCI is reported at the fleet level as operational term $+$ per-scope residual bands (Scope~2 by energy-share, Scope~3 by peak-attribution), sidestepping the per-server attribution \SCI needs. The peak-attributed band rises with load: a busy fleet costs more per token. The right-column gauges compare each metric's aggregated bottom-up total (Agg.) against the provider's top-down report (Top-down), which differentiates Scope~2 and Scope~3 but not operational from residual within them: only \RSCI reaches it. Magnitudes are illustrative (the residual is the quantity no provider exposes), so only direction and ordering are claimed.}
+\caption{A single 8$\times$H100 node serving a real LLM-inference trace under a real grid-intensity trace, with a \emph{known} residual. Grid CI and token demand (top) drive the node's power, and from it \OSCI, \SCI, and \RSCI (per token, hourly). \OSCI counts only marginal operational energy; \SCI adds an amortised embodied term that stays negligible per token; \RSCI adds the residual as two bands matched to their driver (\S\ref{sec:rsci}): an energy-driven band (energy-share weight, flat per token) and a capacity-driven band (peak-attribution weight) that rises with load, so tokens served in a busy hour carry more of the fixed cost of capacity. The right-column gauges compare each metric's aggregated bottom-up total (Agg.) against the provider's top-down report (Top-down), which differentiates Scope~2 and Scope~3 but not operational from residual within them: only \RSCI reaches it. Magnitudes are illustrative (the residual is the quantity no provider exposes), so only direction and ordering are claimed.}
 \label{fig:demo}
 \end{figure}
 \parag{Result}
-\OSCI and \SCI can be stated only per node (Figure~\ref{fig:demo}, upper rows), and both fall well short of the provider's reported total: \OSCI captures under half of it (reconciliation gauges, right), while \SCI adds only a small embodied term that still needs per-server data the tenant cannot observe.
-Read at the fleet level, \RSCI closes the gap by construction: its operational term plus the energy-share and peak-attribution residual bands sum to the reported total (\S\ref{sec:rsci}).
-The two residual bands carry different incentives.
-The energy-share band (idle capacity) is roughly flat per token, whereas the peak-attribution band (embodied hardware) rises with load, so a busy fleet costs more per token: the workload at the peak forces the next server purchase.
-\RSCI thus prices procurement without any per-server embodied model, and reconciles for any weights summing to one.
+\OSCI and \SCI both fall well short of the provider's reported total (Figure~\ref{fig:demo}, reconciliation gauges): \OSCI captures under half of it, and \SCI adds only a small embodied term, since amortising the node's embodied carbon over its lifetime of tokens leaves a negligible per-token figure.
+Read against the report, \RSCI closes the gap by construction: its operational term plus the energy-share and peak-attribution residual bands sum to the reported total (\S\ref{sec:rsci}).
+The two bands carry different incentives.
+The energy-driven band is flat per token: it scales with energy drawn and rewards efficiency like \OSCI, but is neutral to when a token is served.
+The capacity-driven band instead rises with load, because a token served in a busy hour takes a larger share of the fixed cost of provisioned capacity.
+This adds an incentive \OSCI lacks: a workload that concentrates its load at demand peaks, or an over-provisioned one that holds idle capacity, pays more per token than one that spreads into the troughs.
+In this trace demand peaks when the grid is also dirtier, so shifting deferrable work off-peak lowers \RSCI on both counts, a cleaner operational term and a smaller capacity share.
+\RSCI prices this without any per-server embodied model, and reconciles for any weights summing to one.
 
 
 
@@ -554,25 +555,24 @@ The bottom-up model of \RSCI is only the operational term, $\sum_i \E_{i,s}\I_s$
   \item \emph{\RSCI reconciles by construction.} (Eq.~\ref{eq:reconcile}), for any weights summing to one and at any data fidelity.
 As the bottom-up model and the report's granularity improve, $\Delta$ shrinks and the allocation choice matters less. When no residual can be recovered, \RSCI degrades gracefully to \OSCI.
   \item \emph{\RSCI rewards all operational carbon reduction levers.}
-A load-shifter that moves energy to a cleaner hour reabsorbs only its own share $\E_i/\E_s$ of the energy-driven residual $\Delta^{\text{E}}$ it thereby creates, so its \RSCI still falls; a workload at the slice peak pays a larger share of the capacity residual $\Delta^{\text{K}}$ than one at the trough.
+A load-shifter that moves energy to a cleaner hour reabsorbs only its own share $\E_i/\E_s$ of the energy-driven residual $\Delta^{\text{en}}$ it thereby creates, so its \RSCI still falls; and work concentrated at demand peaks pays a larger share of the capacity-driven residual $\Delta^{\text{cap}}$ than work spread into the troughs.
 \end{enumerate}
 
 
-\section{Why \RSCI Cannot Be Computed Today}
+\section{Barriers to Practical Adoption}
 \label{sec:practice}
 
-\todo{in progress}
 % real-time: covered in §4 Properties (retrospective by design) and §7 (estimator sketch)
 
-
-% ===== SEC 6 SCAFFOLD argument skeleton only.
-% Terminology (lever / response / residual / weight) and Table 1 in Sec 2 are NOT final, so keep references to them abstract until they lock. Case-study numbers are from prior internal analyses and must be re-derived.
-% Argument arc: conditional promise -> what recovery requires -> evidence -> diagnostic -> bridge
-
-\paragraph{Setup: the \RSCI column is a conditional promise.}
-\S\ref{sec:demo} showed \RSCI closes the gaps when the residual is \emph{known}, and Table~\ref{tab:levers} claims \RSCI responds faithfully to every lever by construction.
-That claim is conditional: it holds only if the operator can recover the residual from the report \emph{and} distribute it across workloads by an appropriate weight, both of which require the report to expose each residual component's driver.
-This section asks whether today's reports meet that condition; drawing on \S\ref{sec:sota}, the prior is no.
+\S\ref{sec:demo} showed that once the residual is known, \RSCI reconciles by construction, and Table~\ref{tab:levers} claims it responds to every lever.
+Both rest on a condition the example granted for free: that the provider's report supplies a usable residual.
+The reconciliation identity (Eq.~\ref{eq:reconcile}) holds for any residual and any normalized weights, so \RSCI is always computable in principle.
+Whether it is \emph{useful} depends on three properties of the reported number.
+It must be \emph{present}, so that Eq.~\ref{eq:residual-total} has an anchor to difference against.
+It must be \emph{physically grounded}, so that each residual component has a driver a weight can attach to; otherwise the score reconciles but does not move when a workload changes its behavior.
+And it must be \emph{trustworthy}, stable and auditable enough to account against.
+We probed three real customer exports.
+Each satisfies \RSCI's arithmetic and fails a different one of these properties.
 
 \begin{itemize}
 \item \textbf{What recovery requires.} State the criterion as one requirement per weight family (\S\ref{sec:rsci}): the residual must be \emph{decomposed} into components; it needs a \emph{physical} (energy-based) allocation basis, or the energy-share weight cannot be formed; and it needs \emph{resource-level, billing-frequency} granularity, or the peak and temporal weights have nothing to attach to. Today's report supplies none of the three cleanly.
