@@ -16,7 +16,7 @@ grep -n '\label{sec:rsci}' paper/paper.tex   # then Read offset=<line>
 | §3 | The Issue with Bottom-Up Carbon Metrics | `sec:background` | SCI.md, sources/bashir-2024-sunk-carbon/bashir-2024-sunk-carbon.tex |
 | §4 | Reconciling Bottom-Up and Top-Down | `sec:rsci` | SHARMA_2024_SHAPLEY.md, BOAVIZTAPI_2024.md, CINERGY_2025.md |
 | §5 | Example | `sec:demo` | `experiments/trace_analysis.py` (live notebook) → `figures/sec5_example.pdf`. Single 8xH100 node, single workload; one figure (timeline + reconciliation gauges); Setup/Result/Properties prose written. See `project_sec5_example_design` memory. |
-| §6 | Why rSCI Cannot Be Computed Today | `sec:practice` | provider READMEs (gaps), terminology.md, Scaleway (re-run pending) |
+| §6 | Barriers to Practical Adoption | `sec:practice` | provider READMEs (gaps), terminology.md, aws/ (CUR + CCFT), Scaleway; narrative: we tried 3 real exports (Azure/AWS/Scaleway), each fails present/grounded/trustworthy; AWS para folds in the negative-residual reproducibility (~5x, unattributable) |
 | §7 | Call to Action | `sec:asks` | cross_provider_synthesis.md §5; Future Work merged in as the `Outlook` paragraph (2026-07-01) |
 | App A | Cloud provider survey universe (48 providers) | `app:inventory` | carbon_accounting_methodologies/README.md + non-customer-tool-providers.md |
 | App B | Scope-3 category coverage in the Big-3 (`tab:bigthree-s3`) | `app:bigthree-s3` | per-provider READMEs (moved out of §3 `\iffalse` salvage, 2026-07-01) |
