@@ -488,13 +488,14 @@ To illustrate \RSCI's reconciliation and incentives, we work one example end to 
 An organization reserves a bare-metal 8$\times$H100 node to serve an internal LLM over a three-day window and wants to report an \SCI-like metric: gCO$_2$ per million tokens served (gCO$_2$/Mtok), for each hour of the window.
 The node draws about $2.5$\,kW idle and up to $10.2$\,kW at full load~\cite{nvidia-dgx-h100-datasheet} and we assume a PUE of $1.2$.
 We model load using the 2024 Azure LLM inference trace~\cite{stojkovic-dynamollm-2025} and carbon intensity using a trace for the California grid (CAISO) provided by Electricity Maps~\cite{electricitymaps2026}.
-Retrospectively, the provider reports the node's footprint top-down: about $80$\,kg Scope~2 and $20$\,kg Scope~3 (we omit Scope~1 for simplicity).
-We ask how we'll the aggregated carbon-per-token metrics reconcile to that $100$\,kg total and what behaviour they reward along the way.
+Retrospectively, the provider reports the node's footprint top-down: $C^{\downarrow\text{S2}}\!=\!80$\,kg for Scope~2 and $C^{\downarrow\text{S3}}\!=\!20$\,kg for Scope~3 (we omit Scope~1 for simplicity).
+We ask how well the aggregated carbon-per-token metrics reconcile to that $100$\,kg total, and what behaviour they reward along the way.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/sec5_example.pdf}
-\caption{A single 8$\times$H100 node under a real inference trace and a real grid-intensity trace. Grid CI and demand (top) drive the node's power, and from it the three per-token metrics: \OSCI (operational only), \SCI (plus a small embodied term), and \RSCI (plus the residual, split into an energy-driven and a capacity-driven band; \S\ref{sec:rsci}). The gauges compare each metric's bottom-up total (Agg.) against the provider's top-down report (Top-down), split into Scope~2 and Scope~3; only \RSCI reaches it. Magnitudes are illustrative, so only direction and ordering are claimed.}
+\vspace{-7mm}
+\caption{Comparison of different carbon-per-token metrics (\OSCI, \SCI, \RSCI) over time, reported hourly. The bar chart compares each metric's aggregated total against the provider's top-down report.}
 
 
 \label{fig:demo}
@@ -514,17 +515,26 @@ Worse, the per-server \M reintroduces the fallacy \OSCI avoided: a workload on o
 %\SCI is thus both insufficient and, on embodied, perverse.
 
 \parag{\RSCI}
-\RSCI keeps \OSCI's operational term and adds the \emph{residual}: the difference between the reported total and the bottom-up estimate, here about $52$\,kg.
-Following Section~\ref{sec:rsci}, we split it by physical driver and allocate each part by a matched weight: an energy-driven part (about $13$\,kg, upstream electricity and model error), shared by energy drawn and flat per token; and a capacity-driven part (about $39$\,kg, idle and embodied), shared by peak-attribution and rising with load.
-The energy band rewards efficiency like \OSCI.
-The capacity band makes a token served in a busy hour, or one held on over-reserved capacity, pay a larger share of the fixed cost of provisioning, the incentive \OSCI drops and \SCI mishandles.
-Crucially, it prices this capacity with no per-server embodied model, so it carries none of \SCI's sunk-carbon fallacy: aging hardware simply draws more energy and reports a higher \RSCI.
-And because reconciliation fixes only the total, the weights stay free to reward peak-shaving and procurement deferral while still summing to the reported $100$\,kg; when no residual can be recovered they vanish and \RSCI degrades gracefully to \OSCI.
-In this trace the busier hours also tend to be somewhat dirtier, so a tenant that could shift deferrable work off-peak would lower \RSCI twice over: a cleaner operational term and a smaller capacity share.
+\RSCI keeps \OSCI's operational term and adds the \emph{residual}, the gap between the reported total and the bottom-up estimate: $\Delta = C^{\downarrow} - \sum_i \E_i\I \approx 52$\,kg.
+Following Section~\ref{sec:rsci}, we split $\Delta$ by physical driver into an energy-driven part $\Delta^{\text{en}}\!\approx\!13$\,kg (upstream electricity and model error) and a capacity-driven part $\Delta^{\text{cap}}\!\approx\!39$\,kg (idle and embodied); the fractions $\beta^{\text{S2}}\!=\!0.1$ and $\beta^{\text{S3}}\!=\!0.5$ reflect that the Scope-2 gap is almost all idle, while Scope-3 divides between embodied hardware and upstream electricity.
+Each part is allocated by a matched weight: energy drawn (flat per token) for $\Delta^{\text{en}}$ and peak-attribution (rising with machine load) for $\Delta^{\text{cap}}$.
 
-One caveat: \RSCI is retrospective, since the residual is known only once the provider publishes its report, so it cannot be computed in real time.
-This does not blunt its incentives: because the weights are fixed in advance, the effect of an action is known at decision time even though the value settles later, just as a peak demand charge shapes consumption long before the bill arrives.
-Across the five properties in Table~\ref{tab:properties}, only \RSCI satisfies all: it rewards every operational lever, prices capacity and embodied carbon, avoids the sunk-carbon fallacy, can reward procurement deferral, and reconciles to the provider's report.
+By construction the per-token scores sum back to the reported $100$\,kg.
+In this trace the busier hours also tend to be somewhat dirtier, so a tenant that could shift deferrable work off-peak would lower \RSCI twice over: a cleaner operational term and a smaller capacity share.
+\todo{maybe use a different CI trace and adapt this part}
+
+Only \RSCI satisfies all five properties in Table~\ref{tab:properties}:
+\begin{itemize}
+\setlength{\itemsep}{2pt}
+  \item \emph{Rewards operational levers.} Its operational term responds to the same operational levers as \OSCI and \SCI.
+  \item \emph{Prices embodied carbon.} Past hardware purchases are a sunk cost and should not steer operational choices~\cite{bashir2024}, but ignoring embodied carbon understates a team's true footprint and drops its incentive to provision less hardware.
+  \item \emph{Avoids the sunk-carbon fallacy.} Since embodied never enters a per-server \M, a workload on older hardware gets no benefit, it simply draws more energy and reports a higher \RSCI.
+  \item \emph{Rewards using less hardware.} A workload that holds reserved machines idle pays more than one that packs into fewer, so reserving less lowers \RSCI.
+  \item \emph{Reconciles by construction.} \RSCI's is the only metric that lets per-workload scores sum to the provider's reported total.
+\end{itemize}
+
+However, \RSCI is \emph{retrospective}: the residual is known only once the provider publishes its report, so it cannot be computed precicely in real time.
+This does not change its incentives: because the weights are fixed in advance, the effect of an action is known at decision time even though the exact value settles later, just as a peak demand charge shapes consumption long before the bill arrives.
 
 \begin{table}[t]
 \centering
@@ -541,7 +551,7 @@ Across the five properties in Table~\ref{tab:properties}, only \RSCI satisfies a
 Rewards operational levers         & \faithful & \faithful & \faithful \\
 Prices embodied carbon             & \faithful & \notrefl  & \faithful \\
 Avoids the sunk-carbon fallacy~\cite{bashir2024}     & \notrefl  & \faithful & \faithful \\
-Can incentivize procurement deferral  & \notrefl  & \notrefl  & \faithful \\
+Rewards using less hardware  & \notrefl  & \notrefl  & \faithful \\
 Reconciles to cloud provider's report         & \notrefl  & \notrefl  & \faithful \\
 \bottomrule
 \end{tabular}
@@ -551,6 +561,8 @@ Reconciles to cloud provider's report         & \notrefl  & \notrefl  & \faithfu
 
 \section{Barriers to Practical Adoption}
 \label{sec:practice}
+
+\todo{Do not read, in progress}
 
 % real-time: covered in §4 Properties (retrospective by design) and §7 (estimator sketch)
 
@@ -564,17 +576,37 @@ And it must be \emph{trustworthy}, stable and auditable enough to account agains
 We probed three real customer exports.
 Each satisfies \RSCI's arithmetic and fails a different one of these properties.
 
-\begin{itemize}
-\item \textbf{What recovery requires.} State the criterion as one requirement per weight family (\S\ref{sec:rsci}): the residual must be \emph{decomposed} into components; it needs a \emph{physical} (energy-based) allocation basis, or the energy-share weight cannot be formed; and it needs \emph{resource-level, billing-frequency} granularity, or the peak and temporal weights have nothing to attach to. Today's report supplies none of the three cleanly.
-\item \textbf{Evidence: real exports, each defeating one requirement.}
-  \begin{itemize}
-    \item \emph{AWS Frankfurt} --- allocation basis: most of the reported total sits in the revenue-allocated ``Other'' bucket, an undifferentiated lump with no physical driver to weight against. \todo{re-derive the $\sim$70\,\% figure in the consistent pass.}
-    \item \emph{Azure Frankfurt} --- the anchor itself: exported location-based Scope-2 is near zero, so the quantity the operational term reconciles against is missing and the region and time levers leave no recoverable response. \todo{re-derive.}
-    \item \emph{Scaleway} --- partial existence proof: daily granularity \emph{exists} (the levers are individually feasible), but the daily number is flat under load and idle\,$\approx$\,stress is confounded, so the \emph{union} \RSCI needs is unrealised. \todo{data pending; keep qualitative until the re-run lands.}
-  \end{itemize}
-\item \textbf{Diagnostic read-out.} Line the failures up against the not-reflected cells of Table~\ref{tab:levers} (utilization, time-shifting, peak): \RSCI could carry a faithful response to each, but the report exposes nothing of the matching shape, so the residual --- not the workload --- absorbs the lever. The residual is not merely large but \emph{undifferentiated}, and its size measures how much of each lever's real-carbon effect the provider declines to expose. Time-shifting is the concrete instance: a workload moved to a cleaner hour lowers its operational term, but the provider's monthly-average Scope-2 does not move, so the reduction is not lost but \emph{relocated} into a growing $\Delta^{\text{S2}}$ --- a measured quantity of how much clean-hour behavior the coarse methodology declines to credit (reconciliation forbids manufacturing a fleet-level reduction the audited books do not show). This is \RSCI as a diagnostic.
-\item \textbf{Close (bridge to \S\ref{sec:asks}).} The barrier is structural (coarse, delayed, opaque) but not fundamental: Scaleway and Oracle's power-based mode show the pieces are individually feasible, so it is a reporting \emph{choice}, which \S\ref{sec:asks} takes up.
-\end{itemize}
+\parag{Azure: the anchor is absent}
+Azure's methodology describes a location-based Scope-2 figure, but the customer export delivers it as approximately zero, so the quantity Eq.~\ref{eq:residual-total} differences against is missing.
+With no anchor, the operational term has nothing to reconcile to, and the region and time levers leave no recoverable response.
+\todo{re-derive the exported Azure Scope-2 LBM $\approx 0$ from the Frankfurt export; state period and account.}
+
+\parag{AWS: the anchor is present but ungrounded}
+On a real AWS export from a small company's production web service (Frankfurt, Model~3.0.1), the top-down anchor exists but most of it has no physical driver to weight against.
+Across eleven months, 77\% of reported location-based emissions (67--95\% month to month) fall in the ``Other'' bucket, the services AWS allocates by spend rather than by a physical model (\S\ref{sec:sota}).
+Within ``Other'', the largest contributor is the application load balancer (56\% of the bucket), followed by log and data-transfer bytes, the managed-Kubernetes control-plane fee, and public IPv4 address rental.
+Because these are allocated by spend, the natural weight is revenue-share, which is inert to the temporal lever: a workload moved to a cleaner hour changes its spend, and therefore this part of its footprint, by nothing.
+The flat fees make the point without any workload trace, since a rented IPv4 address (7\% of the reported total here) draws no marginal energy yet carries carbon in proportion to its price.
+This is not a reconciliation experiment; a single static service cannot exhibit the cross-workload allocation \RSCI is built for.
+It is evidence that the dominant term is grounded in billing rather than physics, so the levers of Table~\ref{tab:levers} have nothing to attach to.
+
+\parag{Scaleway: the anchor is present and granular but untrustworthy}
+Scaleway is the closest to what \RSCI needs: it publishes per-service carbon at daily granularity, so the temporal and utilization levers have somewhere to land.
+The numbers themselves, however, are not yet usable for accounting.
+The dashboard reports a footprint for days on which no workload ran, including days before the account existed, and it revises past values in hindsight, so a figure recorded one week does not match the same day read later.
+Fine granularity without stability is not an auditable anchor.
+\todo{snapshot the phantom-day and retroactive-edit evidence with timestamps before the numbers change again; cite the captured exports.}
+
+\parag{Diagnostic}
+The three failures line up against the not-reflected cells of Table~\ref{tab:levers}.
+\RSCI could carry a faithful response to utilization, time-shifting, and peak, but each report exposes nothing of the matching shape, so the residual, not the workload, absorbs the lever.
+Time-shifting is the concrete case: a workload moved to a cleaner hour lowers its operational term, but a monthly-average or spend-allocated Scope-2 does not move, so the reduction is not lost but relocated into a growing $\Delta^{\text{S2}}$, a measured quantity of how much clean-hour behavior the coarse methodology declines to credit.
+Reconciliation forbids manufacturing a fleet-level reduction the audited books do not show, which is what makes \RSCI a diagnostic of the reporting gap rather than only a metric.
+
+\parag{A reporting choice, not a fundamental limit}
+None of these barriers is intrinsic.
+Scaleway already publishes at daily granularity, and Oracle's power-based mode allocates on a physical basis, so the pieces exist separately even though no single report combines them.
+The obstacles are coarse cadence, non-physical allocation, and weak auditability, all reporting choices, which \S\ref{sec:asks} takes up.
 
 
 
