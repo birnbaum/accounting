@@ -482,37 +482,40 @@ Section~\ref{sec:asks} discusses estimating it ahead of the report to provide a 
 \section{Example}
 \label{sec:demo}
 
-To illustrate \RSCI's reconciliation and incentives, we work one example end to end: a single workload on a single node, reporting carbon per token served.
+To illustrate \RSCI's reconciliation and incentives, we work one example end to end: we model a single workload on a single node, reporting carbon per token served. Results are shown in Figure~\ref{fig:demo}.
 
 \parag{Scenario}
-An organization reserves a bare-metal 8$\times$H100 node to serve an internal, employee-facing assistant, a copilot over internal documents, over a three-day window.
-The node draws about $2.5$\,kW idle and up to $10.2$\,kW at full load~\cite{nvidia-dgx-h100-datasheet}, so its power tracks demand, which we drive from a real Azure inference trace~\cite{stojkovic-dynamollm-2025} priced against a real CAISO grid-intensity trace~\cite{electricitymaps2026}.
-After the fact, the provider reports the node's footprint top-down: about $80$\,kg Scope~2 and $20$\,kg Scope~3, $100$\,kg in total (we omit Scope~1).
-We ask how close each per-workload metric comes to that $100$\,kg, and what behaviour it rewards along the way (Figure~\ref{fig:demo}); magnitudes are illustrative, so we claim only direction and ordering.
+An organization reserves a bare-metal 8$\times$H100 node to serve an internal LLM over a three-day window and wants to report an \SCI-like metric: gCO$_2$ per million tokens served (gCO$_2$/Mtok), for each hour of the window.
+The node draws about $2.5$\,kW idle and up to $10.2$\,kW at full load~\cite{nvidia-dgx-h100-datasheet} and we assume a PUE of $1.2$.
+We model load using the 2024 Azure LLM inference trace~\cite{stojkovic-dynamollm-2025} and carbon intensity using a trace for the California grid (CAISO) provided by Electricity Maps~\cite{electricitymaps2026}.
+Retrospectively, the provider reports the node's footprint top-down: about $80$\,kg Scope~2 and $20$\,kg Scope~3 (we omit Scope~1 for simplicity).
+We ask how we'll the aggregated carbon-per-token metrics reconcile to that $100$\,kg total and what behaviour they reward along the way.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/sec5_example.pdf}
 \caption{A single 8$\times$H100 node under a real inference trace and a real grid-intensity trace. Grid CI and demand (top) drive the node's power, and from it the three per-token metrics: \OSCI (operational only), \SCI (plus a small embodied term), and \RSCI (plus the residual, split into an energy-driven and a capacity-driven band; \S\ref{sec:rsci}). The gauges compare each metric's bottom-up total (Agg.) against the provider's top-down report (Top-down), split into Scope~2 and Scope~3; only \RSCI reaches it. Magnitudes are illustrative, so only direction and ordering are claimed.}
+
+
 \label{fig:demo}
 \end{figure}
+
 \parag{\OSCI}
-The operational metric counts only the marginal energy the work draws above idle, scaled by the datacentre PUE ($1.2$) and the hourly grid intensity.
-It rewards the levers a tenant controls day to day: using less energy, and shifting flexible work into cleaner hours.
-By construction it stops there, so the node's idle baseline and its embodied hardware stay invisible to it.
-Here it reaches about $48$\,kg, under half the reported total.
-Its one advantage over \SCI is that, lacking any embodied term, it cannot be gamed by depreciated hardware, the sunk-carbon fallacy~\cite{bashir2024}.
+This operational metric counts only the marginal energy the work draws above idle, scaled by the PUE and the hourly grid intensity.
+It rewards the main levers a tenant controls in this scenario: using less energy and computing work during cleaner hours.
+By construction it stops there, so the node's idle power and its embodied hardware are not considered.
+Its advantage over \SCI is that, lacking any embodied term, it cannot be gamed by depreciated hardware (i.e., the sunk-carbon fallacy~\cite{bashir2024}).
+Here it reaches about $48$\,kg, about half the top-down reported total.
 
 \parag{\SCI}
-\SCI folds in an embodied term $M$: the node's cradle-to-gate carbon amortised over its lifespan and divided across the tokens it serves in that time~\cite{sci-spec}.\footnote{We take the node's cradle-to-gate embodied carbon as ${\approx}2500$\,kg: NVIDIA reports $1312$\,kg for the 8-GPU HGX~H100 baseboard~\cite{nvidia2025hgxh100pcf}, plus CPUs, memory, storage, NICs, power supplies, and cooling. The \SCI spec sets $M=\mathit{TE}\cdot(\mathit{TiR}/\mathit{EL})\cdot(\mathit{RR}/\mathit{ToR})$; for this single-tenant node ($\mathit{RR}/\mathit{ToR}{=}1$) it is that embodied carbon prorated over a 4-year lifespan. The per-token term stays well below the operational one even at twice the embodied carbon or half the lifespan.}
-The intent is to price hardware, but per token the amortised figure is small, about a tenth of the operational term, so the total barely moves and still falls well short of the report.
-Worse, the per-server $M$ reintroduces the fallacy \OSCI avoided: a workload on older, written-down hardware is charged \emph{less} embodied carbon, rewarding the tenant for keeping inefficient machines in service~\cite{bashir2024}.
-\SCI is thus both insufficient and, on embodied, perverse.
+\SCI folds in an embodied term \M: the node's cradle-to-gate carbon amortised over its lifespan and divided across the tokens it serves in that time~\cite{sci-spec}.\footnote{We take the node's cradle-to-gate embodied carbon as ${\approx}2500$\,kg: NVIDIA reports $1312$\,kg for the 8-GPU HGX~H100 baseboard~\cite{nvidia2025hgxh100pcf}, plus CPUs, memory, storage, NICs, power supplies, and cooling. We assume the node is amortised over a 4-year lifespan, leading to \M $\approx 14$ gCO$_2$/Mtok.}
+The intent is to price embodied carbon, but per-token the amortised figure is small, about a tenth of the operational term, so the total barely moves and still falls well short of the report.
+Worse, the per-server \M reintroduces the fallacy \OSCI avoided: a workload on old hardware can be charged \emph{less} embodied carbon, rewarding the tenant for keeping inefficient machines in service~\cite{bashir2024}.
+%\SCI is thus both insufficient and, on embodied, perverse.
 
 \parag{\RSCI}
-\RSCI closes the gap by construction.
-It keeps \OSCI's operational term and adds the \emph{residual}: the difference between the reported total and the bottom-up estimate, here about $52$\,kg.
-Following \S\ref{sec:rsci} we split it by physical driver and allocate each part by a matched weight: an energy-driven part (about $13$\,kg, upstream electricity and model error), shared by energy drawn and flat per token; and a capacity-driven part (about $39$\,kg, idle and embodied), shared by peak-attribution and rising with load.
+\RSCI keeps \OSCI's operational term and adds the \emph{residual}: the difference between the reported total and the bottom-up estimate, here about $52$\,kg.
+Following Section~\ref{sec:rsci}, we split it by physical driver and allocate each part by a matched weight: an energy-driven part (about $13$\,kg, upstream electricity and model error), shared by energy drawn and flat per token; and a capacity-driven part (about $39$\,kg, idle and embodied), shared by peak-attribution and rising with load.
 The energy band rewards efficiency like \OSCI.
 The capacity band makes a token served in a busy hour, or one held on over-reserved capacity, pay a larger share of the fixed cost of provisioning, the incentive \OSCI drops and \SCI mishandles.
 Crucially, it prices this capacity with no per-server embodied model, so it carries none of \SCI's sunk-carbon fallacy: aging hardware simply draws more energy and reports a higher \RSCI.
@@ -624,6 +627,8 @@ Two narrower questions remain: allocating the residual across tenants sharing se
 \todo{current carbon accounting is imperfect and does not always incentivize the right downstream behavior, and the standards are under continuous revision. That is a separate problem. \RSCI is defined against the \emph{structure} of GHG-Protocol-style accounting, not any particular vintage, so future revisions slot into the same framework. add citations for the critique of GHG-Protocol-style carbon accounting (market-based instruments, RECs/PPAs, location- vs. market-based divergence, ongoing Scope 2 revision, etc.)}
 \todo{Terminology: rSCI score, reSCI?, residual (bridge, term, emissions)}
 \todo{add more related work}
+\todo{grid intensity vs carbon intensity}
+\todo{Section vs §}
 % 2. Cuts I made in the §7 merge (so you can veto any): the (a)(b)(c) Kalman/pooling enumeration collapsed to one clause; the \hat\mu/\hat\rho references dropped entirely (they were dangling anyway, only defined in the commented-out real-time block); the "Scaleway/OVHcloud already publish water" detail and the energy-coefficient-standardization future-work item removed; the routing-invariance mechanism (the φ_i marginalization argument) compressed to just the claim. The bounded-correlation open problem survived as a paper-strengthener.
 % 3. Two references now lean on things not yet solid: the §4 footnote points at a "notation pass" (your existing \todo{Revise notation} at the §4 setup), and §7's provider ask reuses the GCP-collapse claim from §2 line 181 — both already sourced, just noting the coupling.
 
