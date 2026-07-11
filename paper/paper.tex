@@ -65,7 +65,7 @@
 \newenvironment{callforaction}
   {\par\medskip\noindent\begin{lrbox}{\cfabox}%
    \begin{minipage}{\dimexpr\columnwidth-2\fboxsep-2\fboxrule\relax}%
-   \small\textbf{Call for Action.}\hspace{1mm}\itshape}
+   \small\textbf{Ask.}\hspace{1mm}\itshape}
   {\end{minipage}\end{lrbox}\noindent\fbox{\usebox{\cfabox}}\par\medskip}
 
 \AtBeginDocument{%
@@ -174,7 +174,7 @@ Towards this, we make the following contributions:
 \item We review the state of the art in cloud carbon accounting, including a survey of 48 providers and a matrix showing which engineering actions actually move which provider's reported number.
 \item We introduce \RSCI, which anchors a bottom-up energy estimate to the provider's top-down report through a \emph{residual bridge}, so per-workload numbers sum to the reported total by construction.
 \item We show that reconciliation constrains only the reported \emph{total} and leaves the per-workload allocation free, so the residual bridge can be allocated to reward sustainable behavior, such as peak-shaving and procurement-deferral, that no bottom-up-only metric can express.
-\item We diagnose why \RSCI cannot yet be computed on today's provider reports, and set out concrete asks on provider reporting, customer-side estimation, and standards that would close the gap.
+\item We diagnose why \RSCI cannot yet be computed on today's provider reports, and set out concrete asks on provider reporting, tenant-side estimation, and standards that would close the gap.
 \end{itemize}
 
 
@@ -294,7 +294,7 @@ This means that improving \SCI or \OSCI does not necessarily move the audited nu
 
 \paragraph{Customer-facing tools are rare.}
 We surveyed 48 cloud providers in May~2026, covering hyperscalers, mid-tier and regional IaaS, CDN/edge, AI-specialised neoclouds, application-PaaS, and sustainability-positioned regional operators (full enumeration with disclosure classification in Appendix~\ref{app:inventory}).
-Only twelve ship a first-party, per-customer carbon dashboard --- the bar for a customer to source a GHG-Protocol-compliant Scope-3 Cat-1 input from their cloud spend.\footnote{We exclude marketplace third-party SaaS such as Huella Cloud on Huawei Cloud (vendor: SGS Solutions), since the per-provider allocation is not auditable against the provider's own emission factors. Exoscale's calculator is borderline (Exoscale-branded surface, CloudAssess engine by Resilio/Kleis) and is omitted.}
+Only twelve ship a first-party, per-customer carbon dashboard --- the bar for a tenant to source a GHG-Protocol-compliant Scope-3 Cat-1 input from their cloud spend.\footnote{We exclude marketplace third-party SaaS such as Huella Cloud on Huawei Cloud (vendor: SGS Solutions), since the per-provider allocation is not auditable against the provider's own emission factors. Exoscale's calculator is borderline (Exoscale-branded surface, CloudAssess engine by Resilio/Kleis) and is omitted.}
 Of the remaining 36, fourteen publish corporate-level Scope~1/2/3 disclosures without any per-customer surface; the other 22 publish only marketing-grade renewable/PUE claims or nothing at all.
 Most starkly, the fastest-growing segment --- AI/GPU clouds (CoreWeave, Lambda, Crusoe, Nebius, RunPod, Together, Replicate, Hyperstack, Verda, Fireworks~AI, Paperspace) --- has \emph{zero} per-customer tools.
 Compute capacity for AI training and inference is being built at the fastest pace in cloud history with the \emph{least} customer carbon transparency.
@@ -303,7 +303,7 @@ The rest of this section focuses on the twelve per-customer tools.
 \paragraph{Four axes of variation.}
 Every customer tool computes the same shape:
 \[
-\mathrm{customer\,carbon} \;=\;
+\mathrm{tenant\,carbon} \;=\;
 \textstyle\sum_{r}\, u_{r}\,\cdot\,f_{r} \;+\; \mathrm{overheads},
 \]
 where $u_{r}$ is an activity unit (vCPU-hours, instance-hours, bytes, CPU-time, GB-month, \$-spend, server-hours) and $f_{r}$ is a per-unit factor.
@@ -313,7 +313,7 @@ The prior literature's three-family taxonomy (usage-time / traffic / component-L
 
 
 \paragraph{Measured energy.}
-How well _that unit tracks the customer's actual energy draw.
+How well _that unit tracks the tenant's actual energy draw.
 For network, bytes are approximately linear in energy, so byte-share allocation is structurally sound (Cloudflare, Fastly-Delivery, Akamai's byte component).
 For compute the relationship is highly non-linear (an idle server still draws on the order of half its full-load power) so vCPU-hours, instance-hours, and \$-spend systematically misweight idle and busy workloads.
 Four customer-surface allocations approach energy-direct, in decreasing concreteness: \emph{Scaleway} combines per-component LCA with actual measured CPU consumption and published Boavizta consumption profiles for the monthly report, so an idle and a fully-loaded VM at the same SKU receive different allocations;\footnote{\url{https://www.scaleway.com/en/docs/environmental-footprint/}; per-product calculation pages compiled in our reference set.}
@@ -511,7 +511,7 @@ Only \RSCI satisfies all five properties in Table~\ref{tab:properties}:
 A limitation is that final \RSCI scores are \emph{retrospective}. 
 The residual is known only once the provider publishes its report, and the exact capacity weight depends on the realized load profile. 
 In practice, users can instead optimize against proxies such as peak-hour energy share, which approximate the final weights and preserve the intended incentives. 
-This is analogous to peak-demand electricity tariffs, where customers optimize against signals such as peak periods or demand charges before their final bill is calculated~\cite{bartusch2011demandtariff}.
+This is analogous to peak-demand electricity tariffs, where consumers optimize against signals such as peak periods or demand charges before their final bill is calculated~\cite{bartusch2011demandtariff}.
 
 \begin{table}[t]
 \centering
@@ -580,31 +580,38 @@ More granularity in any dimension shrinks the residual and grounds how it divide
 \end{callforaction}
 
 
-\parag{Methodologies are opaque and inconsistent}
+\parag{Reported totals are opaque and ungrounded}
 Even where the report is fine-grained, the total it reports must be one a tenant can trust.
-\RSCI anchors to that total, so it should be comprehensive, consistent across providers, and methodologically transparent enough to reproduce.
-Today it is none of these, and it rarely discloses which actions would move it.
+\RSCI anchors to that total, so it should be comprehensive, methodologically transparent enough to reproduce, and clear about which actions move it.
+Today it is none of these.
 
 Even for EC2, where AWS allocates by physical usage rather than spend, we could not reproduce the reported figure: a per-vCPU energy estimate runs about twice the reported number at idle and five times at half load, so the residual turns negative.
 A negative residual is admissible in principle, but here it is a smell rather than a result: either our bottom-up model overstates the workload's energy, or the top-down report is opaque and possibly under-counts, and nothing AWS publishes lets us tell which.
 The rest, the ``Other'' tail, is allocated by spend, which decouples the reported number from physical carbon: it carries 81\% of this account's emissions on 38\% of its spend, and 7 gCO$_2$ per dollar against EC2's 1, so an action that cuts real energy in the ``Other'' services need not move the report at all.
 Neither does timing: because Scope~2 is valued at a monthly-average carbon intensity, running the same work in cleaner hours changes nothing in the report.
 These are real levers the methodology hides, and a report that named the drivers behind its number would let a tenant see which ones it responds to.
-
-Providers also disagree at nearly every step, so the same workload reconciles to a different total, or to none, depending on where it runs (Table~\ref{tab:levers}).
-Some do not even reconcile with themselves: Microsoft states outright that its customer calculator ``will differ from those reflected in Microsoft's corporate disclosure''~\cite{microsoft-s3-2021} and that ``usage for emissions calculations might not match your Microsoft usage for billing purposes''~\cite{azure-methodology-2026}, so the customer-facing number is by admission not the audited one.
-Azure and T~Cloud also export only a near-zero market-based figure, leaving no location-based anchor to reconcile against, while most others expose one.
-AWS allocates a large tail by spend, GCP weights per-SKU energy by list price inside a physically named unit, and only Oracle, Scaleway, and T~Cloud allocate compute by measured energy.
-No two of the three hyperscalers even count the same Scope~3 categories (Table~\ref{tab:bigthree-s3}): AWS includes upstream fuel losses and building embodied carbon, GCP adds business travel and commuting but drops end-of-life, and Azure includes end-of-life but drops both fuel losses and buildings, each over a different hardware lifetime.
-Underlying all of this, the GHG Protocol is under-specified for cloud, leaving shared-infrastructure allocation, equipment lifetimes, temporal matching, and building embodied carbon to each provider's discretion.
+Some providers do not even reconcile with themselves: Microsoft states outright that its customer calculator ``will differ from those reflected in Microsoft's corporate disclosure''~\cite{microsoft-s3-2021} and that ``usage for emissions calculations might not match your Microsoft usage for billing purposes''~\cite{azure-methodology-2026}, so the number a tenant would anchor to is, by admission, not the audited one.
 
 \begin{callforaction}
-Above all, cloud carbon accounting needs a GHG standard specific enough to make provider numbers comparable.
+Providers should follow existing best practice in carbon accounting: allocate from physical telemetry rather than economic proxies wherever possible, report location-based figures at (sub)hourly carbon intensity, and keep customer-facing numbers consistent with their own internal accounting.
+The methodology should be transparent enough to expose which drivers move the number, such as idle power, embodied hardware, and upstream losses, so the part of the total that no usage line explains can still be attributed.
+\end{callforaction}
 
-Providers should adhere to already existing best practices in carbon accounting: allocate emissions from physical telemetry rather than economic factors whenever possible, report location-based figures, use (sub)hourly carbon intensity.
-Customer-facing numbers should be consistent with the provider's own internal accounting, with published materiality assessments for any excluded category.
 
-Ideally, providers should make the methodology transparent enough to understand the levers that move the reported number, such as idle power, embodied hardware, and upstream losses, so the part of the number no usage line explains can still be attributed.
+\parag{There is no shared standard}
+Even a grounded, reproducible number is of limited use if every provider computes a different one.
+\RSCI anchors to whatever the provider reports, so the same workload reconciles to a different total, or to none, depending on where it runs (Table~\ref{tab:levers}).
+Azure and T~Cloud export only a near-zero market-based figure, leaving no location-based anchor to reconcile against, while most others expose one.
+AWS allocates a large tail by spend, GCP weights per-SKU energy by list price inside a physically named unit, and only Oracle, Scaleway, and T~Cloud allocate compute by measured energy.
+No two of the three hyperscalers even count the same Scope~3 categories (Table~\ref{tab:bigthree-s3}): AWS includes upstream fuel losses and building embodied carbon, GCP adds business travel and commuting but drops end-of-life, and Azure includes end-of-life but drops both fuel losses and buildings, each over a different hardware lifetime.
+Underlying all of this, the GHG Protocol is under-specified for cloud, leaving shared-infrastructure allocation, equipment lifetimes, temporal matching, and building embodied carbon to each provider's discretion, and the standard itself is under continuous revision.
+This does not undermine \RSCI: it is defined against the \emph{structure} of GHG-Protocol accounting, a top-down total split by scope, so tighter rules and future revisions slot into the same framework rather than breaking it.
+
+\todo{Optional: add citations for the broader critique of GHG-Protocol-style accounting (market-based instruments, RECs/PPAs, location- vs. market-based divergence, ongoing Scope 2 revision) to back the "under continuous revision" claim in \S\ref{sec:practice} barrier 3.}
+
+\begin{callforaction}
+Above all, cloud carbon accounting needs a GHG standard specific enough to make provider numbers comparable: a common set of counted categories, published materiality assessments for any exclusion, and a shared rule for allocating shared infrastructure.
+Consistency across providers is what turns a per-workload number from a local estimate into one a tenant can carry, compare, and rely on.
 \end{callforaction}
 
 
@@ -626,12 +633,11 @@ Absent any history the estimators default to zero residual and \RSCI degrades gr
 \todo{smth about bounding reconciliation error}
 
 
-\todo{note that current carbon accounting is imperfect and does not always incentivize the right downstream behavior! and the standards are under continuous revision. That is a separate problem. \RSCI is defined against the \emph{structure} of GHG-Protocol-style accounting, so future revisions slot into the same framework. add citations for the critique of GHG-Protocol-style carbon accounting (market-based instruments, RECs/PPAs, location- vs. market-based divergence, ongoing Scope 2 revision, etc.)}
 
 \section{General TODOs}
 % Do not yet touch these
 \todo{Clean-up appendix tables, especialyl links.}
-\todo{Tenant vs customer terminology}
+% Terminology resolved: "tenant" = the actor (runs workloads, controls levers, trusts the report); "customer" kept only in frozen provider-artifact names (per-customer tool, customer-facing dashboard) matching provider vocabulary and the survey status label. Electricity-tariff analogy uses "consumers" to avoid the collision.
 \todo{explain MBM and LBM, and why they are relevant to the residual.}
 \todo{GHG vs carbon vs CO2e terminology.}
 \todo{Terminology: rSCI score, reSCI?, residual (bridge, term, emissions)}
