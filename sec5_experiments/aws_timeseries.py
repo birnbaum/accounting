@@ -269,10 +269,10 @@ def _(Patch, cur, emissions, np, pd, plt):
     _x = np.arange(len(_s2.index))
     _labels = [pd.to_datetime(m).strftime("%b\n%Y") for m in _s2.index]
     fig_zoom, _axd = plt.subplot_mosaic(
-        [["a", "l"], ["b", "c"]],
-        figsize=(7.5, 5), gridspec_kw={"width_ratios": [4, 0.5]},
+        [["a", "d"], ["b", "c"]],
+        figsize=(6, 4.5), gridspec_kw={"width_ratios": [4, 2.2]},
     )
-    _ax_em, _ax_sp, _ax_c, _ax_leg = _axd["a"], _axd["b"], _axd["c"], _axd["l"]
+    _ax_em, _ax_sp, _ax_c, _ax_d = _axd["a"], _axd["b"], _axd["c"], _axd["d"]
 
     # (a) emissions: EC2 S2, EC2 S3, Other S2, Other S3 (solid = S2, striped = S3).
     _bottom = np.zeros(len(_x))
@@ -281,45 +281,65 @@ def _(Patch, cur, emissions, np, pd, plt):
             _ax_em.bar(_x, _piv[_svc], 0.6, bottom=_bottom, color=_COLOR[_svc],
                        hatch=_hatch, edgecolor="white" if _hatch else "none")
             _bottom = _bottom + _piv[_svc].to_numpy()
-    _ax_em.set_ylabel("LBM emissions (kg CO$_2$e)")
-    _ax_em.set_title("(a) AWS reported emissions: Scope 2 vs Scope 3, by service")
+    _ax_em.set_ylabel("Emissions (kg CO$_2$e)")
+    _ax_em.set_title("(a) AWS reported emissions by \"service\"", fontsize=10, weight="bold")
     _ax_em.legend(
         handles=[Patch(facecolor=_COLOR[s], label=_LABEL[s]) for s in _SERVICE_ORDER]
         + [Patch(facecolor="#bbb", label="Scope 2"),
            Patch(facecolor="#bbb", hatch="//", edgecolor="white", label="Scope 3")],
-        ncol=2, frameon=False, loc="upper center", bbox_to_anchor=(0.55, 1),
+        ncol=2, frameon=False, loc="upper center", bbox_to_anchor=(0.58, 1),
     )
     _ax_em.set_xticks(_x)
     _ax_em.set_xticklabels([])
+
+    # (d) zoom: May's "Other" EMISSIONS as a single block. Unlike cost, AWS does
+    # not disaggregate emissions by usage type, so its composition is unknown ("?").
+    _may_ec2_em = _s2["AmazonEC2"].iloc[-1] + _s3["AmazonEC2"].iloc[-1]
+    _may_oth_em = _s2["Other"].iloc[-1] + _s3["Other"].iloc[-1]
+    _ax_d.bar(0, _may_oth_em, 0.6, color=_COLOR["Other"])
+    _ax_d.text(0.4, _may_oth_em / 2, "?", ha="left", va="center", fontsize=9)
+    _ax_d.set_xlim(-0.4, 3.0)
+    _ax_d.set_xticks([0])
+    _ax_d.set_xticklabels(["May"])
+    _ax_d.set_title("(d) May 'Other'", fontsize=10, weight="bold")
+    _ax_d.spines["bottom"].set_bounds(-0.4, 0.4)
+
+    # Connectors tie May's "Other" block in (a) to the full-height bar in (d):
+    # lower line at the start of Other Scope 2, upper line at the very top.
+    for _y_a, _y_d in [(_may_ec2_em, 0.0), (_may_ec2_em + _may_oth_em, _may_oth_em)]:
+        fig_zoom.add_artist(ConnectionPatch(
+            xyA=(_x[-1] + 0.3, _y_a), coordsA=_ax_em.transData,
+            xyB=(-0.3, _y_d), coordsB=_ax_d.transData,
+            color="#999", linewidth=0.6, linestyle=(0, (3, 3)),
+        ))
 
     # (b) spend by service.
     _bottom = np.zeros(len(_x))
     for _svc in _SERVICE_ORDER:
         _ax_sp.bar(_x, _spend[_svc], 0.6, bottom=_bottom, color=_COLOR[_svc], label=_LABEL[_svc])
         _bottom = _bottom + _spend[_svc].to_numpy()
-    _ax_sp.set_ylabel("Spend (USD)")
-    _ax_sp.set_title("(b) AWS spend, aggregated by service")
+    _ax_sp.set_ylabel("Cost (USD)")
+    _ax_sp.set_title("(b) AWS cost, aggregated by \"service\"", fontsize=10, weight="bold")
     _ax_sp.legend(ncol=2, frameon=False, loc="upper center", bbox_to_anchor=(0.4, 0.95))
     _ax_sp.set_xticks(_x)
     _ax_sp.set_xticklabels(_labels)
     _ax_em.set_xlim(_ax_sp.get_xlim())
 
     # (c) zoom: May's "Other" spend exploded into its top usage types, full height.
+    # Each segment is labelled inline to the right instead of via a legend.
     _cmap = plt.cm.tab10.colors[2:]
     _b = 0.0
-    for _i, (_cat, _val) in enumerate(zip(_zoom_cats, _zoom_vals)):
+    _height_nudges = [0,0,-10,-20,-10,0,+20]
+    for _i, (_cat, _val, _height_nudge) in enumerate(zip(_zoom_cats, _zoom_vals, _height_nudges)):
         _col = "#cccccc" if _cat == "Other" else _cmap[_i % 10]
-        _ax_c.bar(0, _val, 0.8, bottom=_b, color=_col, label=_cat)
+        _ax_c.bar(0, _val, 0.6, bottom=_b, color=_col)
+        _ax_c.text(0.4, _b + _val / 2 + _height_nudge, _cat, ha="left", va="center", fontsize=9)
         _b += _val
+    _ax_c.set_xlim(-0.4, 3.0)
     _ax_c.set_xticks([0])
     _ax_c.set_xticklabels(["May"])
-    _ax_c.set_title("(c) May 'Other'")
-    #_ax_c.set_ylabel("Spend (USD)")
-
-    # Category legend goes in the empty top-right cell.
-    _ax_leg.axis("off")
-    _hc, _lc = _ax_c.get_legend_handles_labels()
-    _ax_leg.legend(_hc, _lc, frameon=False, loc="center left", title="'Other' usage type")
+    _ax_c.set_title("(c) May 'Other'", fontsize=10, weight="bold")
+    _ax_c.spines["bottom"].set_bounds(-0.4, 0.4)
 
     # Connectors tie May's "Other" segment in (b) to the full-height bar in (c).
     _may_ec2 = _spend["AmazonEC2"].iloc[-1]
@@ -327,12 +347,12 @@ def _(Patch, cur, emissions, np, pd, plt):
     for _y_b, _y_c in [(_may_ec2, 0.0), (_may_ec2 + _may_oth, _may_oth)]:
         _con = ConnectionPatch(
             xyA=(_x[-1] + 0.3, _y_b), coordsA=_ax_sp.transData,
-            xyB=(-0.4, _y_c), coordsB=_ax_c.transData,
+            xyB=(-0.3, _y_c), coordsB=_ax_c.transData,
             color="#999", linewidth=0.6, linestyle=(0, (3, 3)),
         )
         fig_zoom.add_artist(_con)
 
-    for _ax in (_ax_em, _ax_sp, _ax_c):
+    for _ax in (_ax_em, _ax_sp, _ax_c, _ax_d):
         _ax.spines[["top", "right"]].set_visible(False)
 
     fig_zoom.align_ylabels()

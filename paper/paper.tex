@@ -112,24 +112,22 @@
 
 
 \begin{abstract}
-There exist two largely separate approaches to quantifying the carbon footprint of cloud workloads.
-Bottom-up metrics such as Software Carbon Intensity (\SCI) provide real-time signals for carbon-aware optimization, but are blind to most provider-side overheads.
-Top-down reports by cloud providers can provide a comprehensive view of a tenant's carbon footprint, but are coarse, delayed, and methodologically opaque.
-Because the two approaches differ in scope and reporting frequency, the current state of the art treats them as decoupled: bottom-up metrics for optimization, top-down numbers for corporate disclosure.
+Organizations want to reduce the carbon footprint of their cloud applications, but rely on two largely disconnected ways of measuring it.
+Bottom-up metrics like Software Carbon Intensity (\SCI) provide real-time signals for carbon-aware optimization, but are blind to most provider-side overheads.
+Top-down reports by cloud providers provide a more comprehensive view of a tenant's carbon footprint, but are coarse and methodologically opaque.
+Because the two approaches differ in scope and reporting frequency, the current state of the art treats them as decoupled: bottom-up metrics for optimization, top-down reports for corporate disclosure.
 
-We argue that although the two signals can never be identical, \emph{they should be reconcilable}. 
-If organizations cannot trace their bottom-up improvements through to the audited top-down report, they will lose trust in both metrics. 
-In this paper, we survey the state of the art in cloud carbon accounting and propose a vision for \RSCI: a per-workload metric that re-anchors a bottom-up energy estimate to the cloud provider's top-down report through a residual bridge, which can be allocated to workloads in a way that incentivizes sustainable behavior.
-We show that current provider reporting is too coarse and methodologically inconsistent reconciliation in practice, and lay out the concrete steps needed to close this gap.
+We argue that although the two signals can never be identical, they should be \emph{reconcilable}. 
+A per-workload metric whose bottom-up improvements never surface in the provider's audited report will not be trusted or funded at scale.
+We survey the state of the art in cloud carbon accounting and propose a vision for \RSCI: a per-workload metric that re-anchors a bottom-up energy estimate to the cloud provider's top-down report through a residual bridge, which can be allocated to workloads in a way that incentivizes sustainable behavior.
+We show that today's reporting is still too coarse and methodologically inconsistent to support credible reconciliation and lay out concrete steps in provider reporting and standards to make it practical.
+
 \end{abstract}
 
 \maketitle
 
 \section{Introduction}
 \label{sec:intro}
-
-\todo{more storytelling in first abstract paragraph? Is "trust" the right framing? maybe more into the direction of structural impossibility, adoption, and funding?}
-\todo{revise framing after Secs 4-7 are done}
 
 A major challenge in sustainable computing is quantifying the carbon footprint of workloads. 
 It is a prerequisite for determining the effectiveness of carbon-reduction strategies, for reporting to regulators and investors, and for making informed decisions about workload scheduling and adaptation. 
@@ -159,7 +157,7 @@ The reports are published about 14-21 days after the end of each month, which ma
 Today, when an engineering team improves the bottom-up metric of an internal workload, it is entirely unclear whether that improvement reaches the provider's top-down report.
 The two can diverge in both directions.
 The top-down report contains overheads no bottom-up model can cover without internal provider data.
-And conversely, the levers a bottom-up metric does capture---such as lowering a VM's utilization and thus its power draw---may not move the reported number at all, if the provider allocates carbon to tenants by usage-hours or revenue instead of measured energy.
+And conversely, the levers a bottom-up metric does capture, such as lowering a VM's utilization and thus its power draw, may not move the reported number at all, if the provider allocates carbon to tenants by usage-hours or revenue instead of measured energy.
 
 The Green Software Foundation explicitly endorses this separation, distinguishing ``measuring for action'' (per-workload signals that drive engineering) from ``measuring for reporting'' (organization-level inventories that satisfy regulators) and arguing that the two serve different goals and should not be conflated~\cite{gsf-measuring}.
 \emph{We disagree.}
@@ -174,17 +172,13 @@ Towards this, we make the following contributions:
 \item We review the state of the art in cloud carbon accounting, including a survey of 48 providers and a matrix showing which engineering actions actually move which provider's reported number.
 \item We introduce \RSCI, which anchors a bottom-up energy estimate to the provider's top-down report through a \emph{residual bridge}, so per-workload numbers sum to the reported total by construction.
 \item We show that reconciliation constrains only the reported \emph{total} and leaves the per-workload allocation free, so the residual bridge can be allocated to reward sustainable behavior, such as peak-shaving and procurement-deferral, that no bottom-up-only metric can express.
-\item We diagnose why \RSCI cannot yet be computed on today's provider reports, and set out concrete asks on provider reporting, tenant-side estimation, and standards that would close the gap.
+\item We diagnose why today's provider reports are too coarse and opaque for computing credible \RSCI scores in practice, and set out concrete asks on provider reporting and standards to close this gap.
 \end{itemize}
 
 
 %temporal and spatial load shifting~\cite{wiesner2021letswaitawhile,radovanovic2022google,hanafy2024gaia,sukprasert2024limits,gsteiger2024caribou,murillo2024cdn,lechowicz2023pause,lechowicz2024carbonclipper}, elastic scaling~\cite{hanafy2024carbonscaler}, virtual-energy abstractions~\cite{souza2023ecovisor}, and quality- or approximation-side adaptation~\cite{wiesner2025qualitytime,vitali2026adaptive}; even infrastructure planning that takes embodied carbon seriously at fleet scale still optimises the per-workload signal against operational energy~\cite{acun2023carbon_explorer}.
 
 %unprecedented rate~\cite{epri2024powering,bashir2024climate,gaffney2025earth}
-
-% A more comprehensive per-workload metric was introduced in 2021 by the Green Software Foundation: the Software Carbon Intensity (\SCI) specification~\cite{sci-spec}, codified as ISO/IEC~21031 in 2024.
-% \SCI extends $E\cdot I$ with an explicit embodied term, the amortised cradle-to-gate carbon of the hardware running the workload --- formalised by Gupta et al.'s architectural carbon model ACT~\cite{gupta2022act} --- so that hardware-procurement choices are reflected alongside operational energy.
-% The stated intent is a single per-workload number that ranges from a function call to a datacenter, is real-time sensitive, and is meant to drive engineering optimisation.
 
 \begin{table*}[ht!]
 \centering
@@ -645,6 +639,7 @@ Absent any history the estimators default to zero residual and \RSCI degrades gr
 \todo{grid intensity vs carbon intensity}
 \todo{Section vs §}
 \todo{unify texttt notation}
+\todo{check if we consistently use "residual bridge", "residual", "residual term", "residual emissions" and if we need to.}
 % 2. Cuts I made in the §7 merge (so you can veto any): the (a)(b)(c) Kalman/pooling enumeration collapsed to one clause; the \hat\mu/\hat\rho references dropped entirely (they were dangling anyway, only defined in the commented-out real-time block); the "Scaleway/OVHcloud already publish water" detail and the energy-coefficient-standardization future-work item removed; the routing-invariance mechanism (the φ_i marginalization argument) compressed to just the claim. The bounded-correlation open problem survived as a paper-strengthener.
 % 3. Two references now lean on things not yet solid: the §4 footnote points at a "notation pass" (your existing \todo{Revise notation} at the §4 setup), and §7's provider ask reuses the GCP-collapse claim from §2 line 181 — both already sourced, just noting the coupling.
 
