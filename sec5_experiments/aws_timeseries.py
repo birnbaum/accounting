@@ -228,7 +228,7 @@ def _(Patch, cur, emissions, np, pd, plt):
     from matplotlib.patches import ConnectionPatch
 
     _SERVICE_ORDER = ["AmazonEC2", "Other"]
-    _COLOR = {"AmazonEC2": "#4C72B0", "Other": "#DD8452"}
+    _COLOR = {"AmazonEC2": "#DD8452", "Other": "#8C8C8C"}
     _LABEL = {"AmazonEC2": "EC2", "Other": "Other"}
 
     def _pivot(df, col, scale=1.0):
@@ -282,14 +282,15 @@ def _(Patch, cur, emissions, np, pd, plt):
                        hatch=_hatch, edgecolor="white" if _hatch else "none")
             _bottom = _bottom + _piv[_svc].to_numpy()
     _ax_em.set_ylabel("Emissions (kg CO$_2$e)")
-    _ax_em.set_title("(a) AWS reported emissions by \"service\"", fontsize=10, weight="bold")
+    _ax_em.set_title("AWS reported emissions by \"service\"", fontsize=10, weight="bold")
     _ax_em.legend(
         handles=[Patch(facecolor=_COLOR[s], label=_LABEL[s]) for s in _SERVICE_ORDER]
         + [Patch(facecolor="#bbb", label="Scope 2"),
            Patch(facecolor="#bbb", hatch="//", edgecolor="white", label="Scope 3")],
-        ncol=2, frameon=False, loc="upper center", bbox_to_anchor=(0.58, 1),
+        ncol=2, frameon=False, loc="upper center", bbox_to_anchor=(0.63, 1.05), columnspacing=0.5, handletextpad=0.3
     )
     _ax_em.set_xticks(_x)
+    _ax_em.set_ylim(0, 42)
     _ax_em.set_xticklabels([])
 
     # (d) zoom: May's "Other" EMISSIONS as a single block. Unlike cost, AWS does
@@ -297,11 +298,11 @@ def _(Patch, cur, emissions, np, pd, plt):
     _may_ec2_em = _s2["AmazonEC2"].iloc[-1] + _s3["AmazonEC2"].iloc[-1]
     _may_oth_em = _s2["Other"].iloc[-1] + _s3["Other"].iloc[-1]
     _ax_d.bar(0, _may_oth_em, 0.6, color=_COLOR["Other"])
-    _ax_d.text(0.4, _may_oth_em / 2, "?", ha="left", va="center", fontsize=9)
+    _ax_d.text(0.5, _may_oth_em / 2, "?", ha="left", va="center", fontsize=20)
     _ax_d.set_xlim(-0.4, 3.0)
     _ax_d.set_xticks([0])
     _ax_d.set_xticklabels(["May"])
-    _ax_d.set_title("(d) May 'Other'", fontsize=10, weight="bold")
+    _ax_d.set_title("'Other', by usage", fontsize=10, weight="bold")
     _ax_d.spines["bottom"].set_bounds(-0.4, 0.4)
 
     # Connectors tie May's "Other" block in (a) to the full-height bar in (d):
@@ -310,7 +311,7 @@ def _(Patch, cur, emissions, np, pd, plt):
         fig_zoom.add_artist(ConnectionPatch(
             xyA=(_x[-1] + 0.3, _y_a), coordsA=_ax_em.transData,
             xyB=(-0.3, _y_d), coordsB=_ax_d.transData,
-            color="#999", linewidth=0.6, linestyle=(0, (3, 3)),
+            color="#999", linewidth=0.8, linestyle=(0, (3, 3)),
         ))
 
     # (b) spend by service.
@@ -319,26 +320,26 @@ def _(Patch, cur, emissions, np, pd, plt):
         _ax_sp.bar(_x, _spend[_svc], 0.6, bottom=_bottom, color=_COLOR[_svc], label=_LABEL[_svc])
         _bottom = _bottom + _spend[_svc].to_numpy()
     _ax_sp.set_ylabel("Cost (USD)")
-    _ax_sp.set_title("(b) AWS cost, aggregated by \"service\"", fontsize=10, weight="bold")
-    _ax_sp.legend(ncol=2, frameon=False, loc="upper center", bbox_to_anchor=(0.4, 0.95))
+    _ax_sp.set_title("AWS cost, aggregated by \"service\"", fontsize=10, weight="bold")
+    _ax_sp.legend(frameon=False, loc="upper left", bbox_to_anchor=(0, 1.05))
     _ax_sp.set_xticks(_x)
     _ax_sp.set_xticklabels(_labels)
     _ax_em.set_xlim(_ax_sp.get_xlim())
 
     # (c) zoom: May's "Other" spend exploded into its top usage types, full height.
     # Each segment is labelled inline to the right instead of via a legend.
-    _cmap = plt.cm.tab10.colors[2:]
+    # Shades of gray (darkest at the bottom = largest segment), white separators.
+    _grays = plt.cm.Greys(np.linspace(0.8, 0.35, len(_zoom_cats)))
     _b = 0.0
     _height_nudges = [0,0,-10,-20,-10,0,+20]
     for _i, (_cat, _val, _height_nudge) in enumerate(zip(_zoom_cats, _zoom_vals, _height_nudges)):
-        _col = "#cccccc" if _cat == "Other" else _cmap[_i % 10]
-        _ax_c.bar(0, _val, 0.6, bottom=_b, color=_col)
+        _ax_c.bar(0, _val, 0.6, bottom=_b, color=_grays[_i], edgecolor="white", linewidth=0.5)
         _ax_c.text(0.4, _b + _val / 2 + _height_nudge, _cat, ha="left", va="center", fontsize=9)
         _b += _val
     _ax_c.set_xlim(-0.4, 3.0)
     _ax_c.set_xticks([0])
     _ax_c.set_xticklabels(["May"])
-    _ax_c.set_title("(c) May 'Other'", fontsize=10, weight="bold")
+    _ax_c.set_title("'Other', by usage", fontsize=10, weight="bold")
     _ax_c.spines["bottom"].set_bounds(-0.4, 0.4)
 
     # Connectors tie May's "Other" segment in (b) to the full-height bar in (c).
@@ -348,7 +349,7 @@ def _(Patch, cur, emissions, np, pd, plt):
         _con = ConnectionPatch(
             xyA=(_x[-1] + 0.3, _y_b), coordsA=_ax_sp.transData,
             xyB=(-0.3, _y_c), coordsB=_ax_c.transData,
-            color="#999", linewidth=0.6, linestyle=(0, (3, 3)),
+            color="#999", linewidth=0.8, linestyle=(0, (3, 3)),
         )
         fig_zoom.add_artist(_con)
 
