@@ -31,21 +31,9 @@ A useful habit: every time you verify a new fact for the paper, ask "should this
 
 ## Where to find things
 
-### Authoritative for prior work and standards
-- `references/INDEX.md` — top-level index. Read this first when entering the project.
-- `references/SCI.md`, `references/SCI_AI.md` — GSF SCI spec and AI extension. For the sunk-carbon argument, the primary source is `references/sources/bashir-2024-sunk-carbon/`.
-- `references/sources/` — academic priors (Bashir TeX sources, GreenSKU) and GHG Protocol standards.
-- `references/terminology.md` — terminology drift across sources (esp. "usage", embodied scope, SCI variants, S1/2/3, FERA, LBM/MBM).
-- `references/cross_provider_synthesis.md` — Big-3 GHG-Protocol compliance posture, gold-standard scorecard, cross-cutting findings, and the three methodology families used in `paper/paper.tex` §3.
-
-### Authoritative for provider methodologies
-- `references/carbon_accounting_methodologies/<provider>/README.md` — per-provider consolidated methodology summary, plus any PDFs in the same folder.
-- `references/carbon_accounting_methodologies/README.md` — provider matrix.
-- `references/carbon_accounting_methodologies/non-customer-tool-providers.md` — providers without customer tools.
-
 ### Paper artifacts
 - `paper/SECTIONS.md` — **read this first**: maps each § to its `\label` anchor in `paper.tex` and its key references. Grep the anchor (`grep -n '\label{sec:rsci}' paper/paper.tex`) to get the current line, then read that range rather than the full file.
-- `paper/paper.tex` — the SoCC vision-track paper draft (~1010 lines, 9 sections; §5 demonstration + §6 reality-check split 2026-06-06).
+- `paper/paper.tex` — the SoCC vision-track paper draft
 - `paper/references.bib` — bib entries.
 - `paper/figures/` — figures.
 

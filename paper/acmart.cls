@@ -2716,8 +2716,7 @@
   \ClassWarningNoLine{\@classname}{No city present for an affiliation}%
   \fi
   \if@ACM@countrypresent\else
-  \ClassError{\@classname}{No country present for an affiliation}{ACM
-    requires each author to indicate their country using country macro.}%
+  \ClassWarningNoLine{\@classname}{No country present for an affiliation}%
   \fi
 }
 \def\@mkauthors@i{%
