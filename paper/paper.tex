@@ -117,9 +117,9 @@ Bottom-up metrics like Software Carbon Intensity (\SCI) provide real-time signal
 Top-down reports by cloud providers provide a more comprehensive view of a tenant's carbon footprint, but are coarse and methodologically opaque.
 Because the two approaches differ in scope and reporting frequency, the current state of the art treats them as decoupled: bottom-up metrics for optimization, top-down reports for corporate disclosure.
 
-We argue that although the two signals can never be identical, they should be \emph{reconcilable}. 
+We argue that the two signals should be \emph{reconcilable}. 
 A per-workload metric whose bottom-up improvements never surface in the provider's audited report will not be trusted or funded at scale.
-We survey the state of the art in cloud carbon accounting and propose a vision for \RSCI: a per-workload metric that re-anchors a bottom-up energy estimate to the cloud provider's top-down report through a residual, which can be allocated to workloads in a way that incentivizes sustainable behavior.
+We survey the state of the art in cloud carbon accounting and propose a vision for reconciled \SCI (\RSCI): a per-workload metric that re-anchors a bottom-up energy estimate to the cloud provider's top-down report through a residual, which can be allocated to workloads in a way that incentivizes sustainable behavior.
 We show that today's reporting is still too coarse and methodologically inconsistent to support credible reconciliation and lay out concrete steps in provider reporting and standards to make it practical.
 
 \end{abstract}
@@ -131,7 +131,7 @@ We show that today's reporting is still too coarse and methodologically inconsis
 
 A major challenge in sustainable computing is quantifying the carbon footprint of workloads. 
 It is a prerequisite for determining the effectiveness of carbon-reduction strategies, for reporting to regulators and investors, and for making informed decisions about workload scheduling and adaptation. 
-Two largely separate approaches exist: bottom-up estimates of operational and embodied carbon, and top-down corporate greenhouse gas (GHG) reporting. % based on provider-wide measurements and downstream allocation to tenants.
+Two largely separate approaches exist: bottom-up modeling and top-down corporate greenhouse gas (GHG) reporting. % based on provider-wide measurements and downstream allocation to tenants.
 
 \begin{figure}[t]
   \centering
@@ -156,7 +156,7 @@ The reports are published about 14-21 days after the end of each month, which ma
 \parag{The need for reconcilability}
 Today, when an engineering team improves the bottom-up metric of an internal workload, it is entirely unclear whether that improvement reaches the provider's top-down report.
 The two can diverge in both directions.
-The top-down report contains overheads no bottom-up model can cover without internal provider data.
+The top-down report contains overheads that bottom-up models cannot cover without internal provider data.
 And conversely, the actions a bottom-up metric does capture, such as lowering a VM's utilization and thus its power draw, may not move the reported number at all, if the provider allocates carbon to tenants by usage-hours or revenue instead of measured energy.
 
 The Green Software Foundation explicitly endorses this separation, distinguishing ``measuring for action'' (per-workload signals that drive engineering) from ``measuring for reporting'' (organization-level inventories that satisfy regulators) and arguing that the two serve different goals and should not be conflated~\cite{gsf-measuring}.
@@ -486,6 +486,8 @@ Reconciles to cloud provider's report         & \notrefl  & \notrefl  & \faithfu
 \section{Barriers to Practical Adoption}
 \label{sec:practice}
 
+\todo{needs shortening}
+
 As we argued in the introduction, a per-workload metric earns trust only if its improvements can be traced through to the audited report.
 \RSCI reconciles to the provider's reported total by construction, but reconciliation alone does not make its per-workload scores credible.
 To evaluate \RSCI in practice, we attempted to compute it on production accounts on AWS and Azure, as well as our own test deployments on Scaleway, and in none of them could we obtain a score we would trust.
@@ -570,6 +572,8 @@ Consistency across providers is what turns a per-workload number from a local es
 
 \section{Future Work}
 \label{sec:future}
+
+\todo{I'll write this once the rest is done and I know how much space is left}
 
 \todo{The same decomposition supports a customer's own \emph{Scope-3 Cat-1} accounting of cloud use, attributing the provider's disclosed total across internal teams at workload granularity with the guarantee that the parts sum to the whole.}
 
