@@ -433,9 +433,11 @@ Worse, the per-server \M reintroduces the fallacy \OSCI avoided: a workload on o
 %\SCI is thus both insufficient and, on embodied, perverse.
 
 \parag{\RSCI}
-\RSCI keeps \OSCI's operational term and adds the \emph{residual}, the gap between the reported total and the bottom-up estimate: $\Delta = C^{\downarrow} - \sum_i \E_i\I \approx 52$\,kg.
-Following \S\ref{sec:rsci}, we split $\Delta$ by physical driver into an energy-driven part $\Delta^{\text{en}}\!\approx\!13$\,kg (upstream electricity and model error) and a capacity-driven part $\Delta^{\text{cap}}\!\approx\!39$\,kg (idle and embodied); the fractions $\beta^{\text{S2}}\!=\!0.1$ and $\beta^{\text{S3}}\!=\!0.5$ reflect that the Scope-2 gap is almost all idle, while Scope-3 divides between embodied hardware and upstream electricity.
-Each part is allocated by a matched weight: energy drawn (flat per token) for $\Delta^{\text{en}}$ and peak-attribution (rising with machine load) for $\Delta^{\text{cap}}$.
+\RSCI keeps \OSCI's operational term and adds the residual term, the gap between the reported total and the bottom-up estimate.
+Following \S\ref{sec:rsci}, we split $\Delta_s$ by physical driver into an energy-driven part $\Delta_s^{\text{en}}\!\approx\!13$\,kg (upstream electricity and model error) and a capacity-driven part $\Delta_s^{\text{cap}}\!\approx\!39$\,kg (idle and embodied).
+
+We assume $\beta^{\text{S2}}\!=\!0.1$, as the Scope 2 gap is caused mostly by idle energy, and $\beta^{\text{S3}}\!=\!0.5$, as Scope 3 divides between upstream electricity (FERA) and embodied emissions.
+$\Delta^{\text{en}}$ is allocated proportional to energy demand, and $\Delta^{\text{cap}}$ by peak-hour attribution, as a practical proxy for online Shapely.
 
 By construction the per-token scores sum back to the reported $100$\,kg.
 In this trace the busier hours also tend to be somewhat dirtier, so a tenant that could shift deferrable work off-peak would lower \RSCI twice over: a cleaner operational term and a smaller capacity share.
@@ -480,15 +482,31 @@ In practice, users can instead optimize against proxies such as peak-hour energy
 This is analogous to peak-demand electricity tariffs, where consumers optimize against signals such as peak periods or demand charges before their final bill is calculated~\cite{bartusch2011demandtariff}.
 
 
+
 \section{Barriers to Practical Adoption}
 \label{sec:practice}
 
-\todo{needs shortening}
+We previously argued that a per-workload carbon metric is suitable for accounting only if it can be reconciled to the provider's audited report. \RSCI satisfies this requirement by construction: the attributed workload scores sum to the provider's reported total. However, reconciliation alone is not sufficient for trustworthy accounting. In practice, computing credible \RSCI scores requires provider reports that are sufficiently detailed, transparent, and standardized.
 
-As we argued in the introduction, a per-workload metric earns trust only if its improvements can be traced through to the audited report.
-\RSCI reconciles to the provider's reported total by construction, but reconciliation alone does not make its per-workload scores credible.
-To evaluate \RSCI in practice, we attempted to compute it on production accounts on AWS and Azure, as well as our own test deployments on Scaleway, and in none of them could we obtain a score we would trust.
-We identify two main barriers to adoption, and propose improvements in provider reporting.
+To evaluate whether this is possible today, we attempted to compute \RSCI scores using production accounts on AWS and Azure, as well as test deployments on Scaleway. 
+We identify three barriers that prevent practical adoption today: provider reports are too coarse to support workload attribution, the reported totals are insufficiently transparent to explain how they were derived, and providers lack a common reporting standard, making reconciliation inconsistent across platforms.
+
+\parag{Top-down reports are too coarse}
+\RSCI's per-workload attribution is straightforward when a reporting slice contains a single workload, as in \S\ref{sec:demo}. 
+In practice, however, providers aggregate many workloads into a small number of monthly service categories.
+The coarser the report, across both resources and time, the more attribution depends on heuristic allocation and requires assumptions that are not supported by the reported data
+
+We observed this on six months of production data from an AWS account running a web service.
+Although AWS bills individual services separately, its carbon report aggregates most emissions into a service category called ``Other'', see Figure~\ref{fig:aws}. 
+Across the six months, this category accounts for 67--96\,\% of reported emissions and combines diverse services such as load balancing, data transfer, control-plane operations, and public IPv4 addresses. 
+Because these service categories aggregate over very different usage patterns, there is no principled way to attribute the reported emissions back to individual workloads.
+
+\begin{callforaction}
+Providers already meter and bill customer usage at fine granularity.
+Customer-facing carbon reporting should preserve this and publish emissions per billable resource and reporting period.
+This would reduce heuristic attribution and make reconciliation substantially more credible.
+\end{callforaction}
+
 
 \begin{figure}[t]
 \centering
@@ -501,70 +519,41 @@ While billing is granular and can be traced to usage, the carbon report is coars
 \label{fig:aws}
 \end{figure}
 
-% EC2 is the majority of spend but a minority of reported emissions, because the two buckets ride different allocation bases (instance-hours for EC2, equivalent revenue for ``Other'').
 
-\parag{Top-down reports are too coarse}
-As demonstrated in \S\ref{sec:demo}, \RSCI is easy to define when a slice holds a single workload, since the whole residual belongs to only this workload.
-Once a slice holds many workloads, their emissions are reported as one aggregate, and recovering any one workload's share needs a weight the report does not natively provide.
-The same is true along time: a monthly figure cannot say which hours the emissions came from.
-Coarse reporting in either dimension leaves more of the number to an ungrounded split, and finer reporting in either dimension shrinks that residual and grounds how it divides.
+\parag{Reported totals are opaque}
+Even at sufficient granularity, a reconciled metric can only anchor to a provider's reported total if that total is itself trustworthy.
+Today, customer-facing reports are difficult to reproduce or interpret, making it impossible to distinguish modeling error from reporting methodology.
 
-When trying to compute \RSCI on production data from a real AWS account (six months of a small company's production web service of about 7 VMs at a time), we were surprised how coarse the reported ``service'' categories were (Figure~\ref{fig:aws}).
-On average 81\% of its reported location-based emissions, and between 67\% and 96\% in any given month, arrive in a single ``Other'' category that merges load balancing, data transfer, control-plane fees, and address rental.
-These are separately billed services with different usage patterns, yet their carbon is reported as one figure that cannot be traced back to any of them.
-A rented IPv4 address, which draws no power at all, still carries 7\% of the total.
-The other hyperscalers report at a comparable grain: a GCP ``Compute Engine'' or Azure per-service line each spans dozens of SKUs and thousands of workloads.
-\todo{EC2 bottom-up factor (2$\times$/5$\times$) still pending the notebook rework.}
+We found this even for AWS EC2, whose methodology is comparatively well documented.
+Using standard bottom-up energy models, our estimated emissions exceeded the reported values by roughly 2$\times$ at idle and 5$\times$ at moderate utilization, producing a negative residual.
+A negative residual is admissable mathematically, but in general we always expect a bottom-up model to underestimate the top-down report.
+The residual impossible to interpret: either our model overestimates energy, the provider underestimates emissions, or the allocation methodology differs in undocumented ways.
 
-Finer resolution is clearly feasible, but providers choose not to publish it, most likely because it could expose internal allocation rules or make the report more volatile.
-GCP, for instance, already computes its figures on hourly carbon intensity before collapsing it to a monthly average, and the line items that make up the ``Other'' bucket are billed separately upstream.
-The data to report at billing resolution therefore already exists; it is aggregated away before publication.
+Other providers exhibit similar issues.
+For example, Scaleway is one of the few providers that reports \emph{daily} carbon emissions, but we found that these daily totals changed when we queried them a week later, and some days reported emissions before the account even existed.
+Microsoft reports stable monthly reports, but explicitly notes that customer-facing emissions ``will differ from those reflected in Microsoft's corporate disclosure''~\cite{microsoft-s3-2021}.
+Without stable, reproducible totals, reconciliation cannot provide trustworthy workload attribution.
 
-Reporting daily and per service is possible, as Scaleway shows, but granularity alone does not make a number reliable.
-Running test workloads on Scaleway, we found its daily footprints reported emissions for days on which no workload ran and the account did not yet exist, and figures for past days shifted when we re-crawled them a week later.
-Whatever these daily numbers represent, they are rough estimates rather than an auditable record a tenant could anchor to.
+
 
 \begin{callforaction}
-The services that share one carbon number are billed as separate line items, so the provider already tracks them more finely than it reports.
-Emissions should be reported at the resolution at which usage is already billed, across both resources and time, so that carbon can be attributed to a workload and an hour wherever a cost can.
-More granularity in any dimension shrinks the residual and grounds how it divides.
+Customer-facing carbon reports should be reproducible and auditable.
+Providers should disclose enough intermediate information and methodology for tenants to independently explain reported totals and distinguish reporting assumptions from modeling error.
 \end{callforaction}
 
+\parag{There is no common standard}
+As we lined out in \S\ref{sec:sota}, providers differ in what they report, how they allocate it, and even what they count.
+Azure and T~Cloud expose only market-based Scope~2 emissions, leaving no location-based figure to reconcile against.
+AWS allocates much of its footprint by spend, GCP incorporates list-price weighting, while Oracle, Scaleway, and T~Cloud allocate compute from measured energy.
+Even the hyperscalers disagree on Scope~3 boundaries, including different combinations of upstream fuel losses, buildings, end-of-life, and business travel.
 
-\parag{Reported totals are opaque and ungrounded}
-Even where the report is fine-grained, the total it reports must be one a tenant can trust.
-\RSCI anchors to that total, so it should be comprehensive, methodologically transparent enough to reproduce, and clear about which actions move it.
-Today it is none of these.
-
-Even for EC2, where AWS allocates by physical usage rather than spend, we could not reproduce the reported figure: a per-vCPU energy estimate runs about twice the reported number at idle and five times at half load, so the residual turns negative.
-A negative residual is admissible in principle, but here it is a smell rather than a result: either our bottom-up model overstates the workload's energy, or the top-down report is opaque and possibly under-counts, and nothing AWS publishes lets us tell which.
-The rest, the ``Other'' tail, is allocated by spend, which decouples the reported number from physical carbon: it carries 81\% of this account's emissions on 38\% of its spend, and 7 gCO$_2$ per dollar against EC2's 1, so an action that cuts real energy in the ``Other'' services need not move the report at all.
-Neither does timing: because Scope~2 is valued at a monthly-average carbon intensity, running the same work in cleaner hours changes nothing in the report.
-These are real actions whose effect the methodology hides, and a report that named the drivers behind its number would let a tenant see which ones it responds to.
-Some providers do not even reconcile with themselves: Microsoft states outright that its customer calculator ``will differ from those reflected in Microsoft's corporate disclosure''~\cite{microsoft-s3-2021} and that ``usage for emissions calculations might not match your Microsoft usage for billing purposes''~\cite{azure-methodology-2026}, so the number a tenant would anchor to is, by admission, not the audited one.
+These differences ultimately reflect gaps in today's GHG Protocol guidance for cloud infrastructure, which leaves shared-infrastructure allocation, equipment lifetimes, and several reporting boundaries largely to provider discretion.
+Fortunately, \RSCI depends only on the structure of top-down reporting rather than any specific methodology, so improvements to the standard only strengthen the metric.
 
 \begin{callforaction}
-Providers should follow existing best practice in carbon accounting: allocate from physical telemetry rather than economic proxies wherever possible, report location-based figures at (sub)hourly carbon intensity, and keep customer-facing numbers consistent with their own internal accounting.
-The methodology should be transparent enough to expose which drivers move the number, such as idle power, embodied hardware, and upstream losses, so the part of the total that no usage line explains can still be attributed.
+The GHG Protocol should define cloud-specific guidance for customer-facing reporting, including common reporting boundaries, allocation rules for shared infrastructure, and standardized outputs.
+A standard would make provider reports comparable and enable \RSCI to be portable across clouds.
 \end{callforaction}
-
-
-\parag{There is no shared standard}
-Even a grounded, reproducible number is of limited use if every provider computes a different one.
-\RSCI anchors to whatever the provider reports, so the same workload reconciles to a different total, or to none, depending on where it runs (Table~\ref{tab:levers}).
-Azure and T~Cloud export only a near-zero market-based figure, leaving no location-based anchor to reconcile against, while most others expose one.
-AWS allocates a large tail by spend, GCP weights per-SKU energy by list price inside a physically named unit, and only Oracle, Scaleway, and T~Cloud allocate compute by measured energy.
-No two of the three hyperscalers even count the same Scope~3 categories (Table~\ref{tab:bigthree-s3}): AWS includes upstream fuel losses and building embodied carbon, GCP adds business travel and commuting but drops end-of-life, and Azure includes end-of-life but drops both fuel losses and buildings, each over a different hardware lifetime.
-Underlying all of this, the GHG Protocol is under-specified for cloud, leaving shared-infrastructure allocation, equipment lifetimes, temporal matching, and building embodied carbon to each provider's discretion, and the standard itself is under continuous revision.
-This does not undermine \RSCI: it is defined against the \emph{structure} of GHG-Protocol accounting, a top-down total split by scope, so tighter rules and future revisions slot into the same framework rather than breaking it.
-
-\todo{Optional: add citations for the broader critique of GHG-Protocol-style accounting (market-based instruments, RECs/PPAs, location- vs. market-based divergence, ongoing Scope 2 revision) to back the "under continuous revision" claim in \S\ref{sec:practice} barrier 3.}
-
-\begin{callforaction}
-Above all, cloud carbon accounting needs a GHG standard specific enough to make provider numbers comparable: a common set of counted categories, published materiality assessments for any exclusion, and a shared rule for allocating shared infrastructure.
-Consistency across providers is what turns a per-workload number from a local estimate into one a tenant can carry, compare, and rely on.
-\end{callforaction}
-
 
 
 \section{Future Work}
@@ -594,6 +583,8 @@ Absent any history the estimators default to zero residual and \RSCI degrades gr
 \todo{unify texttt notation}
 % 2. Cuts I made in the §7 merge (so you can veto any): the (a)(b)(c) Kalman/pooling enumeration collapsed to one clause; the \hat\mu/\hat\rho references dropped entirely (they were dangling anyway, only defined in the commented-out real-time block); the "Scaleway/OVHcloud already publish water" detail and the energy-coefficient-standardization future-work item removed; the routing-invariance mechanism (the φ_i marginalization argument) compressed to just the claim. The bounded-correlation open problem survived as a paper-strengthener.
 % 3. Two references now lean on things not yet solid: the §4 footnote points at a "notation pass" (your existing \todo{Revise notation} at the §4 setup), and §7's provider ask reuses the GCP-collapse claim from §2 line 181 — both already sourced, just noting the coupling.
+
+
 
 
 \bibliographystyle{ACM-Reference-Format}
