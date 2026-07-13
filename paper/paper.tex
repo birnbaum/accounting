@@ -174,6 +174,7 @@ Towards this, we make the following contributions:
 \item We diagnose why today's provider reports are too coarse and methodologically opaque for computing credible \RSCI scores in practice, and set out concrete asks on reporting and standards.
 \end{itemize}
 \todo{improve first section}
+\todo{Motivation: add a sentence that reconciliation also lets a customer break down its own cloud Scope-3 (Cat-1) across internal teams and products at workload granularity, consistent with the provider's disclosed total.}
 
 
 
@@ -430,7 +431,6 @@ Here it reaches about $48$\,kg, about half the top-down reported total.
 \SCI folds in an embodied term \M: the node's cradle-to-gate carbon amortised over its lifespan and divided across the tokens it serves in that time~\cite{sci-spec}.\footnote{We take the node's cradle-to-gate embodied carbon as ${\approx}2500$\,kg: NVIDIA reports $1312$\,kg for the 8-GPU HGX~H100 baseboard~\cite{nvidia2025hgxh100pcf}, plus CPUs, memory, storage, NICs, power supplies, and cooling. We assume the node is amortised over a 4-year lifespan, leading to \M $\approx 14$ gCO$_2$/Mtok.}
 The intent is to price embodied carbon, but per-token the amortised figure is small, about a tenth of the operational term, so the total barely moves and still falls well short of the report.
 Worse, the per-server \M reintroduces the fallacy \OSCI avoided: a workload on old hardware can be charged \emph{less} embodied carbon, rewarding the tenant for keeping inefficient machines in service~\cite{bashir2024}.
-%\SCI is thus both insufficient and, on embodied, perverse.
 
 \parag{\RSCI}
 \RSCI keeps \OSCI's operational term and adds the residual term, the gap between the reported total and the bottom-up estimate.
@@ -556,23 +556,19 @@ A standard would make provider reports comparable and enable \RSCI to be portabl
 \end{callforaction}
 
 
-\section{Future Work}
+\section{Conclusion}
 \label{sec:future}
 
-\todo{I'll write this once the rest is done and I know how much space is left}
+In this paper, we proposed \RSCI, a per-workload metric that anchors a bottom-up energy estimate to the provider's top-down report through a residual, so that per-workload scores sum to the audited total by construction.
+We showed how to decompose and allocate that residual to reward peak-shaving, and found that today's provider reports remain too coarse, opaque, and inconsistent across providers to compute credible \RSCI scores in practice.
 
-\todo{The same decomposition supports a customer's own \emph{Scope-3 Cat-1} accounting of cloud use, attributing the provider's disclosed total across internal teams at workload granularity with the guarantee that the parts sum to the whole.}
-
-\todo{note that in the future this could also be used for water, Scaleway already publishes water (verify)}
-\paragraph{Toward a real-time signal.}
+\parag{Toward a real-time signal}
 As defined, \RSCI is a \emph{retrospective} metric: the residuals $\Delta_s$ and the weight denominators ($E_s$, the slice peak) are known only once the provider's report lands, weeks to months late.
-Its native use is therefore \emph{accounting} --- faithful allocation of an audited total --- and its incentives bite at reporting cadence, like a carbon chargeback, rather than in a closed scheduling loop.
+Its native use is therefore \emph{accounting} (faithful allocation of an audited total), and its incentives bite at reporting cadence, like a carbon chargeback, rather than in a closed scheduling loop.
 Turning it into a real-time signal is an open problem: predict each residual component ahead of the report.
 This is plausible precisely because a good bottom-up model leaves a residual dominated by \emph{slow-moving, methodology-driven} overheads (PUE, embodied intensity, allocation constants) rather than workload dynamics, so it should be learnable from the sequence of reconciled months.
-No single per-Wh multiplier captures this under the per-component schema --- different components ride different drivers (electricity, fleet existence, peak share) and need separate estimators --- but each is a low-dimensional, slowly-varying quantity well suited to online state estimation, cross-tenant pooling of shared overheads, and Kalman-filter-style updating (Sharma and Fuerst apply exactly this class of filter to online \emph{marginal-energy} profiling of serverless functions~\cite{sharma2024accountable_footprint_serverless}; here it would be lifted from energy to the residual).
+No single per-Wh multiplier captures this under the per-component schema, since different components ride different drivers (electricity, fleet existence, peak share) and need separate estimators; but each is a low-dimensional, slowly-varying quantity well suited to online state estimation, cross-tenant pooling of shared overheads, and Kalman-filter-style updating (Sharma and Fuerst apply exactly this class of filter to online \emph{marginal-energy} profiling of serverless functions~\cite{sharma2024accountable_footprint_serverless}; here it would be lifted from energy to the residual).
 Absent any history the estimators default to zero residual and \RSCI degrades gracefully to \OSCI, the prior-art operational metric.
-
-\todo{smth about bounding reconciliation error}
 
 
 
@@ -598,6 +594,7 @@ Absent any history the estimators default to zero residual and \RSCI degrades gr
 
 All 48 cloud providers reviewed for \S\ref{sec:sota}, clustered by focus and classified by what the provider publishes.
 URLs last verified 2026-05-26.
+\todo{AI/GPU neoclouds = zero per-customer tools (motivation line).}
 
 \paragraph{Provider clusters.} Six clusters, each capturing a different point of view on the market rather than a clean structural distinction:
 \begin{itemize}\setlength{\itemsep}{1pt}
