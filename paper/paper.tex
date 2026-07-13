@@ -112,15 +112,15 @@
 
 
 \begin{abstract}
-Organizations want to reduce the carbon footprint of their cloud applications, but rely on two largely disconnected ways of measuring it.
-Bottom-up metrics like Software Carbon Intensity (\SCI) provide real-time signals for carbon-aware optimization, but are blind to most provider-side overheads.
-Top-down reports by cloud providers provide a more comprehensive view of a tenant's carbon footprint, but are coarse and methodologically opaque.
+Organizations want to reduce the carbon footprint of their cloud applications but to do so have to, they need to rely on two largely disconnected ways of measuring it.
+Bottom-up metrics like Software Carbon Intensity (\SCI) provide real-time signals for carbon-aware optimization but are blind to most provider-side overheads.
+Top-down reports by cloud providers provide a more comprehensive view of a tenant's carbon footprint but are coarse and methodologically opaque.
 Because the two approaches differ in scope and reporting frequency, the current state of the art treats them as decoupled: bottom-up metrics for optimization, top-down reports for corporate disclosure.
 
 We argue that the two signals should be \emph{reconcilable}. 
 A per-workload metric whose bottom-up improvements never surface in the provider's audited report will not be trusted or funded at scale.
 We survey the state of the art in cloud carbon accounting and propose a vision for reconciled \SCI (\RSCI): a per-workload metric that re-anchors a bottom-up energy estimate to the cloud provider's top-down report through a residual, which can be allocated to workloads in a way that incentivizes sustainable behavior.
-We show that today's reporting is still too coarse and methodologically inconsistent to support credible reconciliation and lay out concrete steps in provider reporting and standards to make it practical.
+We show that today's  top-down reporting is still too coarse and methodologically inconsistent to support credible reconciliation and lay out concrete steps in provider reporting and standards to make it practical.
 
 \end{abstract}
 
@@ -141,7 +141,7 @@ Two largely separate approaches exist: bottom-up modeling and top-down corporate
 
 \parag{Bottom-up metrics}
 Most carbon-aware computing research has focused on optimizing bottom-up metrics like operational carbon: the estimated emissions from a workload's marginal increase in energy consumption. 
-This signal is straightforward to obtain (workload energy $\times$ carbon intensity) but does, for example, not capture the embodied carbon of the hardware running the workload.
+This signal is straightforward to obtain (workload energy $\times$ carbon intensity) but does not, for example, capture the embodied carbon of the hardware running the workload.
 To provide a more comprehensive metric, the Green Software Foundation proposed the Software Carbon Intensity (\SCI) specification~\cite{sci-spec}, codified as ISO/IEC~21031 in 2024, which expresses the carbon emitted per unit of work and folds in an embodied term.
 However, Bashir et al.~\cite{bashir2024} show that \SCI can produce perverse incentives for workload placement and scaling in practice. 
 Furthermore, every bottom-up metric, \SCI included, can only capture what a tenant can observe or model, and is blind to most provider-side overheads.
@@ -173,6 +173,7 @@ Towards this, we make the following contributions:
 \item We decompose the residual into an energy-driven and a capacity-driven component, the latter covering idle energy and embodied emissions. We propose to allocate the capacity-driven component to reward peak-shaving.
 \item We diagnose why today's provider reports are too coarse and methodologically opaque for computing credible \RSCI scores in practice, and set out concrete asks on reporting and standards.
 \end{itemize}
+\todo{improve first section}
 
 
 
@@ -183,7 +184,7 @@ Towards this, we make the following contributions:
 \section{Bottom-Up Metrics Miss Provider Overheads}
 \label{sec:background}
 
-A bottom-up metric estimates a workload's carbon from quantities a tenant can measure without provider-internal data.
+A bottom-up metric estimates a workload's carbon from quantities a tenant can measure without access to providers' internal data.
 The de facto choice in most research papers is operational carbon, which we write as \OSCI (operational software carbon intensity) to match the terminology in Bashir et al.~\cite{bashir2024}:
 \[
 \OSCI \;=\; \frac{\E \cdot \I}{\R},
