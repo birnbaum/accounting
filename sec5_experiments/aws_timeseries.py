@@ -158,68 +158,6 @@ def _(cur_monthly, emissions, pd):
 
 @app.cell
 def _(Patch, cur, emissions, np, pd, plt):
-    # Paper figure: (a) reported emissions, Scope 2 (solid) + Scope 3 (striped)
-    # by service in kg CO2e; (b) spend by service in USD. Same EC2/Other split in
-    # both; AmazonS3 is ~0 and folded away. Frankfurt-only from upstream cells.
-    SERVICE_ORDER = ["AmazonEC2", "Other"]
-    COLOR = {"AmazonEC2": "#4C72B0", "Other": "#DD8452"}
-    LABEL = {"AmazonEC2": "EC2", "Other": "Other"}
-
-    def _pivot(df, col, scale=1.0):
-        return (
-            df.pivot_table(index="usage_month", columns="service", values=col,
-                           aggfunc="sum", fill_value=0.0)
-            .reindex(columns=SERVICE_ORDER, fill_value=0.0)
-            .sort_index() * scale
-        )
-
-    s2 = _pivot(emissions, "total_scope_2_lbm_emissions_value", 1000.0)
-    s3 = _pivot(emissions, "total_scope_3_lbm_emissions_value", 1000.0)
-    spend = _pivot(cur[cur["line_item_line_item_type"] == "Usage"], "line_item_unblended_cost")
-
-    _x = np.arange(len(s2.index))
-    _labels = [pd.to_datetime(m).strftime("%b\n%Y") for m in s2.index]
-    fig_paper, (ax_em, ax_sp) = plt.subplots(2, 1, figsize=(6, 5), sharex=True)
-
-    # (a) bottom to top per month: EC2 S2, EC2 S3, Other S2, Other S3.
-    _bottom = np.zeros(len(_x))
-    for _svc in SERVICE_ORDER:
-        for _piv, _hatch in ((s2, None), (s3, "//")):
-            ax_em.bar(_x, _piv[_svc], 0.6, bottom=_bottom, color=COLOR[_svc],
-                      hatch=_hatch, edgecolor="white" if _hatch else "none")
-            _bottom = _bottom + _piv[_svc].to_numpy()
-    ax_em.set_ylabel("LBM emissions (kg CO$_2$e)")
-    ax_em.set_title("(a) AWS reported emissions: Scope 2 vs Scope 3, by service")
-    ax_em.legend(
-        handles=[Patch(facecolor=COLOR[s], label=LABEL[s]) for s in SERVICE_ORDER]
-        + [Patch(facecolor="#bbb", label="Scope 2"),
-           Patch(facecolor="#bbb", hatch="//", edgecolor="white", label="Scope 3")],
-        ncol=2, frameon=False, loc="upper center", bbox_to_anchor=(0.55, 1)
-    )
-
-    # (b) spend, one stacked bar per month by service.
-    _bottom = np.zeros(len(_x))
-    for _svc in SERVICE_ORDER:
-        ax_sp.bar(_x, spend[_svc], 0.6, bottom=_bottom, color=COLOR[_svc], label=LABEL[_svc])
-        _bottom = _bottom + spend[_svc].to_numpy()
-    ax_sp.set_ylabel("Spend (USD)")
-    ax_sp.set_title("(b) AWS spend, aggregated by service")
-    ax_sp.legend(ncol=2, frameon=False, loc="upper center", bbox_to_anchor=(0.4, 0.95))
-
-    ax_sp.set_xticks(_x)
-    ax_sp.set_xticklabels(_labels)
-
-    # Styling
-    ax_em.spines[["top", "right"]].set_visible(False)
-    ax_sp.spines[["top", "right"]].set_visible(False)
-
-    fig_paper.tight_layout()
-    fig_paper
-    return
-
-
-@app.cell
-def _(Patch, cur, emissions, np, pd, plt):
     # Paper figure with a "zoom" inset (experimental copy of the cell above):
     #   (a) emissions by scope/service; (b) spend by service; (c) explodes May's
     #   "Other" spend into its top usage types and blows it up to full height,
@@ -231,7 +169,7 @@ def _(Patch, cur, emissions, np, pd, plt):
     _COLOR = {"AmazonEC2": "#DD8452", "Other": "#8C8C8C"}
     _LABEL = {"AmazonEC2": "EC2", "Other": "Other"}
 
-    def _pivot(df, col, scale=1.0):
+    def pivot(df, col, scale=1.0):
         return (
             df.pivot_table(index="usage_month", columns="service", values=col,
                            aggfunc="sum", fill_value=0.0)
@@ -239,9 +177,9 @@ def _(Patch, cur, emissions, np, pd, plt):
             .sort_index() * scale
         )
 
-    _s2 = _pivot(emissions, "total_scope_2_lbm_emissions_value", 1000.0)
-    _s3 = _pivot(emissions, "total_scope_3_lbm_emissions_value", 1000.0)
-    _spend = _pivot(cur[cur["line_item_line_item_type"] == "Usage"], "line_item_unblended_cost")
+    _s2 = pivot(emissions, "total_scope_2_lbm_emissions_value", 1000.0)
+    _s3 = pivot(emissions, "total_scope_3_lbm_emissions_value", 1000.0)
+    _spend = pivot(cur[cur["line_item_line_item_type"] == "Usage"], "line_item_unblended_cost")
 
     # Explode the "Other" service into usage-type categories (top 6 + remainder).
     _USAGE_LABEL = {
@@ -282,7 +220,7 @@ def _(Patch, cur, emissions, np, pd, plt):
                        hatch=_hatch, edgecolor="white" if _hatch else "none")
             _bottom = _bottom + _piv[_svc].to_numpy()
     _ax_em.set_ylabel("Emissions (kg CO$_2$e)")
-    _ax_em.set_title("AWS reported emissions by \"service\"", fontsize=10, weight="bold")
+    _ax_em.set_title("AWS emissions by \"service category\"", fontsize=10, weight="bold")
     _ax_em.legend(
         handles=[Patch(facecolor=_COLOR[s], label=_LABEL[s]) for s in _SERVICE_ORDER]
         + [Patch(facecolor="#bbb", label="Scope 2"),
@@ -302,7 +240,7 @@ def _(Patch, cur, emissions, np, pd, plt):
     _ax_d.set_xlim(-0.4, 3.0)
     _ax_d.set_xticks([0])
     _ax_d.set_xticklabels(["May"])
-    _ax_d.set_title("'Other', by usage", fontsize=10, weight="bold")
+    _ax_d.set_title("\"Other\" by service", fontsize=10, weight="bold")
     _ax_d.spines["bottom"].set_bounds(-0.4, 0.4)
 
     # Connectors tie May's "Other" block in (a) to the full-height bar in (d):
@@ -320,7 +258,7 @@ def _(Patch, cur, emissions, np, pd, plt):
         _ax_sp.bar(_x, _spend[_svc], 0.6, bottom=_bottom, color=_COLOR[_svc], label=_LABEL[_svc])
         _bottom = _bottom + _spend[_svc].to_numpy()
     _ax_sp.set_ylabel("Cost (USD)")
-    _ax_sp.set_title("AWS cost, aggregated by \"service\"", fontsize=10, weight="bold")
+    _ax_sp.set_title("AWS cost by \"service category\"", fontsize=10, weight="bold")
     _ax_sp.legend(frameon=False, loc="upper left", bbox_to_anchor=(0, 1.05))
     _ax_sp.set_xticks(_x)
     _ax_sp.set_xticklabels(_labels)
@@ -339,7 +277,7 @@ def _(Patch, cur, emissions, np, pd, plt):
     _ax_c.set_xlim(-0.4, 3.0)
     _ax_c.set_xticks([0])
     _ax_c.set_xticklabels(["May"])
-    _ax_c.set_title("'Other', by usage", fontsize=10, weight="bold")
+    _ax_c.set_title("\"Other\" by service", fontsize=10, weight="bold")
     _ax_c.spines["bottom"].set_bounds(-0.4, 0.4)
 
     # Connectors tie May's "Other" segment in (b) to the full-height bar in (c).
@@ -360,6 +298,15 @@ def _(Patch, cur, emissions, np, pd, plt):
     fig_zoom.tight_layout()
     fig_zoom.savefig("paper/figures/aws_spend_carbon.pdf", bbox_inches="tight")
     fig_zoom
+    return (pivot,)
+
+
+@app.cell
+def _(emissions, pivot):
+    _s2 = pivot(emissions, "total_scope_2_lbm_emissions_value", 1000.0)
+    _s3 = pivot(emissions, "total_scope_3_lbm_emissions_value", 1000.0)
+    all = _s2+_s3
+    (all["Other"] / all.sum(axis=1)).round(2)
     return
 
 
@@ -512,15 +459,15 @@ def _(cur, pd, plt):
         lambda u: USAGE_LABEL.get(u, u)
     )
 
-    other_pivot = (
+    otherpivot = (
         other_cur.groupby(["usage_month", "label"])["line_item_unblended_cost"]
         .sum()
         .unstack("label")
         .fillna(0)
         .sort_index()
     )
-    top_labels = other_pivot.sum().sort_values(ascending=False).head(6).index
-    other_top = other_pivot[top_labels]
+    top_labels = otherpivot.sum().sort_values(ascending=False).head(6).index
+    other_top = otherpivot[top_labels]
 
     fig_o, ax_o = plt.subplots(figsize=(10, 4))
     bottom = pd.Series(0.0, index=other_top.index)
