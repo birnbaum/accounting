@@ -307,7 +307,7 @@ Rewriting \OSCI and \SCI using this per-workload notation we get
 \OSCI_i \;=\; \frac{\sum_s \E_{i,s}\cdot\I_s}{\R_i}
 \quad\text{and}\quad
 \SCI_i \;=\; \frac{\sum_s \E_{i,s}\cdot\I_s + \M_i}{\R_i},
-\label{eq}
+\label{eq:osci-sci-repetition}
 \end{equation}
 where $\E_{i,s}$ is the workload's energy within the slice, $\I_s$ the slice's location-based carbon intensity, $\M_i$ the workload machine's embodied term, and $\R_i$ the functional unit totalled over the period.
 
@@ -379,14 +379,15 @@ Scope~3 is mostly capacity-driven (embodied hardware and buildings), with a smal
 Since $\Delta^{\text{en}}_s + \Delta^{\text{cap}}_s = \Delta_s$, any $\beta$ preserves reconciliation. 
 
 \parag{Allocating the residual}
-The energy-driven residual $\Delta^{\text{en}}$ covers emissions tied to electricity generation, so it should track the same grid signal as the operational term. We split by
+The energy-driven residual $\Delta^{\text{en}}$ should scale proportionally with the operational term.
+We attribute by,
 \begin{equation}
-w^{\text{en}}_{i,s} = \frac{\E_{i,s}\cdot\I_s}{\Gamma_s} , \qquad \Gamma_s = \sum_i \E_{i,s}\cdot\I_s.
+w^{\text{en}}_{i,s} = \frac{\E_{i,s}\cdot\I_s}{\sum_j \E_{j,s}\cdot\I_j}.
 \label{eq:w-energy}
 \end{equation}
-A workload drawing the same energy during a dirtier hour is charged a larger share, mirroring \OSCI's own sensitivity to grid carbon intensity.
+Note that a workload drawing the same energy during a dirtier hour is charged a larger share.
 
-The capacity-driven residual $\Delta^{\text{cap}}$ is not a direct cost of running a workload, yet it must still be allocated.
+The capacity-driven residual $\Delta^{\text{cap}}$ is not a direct cost of running a workload but it must still be allocated.
 Sharma and Fuerst split such shared costs evenly across workloads~\cite{sharma2024accountable_footprint_serverless}.
 We instead attribute by peak capacity, following Shapley-based accounting for shared datacentre power~\cite{islam2016energyaccounting} and the peak-provisioning argument of Han et al.~\cite{HotCarbon2024GameTheoretic}: the workloads running during peak times drive the next server purchase.
 The residual then takes the weight
@@ -423,11 +424,6 @@ We ask how well the aggregated carbon-per-token metrics reconcile to that $100$\
 \includegraphics[width=\columnwidth]{figures/sec5_example.pdf}
 \vspace{-7mm}
 \caption{Comparison of different carbon-per-token metrics (\OSCI, \SCI, \RSCI) over time, reported hourly. The bar chart compares each metric's aggregated total against the provider's top-down report.}
-
-\todo{subfigure titles}
-\todo{check timezones}
-\todo{on Monday/Tuesday see that one demand has low carbon intensity}
-\todo{add boxes with high load / low carbon intensity.}
 
 
 \label{fig:demo}
