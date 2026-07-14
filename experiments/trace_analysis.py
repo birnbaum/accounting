@@ -18,7 +18,7 @@ def _():
 @app.cell
 def _():
     TRACE_FILE = "data/AzureLLMInferenceTrace_conv_1week_minutely.csv"
-    CI_FILE = "data/carbon_intensity_2024-05_azure_trace.csv"
+    CI_FILE = "data/carbon_intensity_2024-05_caiso_may10_window_local.csv"
     CI_ZONE = "US-CAL-CISO"
 
     # Single bare-metal DGX H100 node (8xH100). Full-node power basis (not GPU-only),
@@ -41,7 +41,7 @@ def _():
     BETA_S2 = 0.10
     BETA_S3 = 0.50
 
-    SCALE = 57.0          # normalizes the fleet trace to one node; targets ~0.85 peak utilization
+    SCALE = 50.0          # normalizes the fleet trace to one node; targets ~0.85 peak utilization
     J_PER_KWH = 3_600_000.0
     DAYS = 3              # window the trace to the first N days (None = full week)
 
@@ -55,8 +55,10 @@ def _():
         CI_ZONE,
         DAYS,
         GAMMA,
+        IDLE_W,
         J_PER_KWH,
         LIFESPAN_YR,
+        PEAK_W,
         PUE,
         S2_REPORTED,
         S3_REPORTED,
@@ -98,13 +100,15 @@ def _(CAP_MIN, SCALE, context_toks, generated_toks, plt, t):
 
 
 @app.cell
-def _(CI_FILE, CI_ZONE, pd, t):
-    # CAISO carbon by UTC (weekday, hour), mapped onto the trace's UTC timestamps.
-    # Trace (2024) and CI file (2024) share no dates, so align on recurring structure.
-    _raw = pd.read_csv(CI_FILE, parse_dates=["datetime"])
-    _ci = pd.Series(_raw[CI_ZONE].values, index=_raw["datetime"].dt.tz_localize(None))
-    _prof = _ci.groupby([_ci.index.dayofweek, _ci.index.hour]).mean()
-    ci_per_min = _prof.reindex(pd.MultiIndex.from_arrays([t.dt.dayofweek, t.dt.hour])).to_numpy()
+def _(CI_FILE, CI_ZONE, hour_id, np, pd):
+    # CAISO carbon aligned positionally: hour 0 of CI_FILE == hour 0 of the trace
+    # window. This window's calendar days (Fri/Sat/Sun) don't match the trace's own
+    # weekdays (Sun/Mon/Tue), so weekday-keyed alignment doesn't apply here. CI_FILE
+    # is pre-shifted to America/Los_Angeles local time (CAISO's actual timezone),
+    # so hour_id 7-18 lines up with real Pacific daytime, not raw UTC hour-of-day.
+    _raw = pd.read_csv(CI_FILE, parse_dates=["datetime"]).sort_values("datetime")
+    _ci_hourly = _raw[CI_ZONE].to_numpy()
+    ci_per_min = _ci_hourly[np.clip(hour_id, 0, len(_ci_hourly) - 1)]
     return (ci_per_min,)
 
 
@@ -156,17 +160,20 @@ def _(m_per_tok):
 
 
 @app.cell
-def _(E_kwh, RESIDUAL_CAP, RESIDUAL_EN, hour_id, np, osci, toks):
+def _(E_kwh, RESIDUAL_CAP, RESIDUAL_EN, ci_per_min, hour_id, np, osci, toks):
     # rSCI = oSCI + residual, allocated by physical driver (Sec 4):
-    #   energy-driven residual -> energy-share weight (flat per token)
+    #   energy-driven residual -> emissions-share weight (Eq. w-energy): energy times
+    #       the same grid carbon intensity as the operational term, so it tracks CI
+    #       instead of collapsing to a flat per-token rate.
     #   capacity-driven residual -> peak-attribution weight, a temporal Shapley proxy.
     #       Per-token charge ~ (hourly load)^PEAK_P: convex in load, so near-peak
     #       tokens pay disproportionately more than trough tokens (P=1 is linear).
     PEAK_P = 2.0
     _safe = np.where(toks > 0, toks, 1.0)
 
-    _wE = E_kwh / E_kwh.sum()
-    res_e = _wE * RESIDUAL_EN * 1000.0 / _safe  # gCO2/tok (flat)
+    _emissions = E_kwh * ci_per_min
+    _wE = _emissions / _emissions.sum()
+    res_e = _wE * RESIDUAL_EN * 1000.0 / _safe  # gCO2/tok (tracks grid CI)
 
     _hload = np.bincount(hour_id, weights=toks)[hour_id]
     _wK = _hload**PEAK_P * toks
@@ -181,6 +188,9 @@ def _(E_kwh, RESIDUAL_CAP, RESIDUAL_EN, hour_id, np, osci, toks):
 
 @app.cell
 def _(
+    GAMMA,
+    IDLE_W,
+    PEAK_W,
     RESIDUAL_S2,
     RESIDUAL_S3,
     ci_per_min,
@@ -212,19 +222,42 @@ def _(
 
     # Left column = timelines (shared x); right column = gauges on metric rows only.
     _fig = plt.figure(figsize=(6, 6))
-    _gs = _fig.add_gridspec(4, 2, width_ratios=[5, 1], wspace=0.05)
-    _axes = [_fig.add_subplot(_gs[0, 0])]
-    _axes += [_fig.add_subplot(_gs[_r, 0], sharex=_axes[0]) for _r in range(1, 4)]
+    # Input row sits apart from the metric stack so the "Per-workload metrics" header has
+    # room; the three metric rows stay tight to read as one coverage ladder.
+    _gs = _fig.add_gridspec(2, 1, height_ratios=[1, 3], hspace=0.2)
+    _gs_top = _gs[0].subgridspec(1, 2, width_ratios=[5, 1], wspace=0.05)
+    _gs_bot = _gs[1].subgridspec(3, 2, width_ratios=[5, 1], wspace=0.05, hspace=0.12)
+    _axes = [_fig.add_subplot(_gs_top[0, 0])]
+    _axes += [_fig.add_subplot(_gs_bot[_r, 0], sharex=_axes[0]) for _r in range(3)]
 
-    _l_load, = _axes[0].plot(t, toks / 1e6, color="darksalmon", lw=1)  # load drives everything downstream
-    _axes[0].set_ylabel("load\nMtok/min")
-    _axes[0].set_ylim([0, .24])
+    _power_w = IDLE_W + (toks / 60.0) * GAMMA  # W: idle draw + marginal energy-per-token rate
+    _l_ci, = _axes[0].plot(t, ci_per_min, color="black", alpha=0.8, lw=1)
+    _axes[0].set_ylabel("carbon intensity\ngCO$_2$/kWh")
+    _axes[0].set_ylim([0, 410])
     _ax0b = _axes[0].twinx()
-    _l_ci, = _ax0b.plot(t, ci_per_min, color="black", alpha=0.8, lw=1)
-    _ax0b.set_ylabel("carbon intensity\ngCO$_2$/kWh")
-    _ax0b.set_ylim([0, 270])
-    _ax0b.legend([_l_load, _l_ci], ["load", "carbon intensity"], loc="upper left", frameon=False, bbox_to_anchor=(-0.01, 1.15), ncol=2, columnspacing=1, handletextpad=0.5)
+    # Power line shaded light->_C_K (the capacity-residual red below) as it nears max,
+    # so the visual "runs hot" cue foreshadows the capacity-driven residual allocation.
+    from matplotlib.collections import LineCollection
+    from matplotlib.colors import Normalize, LinearSegmentedColormap
+    from matplotlib.lines import Line2D
+
+    _power_cmap = LinearSegmentedColormap.from_list("power_cmap", ["#f3d9d6", _C_K])
+    _power_norm = Normalize(vmin=IDLE_W, vmax=PEAK_W)
+    _pts = np.array([mdates.date2num(t), _power_w]).T.reshape(-1, 1, 2)
+    _segs = np.concatenate([_pts[:-1], _pts[1:]], axis=1)
+    _power_lc = LineCollection(_segs, cmap=_power_cmap, norm=_power_norm, linewidths=1.2)
+    _power_lc.set_array(_power_w[:-1])
+    _ax0b.add_collection(_power_lc)
+    _l_load = Line2D([0], [0], color=_C_K, lw=1.2)  # legend proxy for the gradient line
+    _ax0b.axhline(IDLE_W, color="gray", ls="--", lw=0.8)
+    _ax0b.axhline(PEAK_W, color="gray", ls="--", lw=0.8)
+    _ax0b.set_yticks([IDLE_W, PEAK_W])
+    _ax0b.set_yticklabels(["2.5\n(idle)", "10.2\n(max)"])
+    _ax0b.set_ylabel("Power\nkW")
+    _ax0b.set_ylim([0, PEAK_W * 1.05])
+    _ax0b.legend([_l_load, _l_ci], ["power", "carbon intensity"], loc="upper left", frameon=False, bbox_to_anchor=(0.15, 1.3), ncol=2, columnspacing=1, handletextpad=0.5)
     _ax0b.tick_params(labelsize=9)
+    _axes[0].set_title("Inputs", fontsize=10, weight="bold", loc="left")
 
     _axes[0].spines[["top"]].set_visible(False)
     _ax0b.spines[["top"]].set_visible(False)
@@ -235,6 +268,7 @@ def _(
     _axes[2].stackplot(t, _op * 1e6, _hourly(sci - osci) * 1e6,
                        colors=[_C_OP, _C_K], labels=["operational", "embodied"], alpha=0.95)
     _axes[1].set_ylabel("oSCI\ngCO$_2$/Mtok")
+    _axes[1].set_title("Per-workload metrics", fontsize=10, weight="bold")
     _axes[2].set_ylabel("SCI\ngCO$_2$/Mtok")
 
     # rSCI: operational + energy residual (flat) + capacity residual (rises with load).
@@ -266,7 +300,9 @@ def _(
     }
     _td = [(_op_kg + RESIDUAL_S2, _C_TD2, "S2"), (RESIDUAL_S3, _C_TD3, "S3")]  # reported scopes
     for _r in (1, 2, 3):
-        _bax = _fig.add_subplot(_gs[_r, 1])
+        _bax = _fig.add_subplot(_gs_bot[_r - 1, 1])
+        if _r == 1:
+            _bax.set_title("Reconciliation", fontsize=10, weight="bold")
         _bottom = 0.0
         for _val, _col in _captured[_r]:
             _bax.bar(0, _val, bottom=_bottom, width=0.8, color=_col, edgecolor="white", linewidth=0.4)
@@ -291,17 +327,16 @@ def _(
         _ax.tick_params(labelsize=9)
 
     for _ax in _axes[1:]:
-        _ax.set_ylim(0, 500)
+        _ax.set_ylim(0, 590)
         _ax.spines[["top", "right"]].set_visible(False)
 
     _axes[1].legend(loc="upper left", frameon=False, ncols=1, bbox_to_anchor=(-0.01, 1), columnspacing=1, handletextpad=0.3)
-    _axes[2].legend(loc="upper left", frameon=False, ncols=1, bbox_to_anchor=(-0.01, 1), columnspacing=1, handletextpad=0.3)
+    _axes[2].legend(loc="upper left", frameon=False, ncols=1, bbox_to_anchor=(-0.01, 1), columnspacing=1, handletextpad=0.3, labelspacing=.2)
     _h, _l = _axes[3].get_legend_handles_labels()
     _order = [0,2,1]
-    _axes[3].legend([_h[i] for i in _order],[_l[i] for i in _order], loc="upper left", frameon=False, ncols=2, bbox_to_anchor=(-0.01, 1.2), columnspacing=-5.2, handletextpad=0.3)
+    _axes[3].legend([_h[i] for i in _order],[_l[i] for i in _order], loc="upper left", frameon=False, ncols=2, bbox_to_anchor=(-0.01, 1.15), columnspacing=-5.2, handletextpad=0.3, labelspacing=.2)
 
     _fig.align_ylabels()
-    _fig.tight_layout()
     _fig.savefig("paper/figures/sec5_example.pdf", bbox_inches="tight")
     _fig
     return

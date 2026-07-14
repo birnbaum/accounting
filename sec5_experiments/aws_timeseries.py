@@ -219,7 +219,7 @@ def _(Patch, cur, emissions, np, pd, plt):
             _ax_em.bar(_x, _piv[_svc], 0.6, bottom=_bottom, color=_COLOR[_svc],
                        hatch=_hatch, edgecolor="white" if _hatch else "none")
             _bottom = _bottom + _piv[_svc].to_numpy()
-    _ax_em.set_ylabel("Emissions (kg CO$_2$e)")
+    _ax_em.set_ylabel("Emissions (kg CO$_2$)")
     _ax_em.set_title("AWS emissions by \"service category\"", fontsize=10, weight="bold")
     _ax_em.legend(
         handles=[Patch(facecolor=_COLOR[s], label=_LABEL[s]) for s in _SERVICE_ORDER]
@@ -258,7 +258,7 @@ def _(Patch, cur, emissions, np, pd, plt):
         _ax_sp.bar(_x, _spend[_svc], 0.6, bottom=_bottom, color=_COLOR[_svc], label=_LABEL[_svc])
         _bottom = _bottom + _spend[_svc].to_numpy()
     _ax_sp.set_ylabel("Cost (USD)")
-    _ax_sp.set_title("AWS cost by \"service category\"", fontsize=10, weight="bold")
+    _ax_sp.set_title("AWS cost, aggregated by \"service category\"", fontsize=10, weight="bold")
     _ax_sp.legend(frameon=False, loc="upper left", bbox_to_anchor=(0, 1.05))
     _ax_sp.set_xticks(_x)
     _ax_sp.set_xticklabels(_labels)
@@ -305,8 +305,8 @@ def _(Patch, cur, emissions, np, pd, plt):
 def _(emissions, pivot):
     _s2 = pivot(emissions, "total_scope_2_lbm_emissions_value", 1000.0)
     _s3 = pivot(emissions, "total_scope_3_lbm_emissions_value", 1000.0)
-    all = _s2+_s3
-    (all["Other"] / all.sum(axis=1)).round(2)
+    _all = _s2+_s3
+    (_all["Other"] / _all.sum(axis=1)).round(2).sort_values()
     return
 
 
