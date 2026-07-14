@@ -4,6 +4,8 @@
 gcp/projects.csv
 __pycache__
 
+__marimo__
+
 # Raw Azure LLM inference traces (Azure/AzurePublicDataset, Stojkovic et al. HPCA 2025).
 # Downloadable from https://github.com/Azure/AzurePublicDataset/blob/master/AzureLLMInferenceDataset2024.md
 data/AzureLLMInferenceTrace_code_1week.csv
