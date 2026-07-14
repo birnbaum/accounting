@@ -371,7 +371,8 @@ We therefore propose regrouping the three scope residuals into an energy-driven 
 \Delta^{\text{cap}}_{s} = \sum_{k} (1-\beta^{k})\,\Delta^{k}_{s}.
 \label{eq:residual-levers}
 \end{equation}
-$\beta^{\text{S1}}$, $\beta^{\text{S2}}$, and $\beta^{\text{S3}}$ must be estimated by tenants, however, it only tunes the incentive structure, so rough estimates suffice:
+The betas must be estimated by tenants.
+However, they only tunes the incentive structure, so rough estimates suffice:
 Scope~1 carries no energy-driven part ($\beta^{\text{S1}}=0$).
 Scope~2 mixes energy-driven terms (unmodeled overhead, energy-model error) with capacity-driven ones (idle power), so $\beta^{\text{S2}}$ depends on how well the bottom-up model captures the energy-driven part.
 Scope~3 is mostly capacity-driven (embodied hardware and buildings), with a smaller energy-driven part (electricity upstream, i.e.\ FERA).
@@ -381,7 +382,7 @@ Since $\Delta^{\text{en}}_s + \Delta^{\text{cap}}_s = \Delta_s$, any $\beta$ pre
 \parag{Allocating the residual}
 The energy-driven residual $\Delta^{\text{en}}$ covers emissions tied to electricity generation, so it should track the same grid signal as the operational term. We split by
 \begin{equation}
-w^{\text{en}}_{i,s} = \frac{\E_{i,s}\cdot\I_s}{\Gamma_s} , \qquad \Gamma_s = \sum_i \E_{i,s}\cdot\I_s.
+w^{\text{en}}_{i,s} = \I_s\cdot\frac{\E_{i,s}}{E_s} , \qquad E_s = \sum_i \E_{i,s}
 \label{eq:w-energy}
 \end{equation}
 A workload drawing the same energy during a dirtier hour is charged a larger share, mirroring \OSCI's own sensitivity to grid carbon intensity.
