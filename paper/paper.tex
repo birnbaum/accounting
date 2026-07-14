@@ -118,7 +118,7 @@ Top-down reports by cloud providers provide a more comprehensive view of a tenan
 Because the two approaches differ in scope and reporting frequency, the current state of the art treats them as decoupled: bottom-up metrics for optimization, top-down reports for corporate disclosure.
 
 We argue that the two signals should be \emph{reconcilable}. 
-A per-workload metric whose improvements never surface in the provider's audited report will not be trusted or funded at scale.
+A per-work\-load metric whose improvements never surface in the provider's audited report will not be adopted for accountability at scale.
 We survey the state of the art in cloud carbon accounting and propose a vision for reconciled \SCI (\RSCI): a per-workload metric that re-anchors a bottom-up energy estimate to the cloud provider's top-down report through a residual.
 By decomposing and allocating this residual according to its physical drivers, \RSCI can preserve operational incentives while also attributing idle capacity and embodied carbon to the workloads that drive them.
 We show that today's top-down reporting is still too coarse and methodologically inconsistent to support credible reconciliation and lay out concrete steps in provider reporting and standards to make it practical.
@@ -164,13 +164,12 @@ And conversely, the actions a bottom-up metric does capture, such as lowering a 
 
 The Green Software Foundation explicitly endorses this separation, distinguishing ``measuring for action'' (per-workload signals that drive engineering) from ``measuring for reporting'' (organization-level inventories that satisfy regulators) and arguing that the two serve different goals and should not be conflated~\cite{gsf-measuring}.
 \emph{We disagree.}
-Now that regulators require organization-level GHG disclosure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero} and carbon pricing is increasingly implemented, a per-workload metric whose gains never land in official reporting will not be funded, sustained, or trusted at scale.
-
-We argue that bottom-up carbon metrics should \emph{reconcile} with the provider's top-down GHG report by construction.
-A reconcilable metric would let organizations break down their cloud emissions across internal teams, services, and products at workload granularity, while remaining consistent with the reported total.
+Now that regulators require organization-level GHG disclosure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero} and carbon pricing is increasingly implemented, organizations need workload-level signals that can attribute their reported cloud emissions across internal teams, services, and products. 
+A per-workload metric whose gains never land in official reporting will not be trusted and adopted for accountability at scale.
 
 \parag{Contributions}
-We make the following contributions:
+We argue that bottom-up carbon metrics should \emph{reconcile} with the provider's top-down GHG report by construction.
+Towards this, we make the following contributions:
 \begin{itemize}
 \item We review the state of the art in cloud carbon accounting, including a survey of 48 providers and a matrix showing which engineering actions actually move which provider's reported number.
 \item  We introduce \emph{reconciled Software Carbon Intensity} (\RSCI), which anchors a bottom-up energy estimate to the provider's top-down report through a \emph{residual}, so per-workload numbers sum to the reported total by construction.
@@ -201,7 +200,7 @@ To capture this missing dimension, the Software Carbon Intensity (\SCI) specific
 \SCI \;=\; \frac{\E \cdot \I \;+\; \M}{\R},
 \]
 where $\M$ is the workload's amortized share of the hardware's embodied carbon, allocated according to its reserved time and resource share as described by Gupta et al.~\cite{gupta2022act}.
-The specification defines three categories of \emph{action} that lower software carbon: (i) energy efficiency, (ii) hardware efficiency, and (iii) carbon awareness, and requires the score to fall whenever a tenant takes any of them~\cite{sci-spec}.
+The specification defines three categories of \emph{action} for reducing software carbon: (i) energy efficiency, (ii) hardware efficiency, and (iii) carbon awareness, and requires the score to fall whenever a tenant takes any of these actions~\cite{sci-spec}.
 \OSCI already responds to the first and third through \E and \I, the embodied term \M is what extends \SCI to the second.
 
 However, Bashir et al.~\cite{bashir2024} show that \SCI is subject to a \emph{sunk-carbon fallacy}: because \M is amortized flat over the hardware's expected lifespan, \M/\R does not reflect declining relative hardware efficiency. 
@@ -220,7 +219,7 @@ Under regulatory pressure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero}, clo
 But a top-down report is only useful for engineering if it responds to the same actions a per-workload metric rewards.
 We surveyed 48 cloud providers in May~2026 (Appendix~\ref{app:inventory}); twelve ship a first-party, per-customer tool, and nine of these meter reservable compute in enough detail to trace.
 Table~\ref{tab:levers} records, for each, whether the three actions, defined in \S\ref {sec:background}, move the reported number.
-No provider responds to all actions, and the same action moves different providers inconsistently.
+No provider responds to all actions, and the same action can be reflected inconsistently across providers’ reports.
 
 This is because a top-down report is built in three steps: providers decide \emph{what} emissions to count, \emph{allocate} the datacenter total down to services and tenants, and \emph{report} the result at a chosen granularity.
 Each step decides which engineering actions still move the reported number.
@@ -311,7 +310,7 @@ Rewriting \OSCI and \SCI using this per-workload notation we get
 \end{equation}
 where $\E_{i,s}$ is the workload's energy within the slice, $\I_s$ the slice's location-based carbon intensity, $\M_i$ the workload machine's embodied term, and $\R_i$ the functional unit totalled over the period.
 
-\OSCI, \SCI and \RSCI all rely on a bottom-up energy estimate $\E_{i,s}$.
+\OSCI, \SCI, and \RSCI all rely on a bottom-up energy estimate $\E_{i,s}$.
 We can, for example, derive $\E_{i,s}$ from per-resource quantities,
 \begin{equation}
 \E_{i,s} \;=\; \mathrm{PUE}\cdot\sum_{p} q_{i,s,p} \cdot \varepsilon_p,
@@ -390,7 +389,7 @@ We therefore propose regrouping the three scope residuals into an energy-driven 
 \label{eq:residual-levers}
 \end{equation}
 The betas must be estimated by tenants.
-However, they only tunes the incentive structure, so rough estimates suffice:
+However, they only tune the incentive structure, so rough estimates suffice:
 Scope~1 carries no energy-driven part ($\beta^{\text{S1}}=0$).
 Scope~2 mixes energy-driven terms (unmodeled overhead, energy-model error) with capacity-driven ones (idle power), so $\beta^{\text{S2}}$ depends on how well the bottom-up model captures the energy-driven part.
 Scope~3 is mostly capacity-driven (embodied hardware and buildings), with a smaller energy-driven part (electricity upstream, i.e.\ FERA).
@@ -452,19 +451,19 @@ We ask how well the aggregated carbon-per-token metrics reconcile to that $100$\
 This operational metric counts only the marginal energy the work draws above idle, scaled by the PUE and the hourly carbon intensity.
 It rewards the main actions a tenant controls in this scenario: using less energy (\E) and computing work during cleaner hours (\I).
 By construction the node's idle power and its embodied hardware are not considered.
-Its advantage over \SCI is that, lacking any embodied term, it cannot be gamed by depreciated hardware (i.e., the sunk-carbon fallacy~\cite{bashir2024}).
+Its advantage over \SCI is that, lacking any embodied term, it cannot be misguided by depreciated hardware (i.e., the sunk-carbon fallacy~\cite{bashir2024}).
 \OSCI reports between 52 and 270\,gCO$_2$/Mtok (${\sim}5.2\times$ range) and the aggregated scores reach about 58\,kg.
 
 \parag{\SCI}
 \SCI adds an amortized embodied term of \M $\approx 14$\,gCO$_2$/Mtok.\footnote{We take the node's cradle-to-gate embodied carbon as ${\approx}2500$\,kg: NVIDIA reports $1312$\,kg for the 8-GPU HGX~H100 baseboard~\cite{nvidia2025hgxh100pcf}, plus CPUs, memory, storage, NICs, power supplies, and cooling. We assume the node is amortised over a 4-year lifespan, leading to \M $\approx 14$ gCO$_2$ per million token served .}
-This prices embodied carbon, but the term is only about a tenth of the operational signal, so the aggregate barely rises above \OSCI and still falls well short of the provider's $100$\,kg report.
+This prices embodied carbon, but the term is only about a tenth of the operational signal, so the aggregate barely rises above \OSCI and still falls short of the provider's $100$\,kg report.
 
 \parag{\RSCI}
 \RSCI keeps \OSCI's operational term and adds the residual, the gap between the provider's reported total and the bottom-up estimate.
 Following \S\ref{sec:rsci}, we split the residual into an energy-driven part, $\Delta_s^{\text{en}}\!\approx\!13$\,kg (upstream electricity and model error), and a capacity-driven part, $\Delta_s^{\text{cap}}\!\approx\!39$\,kg (idle and embodied). 
 The split is controlled by provider-specific $\beta$ values.\footnote{We assume $\beta^{\text{S2}}\!=\!0.1$, as the Scope~2 gap is caused mostly by idle energy, and $\beta^{\text{S3}}\!=\!0.5$, as Scope~3 divides between FERA (upstream electricity) and embodied emissions.}
 
-By construction, \RSCI's carbon-per-token scores sum back to the reported $100$\,kg.
+By construction, \RSCI's carbon-per-token scores sum up to the reported $100$\,kg.
 The energy-driven residual is allocated in proportion to bottom-up modeled energy demand, adding 11--57\,gCO$_2$/Mtok (${\sim}5.2\times$ range).
 The capacity-driven residual is allocated by peak-hour attribution, a practical online proxy for Shapley-based accounting, contributing a larger 13--142\,gCO$_2$/Mtok (${\sim}11\times$ range). 
 The exact magnitudes are illustrative, but the split shows the intended incentive: \RSCI still rewards short-term operational improvements such as lower energy use or cleaner hours, while making peak demand visible enough to prioritize peak-shaving when it dominates the reconciled footprint.
@@ -542,6 +541,7 @@ While billing is granular and can be traced to usage, the carbon report is coars
 
 
 \parag{Reported totals are opaque}
+\todo{highlight the uncorrelated plots}
 Even at sufficient granularity, a reconciled metric can only anchor to a provider's reported total if that total is itself trustworthy.
 Today, customer-facing reports are difficult to reproduce or interpret, making it impossible to distinguish modeling error from reporting methodology.
 
@@ -595,7 +595,6 @@ Absent any history the estimators default to zero residual and \RSCI degrades gr
 
 \section{General TODOs}
 \todo{Re-verify every cell in Table~\ref{tab:levers}. Open issues: (1)~Oracle shown in its \emph{power-based} mode (Compute/Storage/DB); its default spend-based mode allocates by revenue, like AWS's non-foundational tier. (2)~AWS foundational allocation is \emph{described} as utilization-based, but the billed unit is instance-hours and whether telemetry feeds the factor is undisclosed, so utilization=\notrefl{} rests on non-disclosure. (3)~Alibaba region=\notrefl{} is inferred from a market-style energy model; no location-based figure is explicitly disclosed (softest cell). (4)~T~Cloud excludes Scope~3 (embodied) today. (5)~Pricing tier normalized out everywhere: spot and on-demand of the same SKU receive identical emissions.}
-\todo{Clean-up appendix tables, especialyl links.}
 \todo{add more related work on carbon accounting and especially reconcilability}
 \todo{unify texttt notation}
 % 2. Cuts I made in the §7 merge (so you can veto any): the (a)(b)(c) Kalman/pooling enumeration collapsed to one clause; the \hat\mu/\hat\rho references dropped entirely (they were dangling anyway, only defined in the commented-out real-time block); the "Scaleway/OVHcloud already publish water" detail and the energy-coefficient-standardization future-work item removed; the routing-invariance mechanism (the φ_i marginalization argument) compressed to just the claim. The bounded-correlation open problem survived as a paper-strengthener.
