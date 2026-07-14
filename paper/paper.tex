@@ -450,28 +450,24 @@ We ask how well the aggregated carbon-per-token metrics reconcile to that $100$\
 
 \parag{\OSCI}
 This operational metric counts only the marginal energy the work draws above idle, scaled by the PUE and the hourly carbon intensity.
-It rewards the main actions a tenant controls in this scenario: computing work during cleaner hours and using less energy.
-By construction it stops there, so the node's idle power and its embodied hardware are not considered.
+It rewards the main actions a tenant controls in this scenario: using less energy (\E) and computing work during cleaner hours (\I).
+By construction the node's idle power and its embodied hardware are not considered.
 Its advantage over \SCI is that, lacking any embodied term, it cannot be gamed by depreciated hardware (i.e., the sunk-carbon fallacy~\cite{bashir2024}).
-Here it reaches about $48$\,kg, about half the top-down reported total.
+\OSCI reports between 52 and 270\,gCO$_2$/Mtok (${\sim}5.2\times$ range) and the aggregated scores reach about 58\,kg.
 
 \parag{\SCI}
-\SCI folds in an embodied term \M: the node's cradle-to-gate carbon amortized over its lifespan and divided across the tokens it serves in that time~\cite{sci-spec}.\footnote{We take the node's cradle-to-gate embodied carbon as ${\approx}2500$\,kg: NVIDIA reports $1312$\,kg for the 8-GPU HGX~H100 baseboard~\cite{nvidia2025hgxh100pcf}, plus CPUs, memory, storage, NICs, power supplies, and cooling. We assume the node is amortised over a 4-year lifespan, leading to \M $\approx 14$ gCO$_2$/Mtok.}
-The intent is to price embodied carbon, but per-token the amortised figure is small, about a tenth of the operational term, so the total barely moves and still falls well short of the report.
-Worse, the per-server \M reintroduces the fallacy \OSCI avoided: a workload on old hardware can be charged \emph{less} embodied carbon, rewarding the tenant for keeping inefficient machines in service~\cite{bashir2024}.
+\SCI adds an amortized embodied term of \M $\approx 14$\,gCO$_2$/Mtok.\footnote{We take the node's cradle-to-gate embodied carbon as ${\approx}2500$\,kg: NVIDIA reports $1312$\,kg for the 8-GPU HGX~H100 baseboard~\cite{nvidia2025hgxh100pcf}, plus CPUs, memory, storage, NICs, power supplies, and cooling. We assume the node is amortised over a 4-year lifespan, leading to \M $\approx 14$ gCO$_2$ per million token served .}
+This prices embodied carbon, but the term is only about a tenth of the operational signal, so the aggregate barely rises above \OSCI and still falls well short of the provider's $100$\,kg report.
 
 \parag{\RSCI}
-\RSCI keeps \OSCI's operational term and adds the residual term, the gap between the reported total and the bottom-up estimate.
-Following \S\ref{sec:rsci}, we split $\Delta_s$ by physical driver into an energy-driven part $\Delta_s^{\text{en}}\!\approx\!13$\,kg (upstream electricity and model error) and a capacity-driven part $\Delta_s^{\text{cap}}\!\approx\!39$\,kg (idle and embodied).
+\RSCI keeps \OSCI's operational term and adds the residual, the gap between the provider's reported total and the bottom-up estimate.
+Following \S\ref{sec:rsci}, we split the residual into an energy-driven part, $\Delta_s^{\text{en}}\!\approx\!13$\,kg (upstream electricity and model error), and a capacity-driven part, $\Delta_s^{\text{cap}}\!\approx\!39$\,kg (idle and embodied). 
+The split is controlled by provider-specific $\beta$ values.\footnote{We assume $\beta^{\text{S2}}\!=\!0.1$, as the Scope~2 gap is caused mostly by idle energy, and $\beta^{\text{S3}}\!=\!0.5$, as Scope~3 divides between FERA (upstream electricity) and embodied emissions.}
 
-We assume $\beta^{\text{S2}}\!=\!0.1$, as the Scope 2 gap is caused mostly by idle energy, and $\beta^{\text{S3}}\!=\!0.5$, as Scope 3 divides between upstream electricity (FERA) and embodied emissions.
-$\Delta^{\text{en}}$ is allocated proportional to energy demand, and $\Delta^{\text{cap}}$ by peak-hour attribution, as a practical proxy for online Shapely.
-
-By construction, the per-token scores sum back to the reported $100$\,kg.
-In this trace the busier hours also tend to be somewhat dirtier, so a tenant that could shift deferrable work off-peak would lower \RSCI twice over: a cleaner operational term and a smaller capacity share.
-\todo{discuss that this is not Shapely}
-
-\todo{maybe use a different CI trace and adapt this part}
+By construction, \RSCI's carbon-per-token scores sum back to the reported $100$\,kg.
+The energy-driven residual is allocated in proportion to bottom-up modeled energy demand, adding 11--57\,gCO$_2$/Mtok (${\sim}5.2\times$ range).
+The capacity-driven residual is allocated by peak-hour attribution, a practical online proxy for Shapley-based accounting, contributing a larger 13--142\,gCO$_2$/Mtok (${\sim}11\times$ range). 
+The exact magnitudes are illustrative, but the split shows the intended incentive: \RSCI still rewards short-term operational improvements such as lower energy use or cleaner hours, while making peak demand visible enough to prioritize peak-shaving when it dominates the reconciled footprint.
 
 \begin{table}[t]
 \centering
