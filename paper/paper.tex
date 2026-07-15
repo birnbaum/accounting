@@ -411,7 +411,7 @@ We attribute by,
 w^{\text{en}}_{i,s} = \frac{\E_{i,s}\cdot\I_s}{\sum_{j \in s} \E_{j,s}\cdot\I_s} = \frac{\E_{i,s}}{\sum_{j \in s} \E_{j,s}}.
 \label{eq:w-energy}
 \end{equation}
-Within a slice, where carbon intensity is fixed, this allocates the energy-driven residual in proportion to modeled energy use. If finer-grained time-varying carbon intensity is available, the same rule can be applied over time-indexed sub-slices, so that consumption during dirtier periods receives a larger attribution.
+Within a slice, where carbon intensity is fixed, this allocates the energy-driven residual in proportion to modeled energy use. If finer-grained time-varying carbon intensity is available, the same rule can be applied over time-indexed sub-slices, so that consumption during periods of higher carbon intensity receives a larger attribution.
 
 The capacity-driven residual $\Delta^{\text{cap}}$ is not a direct cost of running a workload but it must still be allocated.
 Sharma and Fuerst split such shared costs evenly across workloads~\cite{sharma2024accountable_footprint_serverless}.
@@ -437,7 +437,8 @@ Developing and evaluating online estimators that are accurate enough for control
 \section{Example}
 \label{sec:demo}
 
-To illustrate \RSCI's reconciliation and incentives, we work one example end to end: we model a single workload on a single node, reporting carbon per token served. Results are shown in Figure~\ref{fig:demo}.
+To illustrate \RSCI's reconciliation and incentives, we work one example end to end.
+We model a single workload on a single node, reporting carbon per token served. Results are shown in Figure~\ref{fig:demo}.
 
 \parag{Scenario}
 An organization reserves a bare-metal 8$\times$H100 node to serve an internal LLM over a three-day window and wants to report an \SCI-like metric: gCO$_2$ per million tokens served (gCO$_2$/Mtok), for each hour of the window.
