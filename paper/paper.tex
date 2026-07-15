@@ -20,6 +20,7 @@
 \usepackage{fontawesome5}
 \usepackage{longtable}
 \hypersetup{colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black}
+\usepackage{wasysym}
 
 \newcommand{\parag}[1]{\vspace{2mm}\noindent\textbf{#1.}\hspace{2mm}}
 
@@ -76,7 +77,8 @@
 \begin{document}
 
 %\title{Accounting for Action: Reconciling Per-Workload Carbon Metrics with Corporate GHG Reporting}
-\title{\texttt{rSCI}: Reconciling Bottom-Up Metrics with Top-Down Reporting for Carbon Accounting in the Cloud}
+% \texttt{rSCI}: 
+\title{Reconciling Bottom-Up Metrics with Top-Down Reporting for Carbon Accounting in the Cloud}
 
 \author{Philipp Wiesner}
 \affiliation{%
@@ -216,21 +218,19 @@ We argue that a metric that cannot be reconciled to the audited report will not 
 Under regulatory pressure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero}, cloud providers have moved beyond annual corporate reports toward customer-facing tools that attribute emissions to individual tenants.
 But a top-down report is only useful for engineering if it responds to the same actions a per-workload metric rewards.
 We surveyed 48 cloud providers in May~2026, spanning hyperscalers, regional IaaS, CDN and edge networks, GPU-focused neoclouds, application-hosting PaaS, and sustainability-positioned regionals.
-Twenty-six publish some form of quantitative emissions disclosure, whether self-reported or externally audited, but only twelve ship a first-party, per-customer tool, and just nine of these meter reservable compute in enough detail to trace a workload.
-None of the eleven GPU neoclouds we surveyed expose per-tenant emissions, even as AI training and inference concentrate there.
+26 providers publish some form of quantitative emissions disclosure, whether self-reported or externally audited, but only 11 ship a first-party, per-customer report, and just 9 of these meter reservable compute in enough detail to trace a workload.
+None of the 11 GPU neoclouds we surveyed expose per-tenant emissions.
 Table~\ref{tab:levers} records, for each, whether the three actions, defined in \S\ref {sec:background}, move the reported number.
-No provider responds to all actions, and the same action can be reflected inconsistently across providers’ reports.
 
+We find that no provider responds to all actions, and the same action can be reflected inconsistently across providers’ reports.
 This is because a top-down report is built in three steps: providers decide \emph{what} emissions to count, \emph{allocate} the datacenter total down to services and tenants, and \emph{report} the result at a chosen granularity.
-Each step decides which engineering actions still move the reported number.
-We now walk through each step in more detail.
-
+In practice, methodologies diverge at each step.
 
 \begin{table}[t]
 \centering
 \caption{The \SCI defines three \emph{action} categories for reducing carbon.
 The table shows how providers respond to each action in their top-down report:
-\faithful~responds directly; \proxyonly~through a proxy (usage, economic, or undisclosed); \notrefl~does not respond.}
+\faithful~responds directly, \proxyonly~responds through a proxy (usage, economic, or undisclosed), \LEFTcircle~respons partially, \notrefl~does not respond.}
 \vspace{-2mm}
 \label{tab:levers}
 \small
@@ -238,21 +238,21 @@ The table shows how providers respond to each action in their top-down report:
 \renewcommand{\arraystretch}{1.2}
 \begin{tabular}{@{}l cc c cc@{}}
 \toprule
- & \multicolumn{2}{c}{\textbf{Energy efficiency}} & \textbf{Hardware} & \multicolumn{2}{c}{\textbf{Carbon awareness}} \\
+ & \multicolumn{2}{c}{\makecell{\textbf{Energy}\\\textbf{efficiency (\E)}}} & \makecell{\textbf{Hardware}\\\textbf{efficiency (\M)}} & \multicolumn{2}{c}{\makecell{\textbf{Carbon}\\\textbf{awareness (\I)}}} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-4}\cmidrule(lr){5-6}
 \textbf{Provider} & \makecell{Efficient\\resource} & \makecell{Lower\\utilization} & \makecell{Right-\\size} & Region & Time \\
 \midrule
-AWS      & \proxyonly & \notrefl  & \faithful & \faithful & \notrefl \\
-GCP      & \proxyonly   & \notrefl  & \faithful & \faithful & \notrefl \\
-Azure    & \proxyonly & \notrefl  & \faithful & \notrefl  & \notrefl \\
+AWS~\cite{aws-ccft-model3}      & \proxyonly & \notrefl  & \faithful & \faithful & \notrefl \\
+GCP~\cite{google-carbon-methodology}      & \proxyonly   & \notrefl  & \faithful & \faithful & \notrefl \\
+Azure~\cite{azure-methodology-2026}    & \proxyonly & \notrefl  & \faithful & \notrefl  & \notrefl \\
 \midrule
-Alibaba  & \proxyonly & \notrefl  & \faithful & \notrefl  & \notrefl \\
-IBM      & \proxyonly & \notrefl  & \faithful & \faithful & \notrefl \\
-Oracle   & \faithful    & \faithful & \faithful & \faithful & \notrefl \\
+Alibaba~\cite{alibaba-cloud-carbon-footprint}  & \proxyonly & \notrefl  & \faithful & \notrefl  & \notrefl \\
+IBM~\cite{ibm-carbon-calc-v3}      & \proxyonly & \notrefl  & \faithful & \faithful & \notrefl \\
+Oracle~\cite{oracle-power-based}   & \LEFTcircle & \LEFTcircle & \faithful & \faithful & \notrefl \\
 \midrule
-OVH      & \faithful    & \notrefl  & \faithful & \faithful & \notrefl \\
-Scaleway & \faithful    & \faithful & \faithful & \faithful & \notrefl \\
-T~Cloud  & \proxyonly & \faithful & \faithful & \notrefl  & \notrefl \\
+OVH~\cite{ovh-eit-v2}      & \proxyonly & \notrefl  & \faithful & \faithful & \notrefl \\
+Scaleway~\cite{scaleway-footprint-calculator} & \LEFTcircle & \LEFTcircle & \faithful & \faithful & \notrefl \\
+T~Cloud~\cite{tcloud-sustainability-dashboard}  & \LEFTcircle & \LEFTcircle & \faithful & \notrefl  & \notrefl \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -265,27 +265,32 @@ Providers decompose their total datacenter emissions over the reporting period a
 \emph{Scope~3} covers amortized cradle-to-gate hardware and, depending on the provider, building embodied carbon, upstream fuel-and-transmission losses (FERA), freight, and end-of-life.
 No two of the three hyperscalers count the same set of Scope-3 categories.
 For example, only GCP counts employee business travel and commuting~\cite{google-carbon-methodology}, only Azure counts hardware end-of-life~\cite{microsoft-s3-2021}, and building-embodied carbon is counted by AWS and GCP but not Azure~\cite{aws-ccft-model3,google-carbon-methodology}.
-So even the headline totals are not directly comparable.
+% So even the headline totals are not directly comparable.
 
 \parag{How cloud providers allocate}
-Each provider then allocates the datacenter total to tenants in proportion to their share of an \emph{activity unit}.
+Providers then allocates the datacenter total to tenants in proportion to their share of an \emph{activity unit}.
 The units are inconsistent and lean on economics to differing degrees.
-AWS runs two regimes at once, physical instance-hours for services with dedicated racks, \emph{equivalent revenue} for the rest, without publishing which service falls on which side~\cite{aws-ccft-model3}.
+AWS runs two regimes at once, physical instance-hours for services with dedicated racks, ``equivalent revenue'' for the rest, without publishing which service falls on which side~\cite{aws-ccft-model3}.
 GCP hides an economic weighting inside a physical-looking unit: it distributes each product's energy across SKUs in proportion to list price before allocating by per-SKU usage such as vCPU-hours~\cite{schneider-mattia-2024}.
+That choice is nevertheless the most transparent and predictable: a tenant can reliably reduce its allocation by shifting to cheaper SKUs, even if it usually cannot tell which SKU is actually more energy-efficient.
 
 None of the hyperscalers allocates by \emph{measured} energy, which is certainly hard to do in virtualized infrastructure at scale.
 As a result, two identical VMs of the same type and duration, one idle and one fully loaded, are attributed the same emissions (Table~\ref{tab:levers}, \emph{lower util.}\ column).
-Smaller providers show this is not fundamental: Oracle's power-based mode, Scaleway, and T~Cloud allocate compute by measured energy, so an idle and a busy instance diverge, making the action individually feasible, just not unified in any one tool.
+Smaller providers such as Oracle~\cite{oracle-power-based}, Scaleway~\cite{scaleway-methodology}, and T~Cloud~\cite{tcloud-methodology} claim to allocate emissions by measured energy for some of their services, although such allocation is only meaningful where energy can be measured or defensibly proxied at the relevant resource boundary.
+Scaleway’s bare-metal methodologys~\cite{scaleway-baremetal-footprint} is a clean example: because the customer controls a dedicated physical server, Scaleway can attribute that server’s operational energy and amortized manufacturing footprint directly to the customer. 
+
 The activity unit also decides the \emph{efficient-resource} action: switching to a more efficient instance lowers the number only where the per-unit factor is grounded in energy or LCA, whereas at GCP it tracks list price, so a cheaper-but-dirtier SKU can look greener~\cite{schneider-mattia-2024}.
-\todo{check these claims and acknowledge that not even users know which resource is more efficient}
 
 \parag{How cloud providers report}
 Customer dashboards report at the service level (for GCP, ``Compute Engine,'' ``Networking,'' \ldots), far coarser than a bottom-up metric's per-workload view: a service spans dozens of SKUs and a SKU thousands of workloads, and none of that structure survives into what is published.
 A tenant sees Scope 1, 2, and 3 totals per service $\times$ region $\times$ month, released 14 to 21 days after the period closes.
 This monthly cadence erases \emph{when} a tenant runs: AWS and Azure apply a monthly-average carbon intensity, and although GCP computes on hourly carbon intensity internally, it collapses it into a fleet-wide per-SKU-and-region average before allocating by monthly usage~\cite{schneider-mattia-2024}, so shifting the same work to cleaner hours changes nothing (Table~\ref{tab:levers}, \emph{time} column).
-Providers also differ on \emph{how} Scope~2 is valued: AWS, GCP, and most others expose a location-based figure that reflects the regional grid, so a cleaner region lowers the number. Azure and T~Cloud export only the near-zero market-based figure, hiding the region action entirely.
 
-\todo{Do we need a brief takeaway here?}
+Providers also differ on \emph{how} Scope~2 is valued: AWS, GCP, and most others expose a location-based figure that reflects the regional grid, so a cleaner region lowers the number. 
+Azure and T~Cloud export only the near-zero market-based figure, hiding the region action entirely.
+Alibaba Cloud publishes a ``green-power-adjusted'' customer footprint rather than a location-based Scope~2 view.
+
+% \todo{Do we need a brief takeaway here?}
 
 %\begin{takeaway}
 %Providers differ in \emph{what} they count, in \emph{how} they allocate it, and in \emph{how} they report it, so the same workload yields different numbers at different providers and the same lever moves them inconsistently.
@@ -543,7 +548,6 @@ While billing is granular and can be traced to usage, the carbon report is coars
 
 
 \parag{Reported totals are opaque}
-\todo{highlight the uncorrelated plots}
 Even at sufficient granularity, a reconciled metric can only anchor to a provider's reported total if that total is itself trustworthy.
 Today, customer-facing reports are difficult to reproduce or interpret, making it impossible to distinguish modeling error from reporting methodology.
 
@@ -596,7 +600,6 @@ Absent any history the estimators default to zero residual and \RSCI degrades gr
 
 
 \section{General TODOs}
-\todo{Re-verify every cell in Table~\ref{tab:levers}. Open issues: (1)~Oracle shown in its \emph{power-based} mode (Compute/Storage/DB); its default spend-based mode allocates by revenue, like AWS's non-foundational tier. (2)~AWS foundational allocation is \emph{described} as utilization-based, but the billed unit is instance-hours and whether telemetry feeds the factor is undisclosed, so utilization=\notrefl{} rests on non-disclosure. (3)~Alibaba region=\notrefl{} is inferred from a market-style energy model; no location-based figure is explicitly disclosed (softest cell). (4)~T~Cloud excludes Scope~3 (embodied) today. (5)~Pricing tier normalized out everywhere: spot and on-demand of the same SKU receive identical emissions.}
 \todo{add more related work on carbon accounting and especially reconcilability}
 \todo{check references}
 % 2. Cuts I made in the §7 merge (so you can veto any): the (a)(b)(c) Kalman/pooling enumeration collapsed to one clause; the \hat\mu/\hat\rho references dropped entirely (they were dangling anyway, only defined in the commented-out real-time block); the "Scaleway/OVHcloud already publish water" detail and the energy-coefficient-standardization future-work item removed; the routing-invariance mechanism (the φ_i marginalization argument) compressed to just the claim. The bounded-correlation open problem survived as a paper-strengthener.
