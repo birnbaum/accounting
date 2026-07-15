@@ -554,10 +554,10 @@ Today, customer-facing reports are difficult to reproduce or interpret, making i
 We found this even for AWS EC2, whose methodology is comparatively well documented.
 Using standard bottom-up energy models, our estimated emissions exceeded the reported values by roughly 2$\times$ at idle and 5$\times$ at moderate utilization, producing a negative residual.
 A negative residual is admissable mathematically, but in general we always expect a bottom-up model to underestimate the top-down report.
-The residual impossible to interpret: either our model overestimates energy, the provider underestimates emissions, or the allocation methodology differs in undocumented ways.
+The residual is impossible to interpret: either our model overestimates energy, the provider underestimates emissions, or the allocation methodology differs in undocumented ways.
 
 Other providers exhibit similar issues.
-For example, Scaleway is one of the few providers that reports \emph{daily} carbon emissions, but we found that these daily totals changed when we queried them a week later, and some days reported emissions before the account even existed.
+For example, Scaleway is one of the few providers that reports \emph{daily} carbon emissions, but we found that these daily totals changed when we queried them a week later, and occasionally reported past emissions before the user account was created.
 Microsoft reports stable monthly reports, but explicitly notes that customer-facing emissions ``will differ from those reflected in Microsoft's corporate disclosure''~\cite{microsoft-s3-2021}.
 Without stable, reproducible totals, reconciliation cannot provide trustworthy workload attribution.
 
@@ -569,13 +569,13 @@ Providers should disclose enough intermediate information and methodology for te
 \end{callforaction}
 
 \parag{There is no common standard}
-As we lined out in \S\ref{sec:sota}, providers differ in what they report, how they allocate it, and even what they count.
+As we lined out in \S\ref{sec:sota}, providers differ in what they report, how they allocate it, and what they count.
 Azure and T~Cloud expose only market-based Scope~2 emissions, leaving no location-based figure to reconcile against.
 AWS allocates much of its footprint by spend, GCP incorporates list-price weighting, while Oracle, Scaleway, and T~Cloud allocate compute from measured energy.
 Even the hyperscalers disagree on Scope~3 boundaries, including different combinations of upstream fuel losses, buildings, end-of-life, and business travel.
 
 These differences ultimately reflect gaps in today's GHG Protocol guidance for cloud infrastructure, which leaves shared-infrastructure allocation, equipment lifetimes, and several reporting boundaries largely to provider discretion.
-Fortunately, \RSCI depends only on the structure of top-down reporting rather than any specific methodology, so improvements to the standard only strengthen the metric.
+\RSCI depends only on the structure of top-down reporting rather than any specific methodology, so improvements to the standard only strengthen the metric.
 
 \begin{callforaction}
 The GHG Protocol should define cloud-specific guidance for customer-facing reporting, including common reporting boundaries, allocation rules for shared infrastructure, and standardized outputs.
