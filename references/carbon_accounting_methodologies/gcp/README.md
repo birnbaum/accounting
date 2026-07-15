@@ -4,7 +4,8 @@
 
 ## Authoritative sources in this folder
 
-- `schneider-mattia-2024-gcp.pdf` — Schneider & Mattia 2024 (arXiv:2406.09645). The peer-reviewed write-up of GCP's customer-facing methodology by Google authors. **This is the canonical reference for any GCP claim.**
+- `schneider-mattia-2024-gcp.pdf` — Schneider & Mattia 2024 (arXiv:2406.09645). The peer-reviewed write-up of GCP's customer-facing methodology by Google authors. **Canonical for Scope-2 (energy/allocation) claims, but Scope-2 only** — it explicitly defers Scope 1/3 to the methodology page below (their ref [20]).
+- Google Cloud Carbon Footprint methodology page (https://docs.cloud.google.com/carbon-footprint/docs/methodology; bib key `google-carbon-methodology`). **Canonical for GCP Scope-3 boundary claims** (business travel/commuting inclusion, end-of-life exclusion, 4-yr equipment / 20-yr facility amortization). Verified via WebFetch 2026-07-15.
 
 ## Provider URLs (for fresh verification)
 

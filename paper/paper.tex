@@ -130,15 +130,13 @@ We show that today's top-down reporting is still too coarse and methodologically
 \section{Introduction}
 \label{sec:intro}
 
-\todo{new, single-column figure 1}
-
 A major challenge in sustainable computing is quantifying the carbon footprint of workloads. 
 It is a prerequisite for determining the effectiveness of carbon-reduction strategies, for reporting to regulators and investors, and for making informed decisions about workload scheduling and adaptation. 
 Two largely separate approaches exist: bottom-up modeling and top-down corporate greenhouse gas (GHG) reporting. % based on provider-wide measurements and downstream allocation to tenants.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=.9\columnwidth,height=5cm]{figures/carbon_accounting_tension.pdf}
+  \includegraphics[width=.95\columnwidth]{figures/carbon_accounting_tension.pdf}
   \caption{A provider's top-down carbon report and a tenant's bottom-up estimate rarely match. We call for \emph{reconciling} the two totals and allocating the residual back to workloads.}
 \end{figure}
 
@@ -217,7 +215,9 @@ We argue that a metric that cannot be reconciled to the audited report will not 
 
 Under regulatory pressure~\cite{eu2022csrd,SEC2024_3311275,sbti2024netzero}, cloud providers have moved beyond annual corporate reports toward customer-facing tools that attribute emissions to individual tenants.
 But a top-down report is only useful for engineering if it responds to the same actions a per-workload metric rewards.
-We surveyed 48 cloud providers in May~2026 (Appendix~\ref{app:inventory}); twelve ship a first-party, per-customer tool, and nine of these meter reservable compute in enough detail to trace.
+We surveyed 48 cloud providers in May~2026, spanning hyperscalers, regional IaaS, CDN and edge networks, GPU-focused neoclouds, application-hosting PaaS, and sustainability-positioned regionals.
+Twenty-six publish some form of quantitative emissions disclosure, whether self-reported or externally audited, but only twelve ship a first-party, per-customer tool, and just nine of these meter reservable compute in enough detail to trace a workload.
+None of the eleven GPU neoclouds we surveyed expose per-tenant emissions, even as AI training and inference concentrate there.
 Table~\ref{tab:levers} records, for each, whether the three actions, defined in \S\ref {sec:background}, move the reported number.
 No provider responds to all actions, and the same action can be reflected inconsistently across providers’ reports.
 
@@ -263,7 +263,9 @@ Providers decompose their total datacenter emissions over the reporting period a
 \emph{Scope~1}, direct on-site emissions such as backup-diesel combustion and refrigerant leakage, is usually negligible for most tenants today, though the increasing deployment of behind-the-meter gas generation at datacenters may change this in future.
 \emph{Scope~2} is the datacenter's purchased electricity valued at the region's grid carbon intensity.\footnote{The GHG Protocol mandates dual reporting for Scope 2: \emph{location-based} figures reflect actual grid emissions, while \emph{market-based} figures net out procurement instruments like power purchase agreements (PPAs) and renewable energy certificates (RECs), which in practice often moves the market-based number to near zero. Since engineering teams have no control over the provider's procurement choices, the market-based figure is not actionable for workload optimization. which is why \SCI explicitly excludes it~\cite{sci-spec}. We only consider the location-based figure in this paper.}
 \emph{Scope~3} covers amortized cradle-to-gate hardware and, depending on the provider, building embodied carbon, upstream fuel-and-transmission losses (FERA), freight, and end-of-life.
-No two of the three hyperscalers count the same set of Scope-3 categories (Table~\ref{tab:bigthree-s3} in the appendix), so even the headline totals are not directly comparable.
+No two of the three hyperscalers count the same set of Scope-3 categories.
+For example, only GCP counts employee business travel and commuting~\cite{google-carbon-methodology}, only Azure counts hardware end-of-life~\cite{microsoft-s3-2021}, and building-embodied carbon is counted by AWS and GCP but not Azure~\cite{aws-ccft-model3,google-carbon-methodology}.
+So even the headline totals are not directly comparable.
 
 \parag{How cloud providers allocate}
 Each provider then allocates the datacenter total to tenants in proportion to their share of an \emph{activity unit}.
@@ -584,7 +586,7 @@ In this paper, we proposed \RSCI, a per-workload metric that anchors a bottom-up
 We showed how to decompose and allocate that residual to reward peak-shaving, and found that today's provider reports remain too coarse, opaque, and inconsistent across providers to compute credible \RSCI scores in practice.
 
 \parag{Toward a real-time signal}
-As defined, \RSCI is a \emph{retrospective} metric: the residuals $\Delta_s$ and the weight denominators ($E_s$, the slice peak) are known only once the provider's report lands, weeks to months late.
+As defined, \RSCI is a \emph{retrospective} metric: the residuals $\Delta_s$ and the weight denominators ($\E_s$, the slice peak) are known only once the provider's report lands, weeks to months late.
 Its native use is therefore \emph{accounting} (faithful allocation of an audited total), and its incentives bite at reporting cadence, like a carbon chargeback, rather than in a closed scheduling loop.
 Turning it into a real-time signal is an open problem: predict each residual component ahead of the report.
 This is plausible precisely because a good bottom-up model leaves a residual dominated by \emph{slow-moving, methodology-driven} overheads (PUE, embodied intensity, allocation constants) rather than workload dynamics, so it should be learnable from the sequence of reconciled months.
@@ -596,7 +598,7 @@ Absent any history the estimators default to zero residual and \RSCI degrades gr
 \section{General TODOs}
 \todo{Re-verify every cell in Table~\ref{tab:levers}. Open issues: (1)~Oracle shown in its \emph{power-based} mode (Compute/Storage/DB); its default spend-based mode allocates by revenue, like AWS's non-foundational tier. (2)~AWS foundational allocation is \emph{described} as utilization-based, but the billed unit is instance-hours and whether telemetry feeds the factor is undisclosed, so utilization=\notrefl{} rests on non-disclosure. (3)~Alibaba region=\notrefl{} is inferred from a market-style energy model; no location-based figure is explicitly disclosed (softest cell). (4)~T~Cloud excludes Scope~3 (embodied) today. (5)~Pricing tier normalized out everywhere: spot and on-demand of the same SKU receive identical emissions.}
 \todo{add more related work on carbon accounting and especially reconcilability}
-\todo{unify texttt notation}
+\todo{check references}
 % 2. Cuts I made in the §7 merge (so you can veto any): the (a)(b)(c) Kalman/pooling enumeration collapsed to one clause; the \hat\mu/\hat\rho references dropped entirely (they were dangling anyway, only defined in the commented-out real-time block); the "Scaleway/OVHcloud already publish water" detail and the energy-coefficient-standardization future-work item removed; the routing-invariance mechanism (the φ_i marginalization argument) compressed to just the claim. The bounded-correlation open problem survived as a paper-strengthener.
 % 3. Two references now lean on things not yet solid: the §4 footnote points at a "notation pass" (your existing \todo{Revise notation} at the §4 setup), and §7's provider ask reuses the GCP-collapse claim from §2 line 181 — both already sourced, just noting the coupling.
 
@@ -606,6 +608,7 @@ Absent any history the estimators default to zero residual and \RSCI degrades gr
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
 
+\iffalse % Appendix removed for SoCC submission (no appendix allowed); retained for the arXiv version.
 \appendix
 \onecolumn
 
@@ -746,5 +749,7 @@ Cat~12 --- End-of-life treatment & \no & \no & \yes \\
 \bottomrule
 \end{tabular}
 \end{table}
+\fi % end appendix (SoCC submission)
 
 \end{document}
+
