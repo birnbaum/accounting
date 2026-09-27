@@ -82,7 +82,7 @@
 
 \author{Philipp Wiesner}
 \affiliation{%
-  \institution{TU Berlin}
+  \institution{University of Cambridge}
 %  \country{Germany}
 }
 \affiliation{%
@@ -238,7 +238,7 @@ The table shows how providers respond to each action in their top-down report:
 \small
 \setlength{\tabcolsep}{5pt}
 \renewcommand{\arraystretch}{1.2}
-\begin{tabular}{@{}l cc c cc@{}}
+\begin{tabular}{@{}p{1.4cm} cc c cc@{}}
 \toprule
  & \multicolumn{2}{c}{\makecell{\textbf{Energy}\\\textbf{efficiency (\E)}}} & \makecell{\textbf{Hardware}\\\textbf{efficiency (\M)}} & \multicolumn{2}{c}{\makecell{\textbf{Carbon}\\\textbf{awareness (\I)}}} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-4}\cmidrule(lr){5-6}
@@ -292,13 +292,6 @@ This monthly cadence erases \emph{when} a tenant runs: AWS and Azure apply a mon
 Providers also differ on \emph{how} Scope~2 is valued: AWS, GCP, and most others expose a location-based figure that reflects the regional grid, so a cleaner region lowers the number. 
 Azure and T~Cloud export only the near-zero market-based figure, hiding the region action entirely.
 Alibaba Cloud publishes a ``green-power-adjusted'' customer footprint rather than a location-based Scope~2 view.
-
-% \todo{Do we need a brief takeaway here?}
-
-%\begin{takeaway}
-%Providers differ in \emph{what} they count, in \emph{how} they allocate it, and in \emph{how} they report it, so the same workload yields different numbers at different providers and the same lever moves them inconsistently.
-%Only right-sizing reliably lowers every provider's number; raising utilization and shifting load in time move no one's; region moves most but not the market-based-only tools; and a ``greener'' SKU can move the number for the wrong reason.
-%\end{takeaway}
 
 
 
