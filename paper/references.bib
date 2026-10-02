@@ -17,8 +17,8 @@
 }
 
 @article{schneider-mattia-2024,
-  title   = {Methodology for the {Google} {Cloud} Carbon Footprint Tool},
-  author  = {Schneider, Sarah and Mattia, Andrea},
+  title   = {Carbon accounting in the Cloud: a methodology for allocating emissions across data center users},
+  author  = {Schneider, Ian and Mattia, Taylor},
   journal = {arXiv preprint arXiv:2406.09645},
   year    = {2024}
 }
@@ -138,30 +138,57 @@
 % ----- Provider methodologies & customer tools -----
 
 @misc{google-carbon-methodology,
-  title        = {{Google} {Cloud} Carbon Footprint: Methodology},
+  title        = {Carbon Footprint reporting methodology},
   author       = {{Google}},
   howpublished = {\url{https://docs.cloud.google.com/carbon-footprint/docs/methodology}},
-  year         = {2024}
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
 }
 
 @misc{aws-ccft-model3,
-  title        = {{AWS} Customer Carbon Footprint Tool Methodology, Model 3.0.1},
+  title        = {{AWS} Customer Carbon Footprint Methodology, Model Version 3.0},
   author       = {{Amazon Web Services}},
   howpublished = {\url{https://sustainability.aboutamazon.com/aws-customer-carbon-footprint-methodology.pdf}},
-  year         = {2026}
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
 }
 
 @misc{azure-methodology-2026,
   title        = {{Azure} Emissions Calculation Methodology},
   author       = {{Microsoft}},
   howpublished = {\url{https://learn.microsoft.com/en-us/power-bi/connect-data/azure-emissions-calculation-methodology}},
-  year         = {2026}
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{azure-carbon-overview,
+  title        = {What is Carbon optimization in {Azure}},
+  author       = {{Microsoft}},
+  howpublished = {\url{https://learn.microsoft.com/en-us/azure/carbon-optimization/overview}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{azure-carbon-recommendations,
+  title        = {Reduce your carbon emissions in {Azure}},
+  author       = {{Microsoft}},
+  howpublished = {\url{https://learn.microsoft.com/en-us/azure/carbon-optimization/reduce-emissions}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{azure-carbon-data,
+  title        = {View and analyze carbon emissions data and insights},
+  author       = {{Microsoft}},
+  howpublished = {\url{https://learn.microsoft.com/en-us/azure/carbon-optimization/quickstart-view-analyze-emission-data}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
 }
 
 @misc{microsoft-s3-2021,
   title        = {A New Approach for {Scope~3} Emissions Transparency},
   author       = {{Microsoft Cloud Supply Chain Sustainability Organization}},
-  howpublished = {Microsoft Whitepaper},
+  howpublished = {\url{https://download.microsoft.com/download/7/2/8/72830831-5d64-4f5c-9f51-e6e38ab1dd55/Microsoft_Scope_3_Emissions.pdf}},
   year         = {2021}
 }
 
@@ -172,11 +199,20 @@
   year         = {2025}
 }
 
+@misc{oracle-emissions-management,
+  title        = {Emissions Management},
+  author       = {{Oracle}},
+  howpublished = {\url{https://docs.oracle.com/en-us/iaas/Content/General/Concepts/emissions-management.htm}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
 @misc{scaleway-footprint-calculator,
-  title        = {Understanding the {Scaleway} Environmental Footprint calculator},
+  title        = {Environmental Footprint calculation breakdown},
   author       = {{Scaleway}},
   howpublished = {\url{https://www.scaleway.com/en/docs/environmental-footprint/additional-content/environmental-footprint-calculator/}},
-  year         = {2025}
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
 }
 
 @misc{scaleway-baremetal-footprint,
@@ -186,35 +222,434 @@
   year         = {2025}
 }
 
+@misc{scaleway-instances-footprint,
+  title        = {Instances footprint calculation},
+  author       = {{Scaleway}},
+  howpublished = {\url{https://www.scaleway.com/en/docs/environmental-footprint/additional-content/instances-env-footprint/}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{scaleway-calculation-values,
+  title        = {Calculation reference values},
+  author       = {{Scaleway}},
+  howpublished = {\url{https://www.scaleway.com/en/docs/environmental-footprint/additional-content/calculation-values-reference/}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
 @misc{tcloud-sustainability-dashboard,
   title        = {A next-generation cloud sustainability dashboard},
   author       = {{T Cloud Public}},
   howpublished = {\url{https://www.t-cloud-public.com/en/blog/product-news/sustainability-dashboard}},
-  year         = {2025}
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
 }
 
 @misc{alibaba-cloud-carbon-footprint,
   title        = {Cloud Product Carbon Footprint},
   author       = {{Alibaba Cloud}},
-  howpublished = {\url{https://www.alibabacloud.com/help/en/energy-expert/support/cloud-product-carbon-footprint}},
-  year         = {2025}
+  howpublished = {\url{https://help.aliyun.com/en/energy-expert/support/cloud-product-carbon-footprint}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
 }
 
 @misc{ibm-carbon-calc-v3,
   title        = {{IBM Cloud} Carbon Calculator: Energy \& Carbon Quantification Methodology v3},
   author       = {{IBM}},
   howpublished = {\url{https://cloud.ibm.com/media/docs/downloads/account/carbon-calc-method-v3.pdf}},
-  year         = {2024}
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{ibm-carbon-current,
+  title        = {Working with {IBM Cloud}'s carbon calculator},
+  author       = {{IBM}},
+  howpublished = {\url{https://cloud.ibm.com/docs/account?topic=account-what-is-cloud-calc}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{exoscale-impact-methodology,
+  title        = {Environmental Impact: Methodology},
+  author       = {{Exoscale}},
+  howpublished = {\url{https://community.exoscale.com/platform/environmental-impact/methodology/}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{outscale-carbon-methodology,
+  title        = {Methodological approach: Carbon footprint service, version 1.2},
+  author       = {{OUTSCALE}},
+  howpublished = {\url{https://fr.outscale.com/wp-content/uploads/2026/09/OUTSCALE_Carbon_Footprint_Methodology_v1.2-20261.pdf}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
 }
 
 @misc{ovh-eit-v2,
-  title        = {{OVHcloud} Environmental Impact Tracker Methodology v2.0},
+  title        = {{OVHcloud} Environmental Impact Tracker Methodology},
   author       = {{OVHcloud}},
   howpublished = {\url{https://corporate.ovhcloud.com/sites/default/files/2025-07/environmental_impact_tracker_-_methodology.pdf}},
-  year         = {2025}
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+% ----- Additional appendix survey sources -----
+% Undated web sources use the access year, as requested.
+
+@misc{aws-sustainability-console,
+  title        = {{AWS} Sustainability Console},
+  author       = {{Amazon Web Services}},
+  howpublished = {\url{https://aws.amazon.com/sustainability/tools/console/}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{baidu-esg-2024,
+  title        = {{Baidu} 2024 Environmental, Social and Governance ({ESG}) Report},
+  author       = {{Baidu}},
+  howpublished = {\url{https://esgs.cdn.bcebos.com/2025/04/28/a2/39a2aaa4f728f4e2d0aebaff346c045e.pdf}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{huawei-green-data-centers,
+  title        = {{Huawei Cloud}: Improving {PUE} to Build Green Data Centers},
+  author       = {{Huawei}},
+  howpublished = {\url{https://www.huawei.com/en/sustainability/the-latest/stories/green-data-centers-optimal-pue}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{tencent-carbon-neutrality,
+  title        = {{Tencent} Carbon Neutrality Mid-Term Report},
+  author       = {{Tencent}},
+  howpublished = {\url{https://www.tencent.com/climate/}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{exoscale-environmental-impact,
+  title        = {Environmental Impact},
+  author       = {{Exoscale}},
+  howpublished = {\url{https://community.exoscale.com/platform/environmental-impact/}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{infomaniak-invoice-footprint,
+  title        = {D{\'e}couvrir l'{\'e}co-conception pour r{\'e}duire l'empreinte carbone},
+  author       = {{Infomaniak}},
+  howpublished = {\url{https://www.infomaniak.com/fr/support/faq/1160/decouvrir-leco-conception-pour-reduire-lempreinte-carbone}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{outscale-environment,
+  title        = {Our Sustainable Development Commitments: Environment},
+  author       = {{OUTSCALE}},
+  howpublished = {\url{https://en.outscale.com/our-sustainable-development-commitments/environment/}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{ovh-environmental-impact-tracker,
+  title        = {Environmental Impact Tracker},
+  author       = {{OVHcloud}},
+  howpublished = {\url{https://www.ovhcloud.com/en/about-us/environmental-impact-tracker/}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{scaleway-footprint-dashboard,
+  title        = {How to use the Environmental Footprint dashboard},
+  author       = {{Scaleway}},
+  howpublished = {\url{https://www.scaleway.com/en/docs/environmental-footprint/how-to/environmental-footprint-dashboard/}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{glesys-sustainability-2024,
+  title        = {{Glesys} releases 2024 sustainability report and establishes {CSRD}-aligned baseline},
+  author       = {{GleSYS}},
+  howpublished = {\url{https://glesys.com/blog/glesys-releases-2024-sustainability-report-and-establishes-csrd-aligned-baseline/}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{hetzner-environmental-statement-2025,
+  title        = {Umwelterkl{\"a}rung 2025: Berichtszeitraum 2022--2024},
+  author       = {{Hetzner Online GmbH}},
+  howpublished = {\url{https://cdn.hetzner.com/assets/downloads/Umwelterklarung_Stand_30_10.pdf}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{ionos-environment,
+  title        = {Environmental Protection and Sustainability at {IONOS}},
+  author       = {{IONOS}},
+  howpublished = {\url{https://www.ionos.com/environment}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{jd-esg-2024,
+  title        = {{JD.com} Releases 2024 {ESG} Report},
+  author       = {Yang, Vivian},
+  howpublished = {\url{https://jdcorporateblog.com/jd-com-releases-2024-esg-report/}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{rackspace-sustainability-2025,
+  title        = {{Rackspace Technology} Releases 2025 Sustainability Report},
+  author       = {{Rackspace Technology}},
+  howpublished = {\url{https://www.rackspace.com/en-ae/newsroom/rackspace-technology-releases-2025-sustainability-report}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{stackit-colocation,
+  title        = {{STACKIT} Colocation: Secure server hosting},
+  author       = {{STACKIT}},
+  howpublished = {\url{https://stackit.com/en/solutions/colocation}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{upcloud-esg-2024,
+  title        = {{ESG} Report 2024},
+  author       = {{UpCloud Ltd}},
+  howpublished = {\url{https://upcloud.com/media/upcloud-esg-report-2024.pdf}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{yandex-sustainability-2024,
+  title        = {{Yandex} Sustainability Report 2024},
+  author       = {{Yandex}},
+  howpublished = {\url{https://help.yandex.ru/sp/sustainability-2024}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{civo-uk-ai-sovereignty,
+  title        = {The role of data sovereignty in securing the future of {UK} enterprise {AI}},
+  author       = {Hansford, Simon},
+  howpublished = {\url{https://www.civo.com/blog/data-sovereignty-for-uk-ai}},
+  year         = {2024},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{leafcloud-gpu-carbon-calculator,
+  title        = {{GPU} Carbon Calculator Explained},
+  author       = {Pathak, Guy},
+  howpublished = {\url{https://leaf.cloud/blog/gpu-carbon-calculator-explained/}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{vultr-sabey-expansion,
+  title        = {{Vultr} Expands Cloud {GPU} Capacity and Eco Focus with {Sabey Data Center}},
+  author       = {{Vultr}},
+  howpublished = {\url{https://blogs.vultr.com/Vultr-Expands-Cloud-GPU-Capacity-and-Eco-Focus-with-Sabey-Data-Center}},
+  year         = {2024},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{atnorth-sustainability-2024,
+  title        = {{atNorth} 2024 sustainability report},
+  author       = {{atNorth}},
+  howpublished = {\url{https://www.atnorth.com/news/atnorth-2024-sustainability-report/}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{crusoe-impact-2024,
+  title        = {Powering progress: {Crusoe}'s 2024 impact},
+  author       = {Chan, Hui Wen},
+  howpublished = {\url{https://www.crusoe.ai/resources/blog/crusoe-2024-impact-report}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{nebius-sustainability,
+  title        = {Sustainability},
+  author       = {{Nebius}},
+  howpublished = {\url{https://nebius.com/sustainability}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{verda-locations-sustainability,
+  title        = {Locations and Sustainability},
+  author       = {{Verda}},
+  howpublished = {\url{https://docs.verda.com/welcome-to-verda/locations-and-sustainability/}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{coreweave-10k-2025,
+  title        = {Form 10-{K} for the fiscal year ended December 31, 2025},
+  author       = {{CoreWeave, Inc.}},
+  howpublished = {\url{https://s205.q4cdn.com/133937190/files/doc_financials/2025/q4/CoreWeave-Inc-FY25-10-K-7.pdf}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{hyperstack-infrastructure,
+  title        = {Why choose {Hyperstack} as a cloud provider for {GPU}?},
+  author       = {{Hyperstack}},
+  howpublished = {\url{https://www.hyperstack.cloud/why-hyperstack}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{lambda-hydrogen-gb300,
+  title        = {{Lambda} and {ECL} Bring the First Hydrogen-Powered {NVIDIA GB300 NVL72} Systems Online},
+  author       = {{Lambda}},
+  howpublished = {\url{https://lambda.ai/blog/lambda-ecl-bring-first-hydrogen-powered-nvidia-gb300-nvl72-systems-online}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{nscale-sustainable-infrastructure,
+  title        = {Engineering efficiency: Redefining sustainable {AI} infrastructure},
+  author       = {Sharp, Alex},
+  howpublished = {\url{https://www.nscale.com/blog/redefining-sustainable-ai-infrastructure}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{runpod-legal-compliance,
+  title        = {Legal Compliance},
+  author       = {{Runpod}},
+  howpublished = {\url{https://www.runpod.io/legal}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{akamai-customer-engagement,
+  title        = {Customer Engagement},
+  author       = {{Akamai}},
+  howpublished = {\url{https://akamaisustainability.com/circularity/customer-engagement/}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{cloudflare-analytics-types,
+  title        = {Types of analytics},
+  author       = {{Cloudflare}},
+  howpublished = {\url{https://developers.cloudflare.com/analytics/types-of-analytics/}},
+  year         = {2026},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{cloudflare-impact-2025,
+  title        = {Impact Report 2025},
+  author       = {{Cloudflare}},
+  howpublished = {\url{https://cf-assets.www.cloudflare.com/slt3lc6tev37/7koyyovVxIqK8zdG1pqo6O/dfcbbde950394c61855befd9bf083a28/Impact-Report-2025-Final.pdf}},
+  year         = {2025},
+  note         = {Accessed 2026-09-30}
+}
+
+@misc{fastly-sustainability-dashboard,
+  title        = {{Fastly} Sustainability Dashboard},
+  author       = {{Fastly}},
+  howpublished = {\url{https://www.fastly.com/products/sustainability-dashboard}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{cdnetworks-sustainability,
+  title        = {{CDNetworks} Sustainability},
+  author       = {{CDNetworks}},
+  howpublished = {\url{https://www.cdnetworks.com/sustainability/}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{gcore-infrastructure,
+  title        = {Advanced, secure, and compliant infrastructure},
+  author       = {{Gcore}},
+  howpublished = {\url{https://gcore.com/infrastructure}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{netlify-sustainability,
+  title        = {{Netlify} and Sustainability},
+  author       = {{Netlify}},
+  howpublished = {\url{https://www.netlify.com/sustainability/}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{vercel-avanade-case-study,
+  title        = {{Avanade} leverages {Vercel} and {Next.js} to accelerate development and deliver high-performance experiences},
+  author       = {{Vercel}},
+  howpublished = {\url{https://vercel.com/customers/integrating-vercel-and-sitecore-for-2x-faster-development-times-and-111}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{wasabi-zero-circle-partnership,
+  title        = {{Zero Circle} and {Wasabi Technologies} Partner on New Sustainability Tools for Cloud Storage},
+  author       = {{Wasabi Technologies}},
+  howpublished = {\url{https://wasabi.com/company/newsroom/press-releases/zero-circle-and-wasabi-technologies-partner-on-new-sustainability-tools-for-cloud-storage}},
+  year         = {2024},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{backblaze-infrastructure,
+  title        = {Why {Backblaze}: Enterprise Cloud Storage for {AI} \& Data},
+  author       = {{Backblaze}},
+  howpublished = {\url{https://www.backblaze.com/why-backblaze}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{akamai-emissions-policy-2025,
+  title        = {Environmental Policy: Customer Emissions Data---{Akamai}'s policy regarding customer emissions data},
+  author       = {{Akamai Technologies, Inc.}},
+  howpublished = {\url{https://www.akamai.com/site/en/documents/corporate/2025/emissions-reporting-policy.pdf}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{akamai-customer-reporting,
+  title        = {Scope 3, Category 8: What {Akamai} Is Doing for Customer Reporting},
+  author       = {Mattera, Mike},
+  howpublished = {\url{https://www.akamai.com/blog/sustainability/what-akamai-is-doing-for-customer-reporting}},
+  year         = {2025},
+  note         = {Accessed 2026-09-28}
+}
+
+@misc{fastly-sustainability-methodology,
+  title        = {Our Sustainability dashboard methodology},
+  author       = {{Fastly}},
+  howpublished = {\url{https://quic.fastly.com/documentation/guides/account-info/sustainability/our-sustainability-dashboard-methodology/}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
+}
+
+@misc{wasabi-zero-circle-calculator,
+  title        = {{Wasabi}: Carbon Footprint by {Zero Circle}},
+  author       = {{Zero Circle}},
+  howpublished = {\url{https://cust.zerocircle.eco/wasabi}},
+  note         = {Accessed 2026-09-28},
+  year         = {2026}
 }
 
 % ----- Tools & context -----
+
+@misc{wasabi-carbon-footprint-dashboard,
+  title        = {Account Information Settings View: Control Account},
+  author       = {{Wasabi Technologies}},
+  howpublished = {\url{https://docs.wasabi.com/docs/account-information-settings-control-account\#carbon-footprint}},
+  note         = {Accessed 2026-09-30},
+  year         = {2026}
+}
 
 @misc{gsf-measuring,
   title        = {Measuring for Reporting vs. Measuring for Action},
@@ -228,6 +663,14 @@
   author       = {{Thoughtworks}},
   howpublished = {\url{https://github.com/cloud-carbon-footprint/cloud-carbon-footprint}},
   year         = {2024}
+}
+
+@misc{greenpixie-cloud-methodology,
+  title        = {{Greenpixie}: Methodology for Cloud Emission Measurement},
+  author       = {{Greenpixie}},
+  howpublished = {\url{https://greenpixie.com/docs/methodology/cloud}},
+  note         = {Accessed 2026-10-02},
+  year         = {2026}
 }
 
 @misc{electricitymaps2026,
@@ -444,6 +887,59 @@
   author    = {Patel, Pratyush and Choukse, Esha and Zhang, Chaojie and Goiri, {\'I}{\~n}igo and Shah, Aashaka and Maleki, Saeed and Bianchini, Ricardo},
   booktitle = {International Symposium on Computer Architecture (ISCA)},
   year      = {2024}
+}
+
+@article{elzahr2025measurement,
+  title   = {From Measurement to Emissions: Assessing the Carbon Footprint of Traffic Flows},
+  author  = {El-Zahr, Sawsan and Zilberman, Noa},
+  journal = {Proceedings of the ACM on Measurement and Analysis of Computing Systems},
+  volume  = {9},
+  number  = {3},
+  pages   = {1--24},
+  year    = {2025},
+  doi     = {10.1145/3771569}
+}
+
+@inproceedings{man2026emissionimpossible,
+  title     = {{Emission Impossible}: Cryptographically Verifiable Carbon Emissions Reporting for Cloud Computing},
+  author    = {Man, Jessica and Kleppmann, Martin},
+  booktitle = {Proceedings of the 17th ACM International Conference on Future and Sustainable Energy Systems},
+  series    = {e-Energy '26},
+  pages     = {712--725},
+  year      = {2026},
+  doi       = {10.1145/3744255.3811720}
+}
+
+@inproceedings{eilam2021transparent,
+  author    = {Eilam, Tamar},
+  title     = {Towards Transparent and Trustworthy Cloud Carbon Accounting},
+  booktitle = {Proceedings of the 22nd International Middleware Conference: Extended Abstracts},
+  pages     = {1--5},
+  year      = {2021},
+  doi       = {10.1145/3501255.3501408}
+}
+
+@article{schien2025causal,
+  author  = {Schien, Daniel and Shabajee, Paul and Krug, Louise and McSorley, Greg and Preist, Chris},
+  title   = {Causal allocation of fixed impacts in product systems: Assessing the effect of data demand on network energy consumption},
+  journal = {Journal of Industrial Ecology},
+  volume  = {29},
+  number  = {5},
+  pages   = {1618--1631},
+  year    = {2025},
+  doi     = {10.1111/jiec.70057}
+}
+
+@article{nasiriani2016peakpricing,
+  author   = {Nasiriani, Neda and Wang, Cheng and Kesidis, George and Urgaonkar, Bhuvan and Chen, Lydia Y. and Birke, Robert},
+  title    = {On Fair Attribution of Costs Under Peak-Based Pricing to Cloud Tenants},
+  journal  = {ACM Transactions on Modeling and Performance Evaluation of Computing Systems},
+  volume   = {2},
+  number   = {1},
+  articleno = {3},
+  numpages = {28},
+  year     = {2016},
+  doi      = {10.1145/2970815}
 }
 
 @article{castro2009polynomial,

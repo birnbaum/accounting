@@ -1,0 +1,27 @@
+Dear reviewers,
+
+thank you very much for the thorough reviews and feedback. We will try to address your questions and concerns below.
+Reviewer #9A
+
+W1. Neither bottom-up metrics (which are missing overheads) nor the top-down numbers (which rely on proxies for allocating to tenants) can necessarily be considered "ground truth". SCI does not solve this, as SCI’s embodied term does not ensure that all provider emissions are accounted for or that workload estimates agree with the organization’s report. We argue that attempting reconciliation makes the gaps between the two views explicit. We will clarify this in the paper.
+
+W2. We agree that the operational term alone does not guarantee an improvement in the reconciled score. Beta controls the energy/capacity split, but incentives also depend on residual signs, allocation weights, and the provider report’s response. We will revise unconditional incentive claims from Table 2 and adapt the discussion accordingly.
+
+W3. Spiky cloud workloads are one reason why datacenters must hold substantial idle capacity. We argue that workloads contributing to shared peaks should therefore bear a larger share of the emissions associated with that capacity. This rewards demand changes that reduce contributions to shared peaks. However, other allocation strategies are certainly possible. For example, capacity held for redundancy could be allocated according to workloads’ availability requirements.
+
+W4. While the main problems around current cloud carbon accounting practices have been discussed in prior work, our goal in Section 6 was to identify which issues prevent reconciliation in practice, based on our attempts to compute rSCI using actual provider reports. We will make this connection clearer.
+
+Q1. For accounting purposes, organizations want to quantify the emissions caused by specific services, projects, or teams, and connect these figures to the organization’s carbon reporting under the GHG Protocol. Without access to provider data, bottom-up estimates can leave overheads unallocated. We include the residual to account for the difference and connect workload figures to the reported total. We agree with Bashir et al. that allocating past embodied emissions does not make them avoidable through operational decisions. But we argue that allocating emissions by peak contribution could encourage load shaping and reduce future hardware needs. Note that overheads also include idle electricity and cooling energy, which are operational rather than embodied.
+
+Q2. These discrepancies are evidence of the "Barriers to Practical Adoption". A negative residual indicates that the bottom-up estimate exceeds the reported total. Without further information, we cannot distinguish model error from differences in reporting boundaries or allocation. Its effect on decisions depends on its allocation. For example, allocating a negative capacity residual by peak contribution gives workloads with larger peak contributions a larger credit, potentially reversing the intended incentive. We will make this clearer in the paper.
+
+Q3. Yes, we will publish the full provider list, inclusion criteria, links to the documents that support our classification, and the data and code needed to reproduce all results and the plot in Section 5.
+
+Thank you for pointing out the typos and incorrect author names in [34], we will correct them.
+Reviewer #9B
+
+W1. We agree that the current paper does not adequately explain or demonstrate why rSCI avoids the sunk-carbon fallacy. The fallacy is choosing less efficient hardware because it is already depreciated. In rSCI, workloads within a reporting slice share the same Scope 3 total, so the embodied footprint does not play a role in the allocation choice. You are right that an older provider fleet can have a smaller reported total. Our argument therefore needs to distinguish choices within one slice from comparisons across providers. We will explain this and state when the claim holds.
+
+W2. The example uses one workload to illustrate reconciliation and does not test allocation between workloads. Section 6 discusses the additional reporting limitations that prevent us from validating such allocations against provider data. We will make the purpose of the example and the assumed 100kg total clearer.
+
+W3. We agree that the Shapley proposal needs a more precise definition. It is a proposed way to allocate capacity-related emissions, and we have not validated the peak-hour proxy. We will specify the proposed calculation and remove the claim that the proxy preserves its incentives. Table 2 will distinguish the proposed peak-demand incentive from the reconciliation property established by the equations.

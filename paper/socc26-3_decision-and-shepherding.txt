@@ -1,0 +1,55 @@
+SoCC 2026 — decision and shepherding instructions
+Paper: Reconciling Bottom-Up Metrics with Top-Down Reporting for Carbon Accounting in the Cloud
+Decision: Accepted with Shepherding
+
+Source: Text supplied by Philipp Wiesner in this conversation on 2026-09-27.
+The two messages below are preserved as supplied, including the spelling “rCSI”.
+This is a transcript, not an independently retrieved email or HotCRP export.
+Individual reviews: socc26-reviews-9.txt
+Author response: socc26-response.txt
+Working revision plan: SHEPHERDING_TODO.md
+
+
+META-REVIEW / REVISION REQUESTS
+===========================================================================
+
+Thanks for submitting this paper to SoCC.
+
+We discussed the paper, and we decided to accept it with shepherding. Please address the issues the reviewers highlighted. In addition, we expect to see the following changes:
+
+    Highlight the benefits of rCSI and the SCI limitations it addresses, as well as the challenges of obtaining the needed information.
+
+    Demonstrate the benefits of allocation by peak demand.
+
+    Consider recent accounting approaches such as [1], which discusses allocation frameworks for idle energy/carbon you cannot control. In this case, and in your case, you should highlight that there are two types of emissions (consequential and attributional), and your work basically closes the loop by fixing the attributional part. The scope is different, but the approach is general.
+
+[1] https://dl.acm.org/doi/10.1145/3771569
+
+
+DECISION EMAIL
+===========================================================================
+
+Dear Philipp Wiesner,
+
+Thank you for submitting your paper, “Reconciling Bottom-Up Metrics with Top-Down Reporting for Carbon Accounting in the Cloud," to the 17th ACM Symposium on Cloud Computing (SoCC'26). This year, we received 292 Round 2 submissions. Of these, 22 papers were desk-rejected (e.g., for double-blind violations or because the designated senior author did not fulfill their reserve-reviewer duty); 32 papers were accepted outright, and 27 were accepted with shepherding.
+
+The reviewers found merit in your work and were enthusiastic about seeing it presented at the conference. However, they have identified specific concerns that must be addressed before final acceptance. We are therefore conditionally accepting your paper, pending successful shepherding.
+
+You will need to prepare a revised version of your paper with all changes clearly highlighted, along with a 750-word summary of the revisions. These materials must be submitted to your assigned shepherd for final approval by Oct 10, 2026 (AoE).  The shepherds have all been informed that no paper is perfect and that the revision window is especially short this year.  Please address, to the best of your ability, the requests outlined in the meta-review (note that for a few papers the meta-review may still be on the way; you may start preparing first, and you may ping your meta-reviewer on HotCRP) and the individual reviewer comments.
+
+You will soon be able to post comments on HotCRP again, similar to the author feedback phase. Once your revision is ready, please post a HotCRP comment to your shepherd that includes your change summary and upload the revised paper. Please maintain *double-blind (dual-anonymous)* in your revision. Your shepherd will review the updated version and confirm acceptance via a HotCRP comment on or before Oct 14, 2026.
+
+You may include supplementary material as a 1-page appendix when submitting your revision through HotCRP. However, the camera-ready version for ACM publication must comply with the 12-page limit, the same limit as for the original submission.
+
+We appreciate your commitment to improving your paper and look forward to including it in the SoCC'26 program in Singapore, November 18-20, 2026.  The early-bird conference registration deadline is October 22, and we expect at least one author to register and present the paper in person.
+
+Best regards,
+Eric and Ivan
+Program Committee Co-Chairs
+ACM SoCC'26
+
+Important dates:
+Oct 10: Revision Deadline
+Oct 14: Shepherd Reply
+Oct 17: Camera Ready Deadline
+Oct 22: Early Bird Conference Registration Deadline

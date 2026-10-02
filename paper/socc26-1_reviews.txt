@@ -1,0 +1,96 @@
+SoCC 2026 Paper #9 Reviews and Comments
+===========================================================================
+Paper #9 Reconciling Bottom-Up Metrics with Top-Down Reporting for Carbon
+Accounting in the Cloud
+
+
+Review #9A
+===========================================================================
+
+Overall merit
+-------------
+3. Weak accept
+
+Paper summary
+-------------
+The paper highlights the limitations of th current carbon accounting practices are disconnected. The paper analyze the reason for this disconnection and highlights its impact. For instance, the author argues that bottom up approaches (e.g., oSCI) do not capture cloud datacenter overheads (hardware, idle energy), while the top down approaches do not consider the optimizations or incentive them.
+To `reconcile` these two views they introduce rSCI, which keeps oSCI's operational term and adds a residual, the gap between the provider's reported total and the bottom-up estimate, distributed across a reporting slice's workloads by weights that sum to one, so per-workload scores add up to the reported total by construction. The paper then defines approaches to compute and allocate these residuals across clients (e.g., by peak demand). Finally, the paper highlights the limitations of rSCI and why its not applicable in todays' cloud systems.
+
+Strengths
+---------
+S1. The paper is well written and address a key problem that impacts all the literature of carbon-aware scheduling. The question of whether carbon optimizations affect the carbon bill (or reporting) is a very important question.
+
+S2. The survey in table 1 is really nice. I think a detailed version of this analysis will be very useful to the entire community.
+
+S3. Considering the overall carbon-emissions and auditable carbon accounting is a very important problem.
+
+Weaknesses
+----------
+W1. To some degree, the paper argues that the cloud numbers are the ground truth and rSCI just patches the numbers to match the cloud total numbers. If the argument is to fix the cloud reporting done by clouds, doesn't SCI already solve the problem but cloud datacenters are the ones who are refusing to do the total accounting.
+
+
+W2. rSCI rewards `some` operational actions, but only the limited set determined by the beta values. The paper should state explicitly which actions are incentivized under which beta regime rather stating that rSCI incentive all actions.
+
+W3. While I agree that there should be someway to allocate excess power to tenants, the proposed approach rewards clients that reduce there peak demand which goes against the spiky nature of cloud workloads.
+
+W4. While I like the last part, it do not state any new information beyond what is known in state of the art.
+
+Questions for authors’ response
+-------------------------------
+Thanks for submitting this paper to SoCC'26. While I like the idea, I don't agree with some of the arguments. Here are some questions to the authors.
+
+Q1. Why merge residuals into SCI? This is the same argument in bashir et al. [4]. Things that goes into different accounting scales, should not be added together. I would argue that the overheads should be considered as part of the embodied emissions.
+
+Q2. The results in figure 3 goes against the utility of the residuals. Please detail the reason and the impact of negative residuals on the client decisions.
+
+Q3. Do you plan to release the full 48-provider survey, including the provider list, inclusion criteria, and the evidence behind each Table 1 classification, along with the model and traces used in Section 5?
+
+Minor comments
+--------------
+M1. Reference [34] has the wrong author first names. The bibliography says "Sarah Schneider and Andrea Mattia"; the authors are Ian Schneider and Taylor Mattia.
+
+M2. The paper has many typos: aggreate (figure 1), methodologys" (Section 3), "Thereform" (Section 4), admissable" (Section 6)
+
+M2. Figure 1 caption/label: "Bottom-up aggreate" should be "aggregate".
+
+Proper Use of AI
+----------------
+Yes
+
+
+
+Review #9B
+===========================================================================
+
+Overall merit
+-------------
+3. Weak accept
+
+Paper summary
+-------------
+This position paper argues that bottom-up, per-workload carbon metrics (e.g., SCI and operational-SCI [oSCI]) and top-down provider GHG reports should be reconcilable views of the same emissions, not separate tools serving different purposes. It directly challenges the Green Software Foundation’s framing that distinguishes measuring for action from measuring for reporting, contending that these two perspectives must ultimately agree. To bridge them, the paper proposes rSCI, a method that reconciles bottom-up energy estimates against a provider’s reported total through a residual term. That residual is decomposed into energy-driven and capacity-driven components, which are then allocated according to modeled energy share and Shapley-based peak-capacity share, respectively. The paper then surveys forty-eight providers and reports hands-on experiments with AWS, Azure, and Scaleway to show that current GHG disclosures are too coarse, opaque, and non-standardized for this reconciliation to work in practice.
+
+Strengths
+---------
+- S1: The central argument is correct and well-posed
+- S2: The negative-residual finding is the interesting finding in the paper
+- S3: It concludes today's reports "remain too coarse, opaque, and inconsistent to compute credible rSCI scores in practice," backed by production AWS and Scaleway data
+-
+
+Weaknesses
+----------
+- W1: rSCI does not actually avoid the sunk-carbon fallacy in the way Table 2 claims, because a tenant on fully-depreciated hardware still receives a Scope-3 allocation, and a tenant whose provider runs older, lower-remaining-embodied fleets could see a smaller Δ^S3. The mechanism is different from SCI's M, but the claim that the fallacy is avoided needs a better argument than a table.
+- W2: The example is a single synthetic workload on a single node with a top-down report because somehow the 100 kg total was assumed and not measured; there is one workload, so the allocation weights are never exercised (each w = 1).
+- W3: The Shapley proposal is not well specified. As this is the mechanism generating the paper's distinctive incentive, it gets just ta paragraph. Whether the proxy preserves the incentive is not really shown.
+
+Questions for authors’ response
+-------------------------------
+The framing question is important and under-examined, the position taken is non-obvious and argued against a named standards body, the 48-provider survey is new empirical work, and the paper is honest about its infeasibility. The negative-residual result and the "Other = 67–96%" finding are the evidence authors would soften.
+
+Minor comments
+--------------
+The weakness and strength of this paper is that the reconciliation identity is trivial by design. The incentive properties depend on β values chosen by fiat and a Shapley computation replaced by an unvalidated proxy, while the worked example exercises neither. Two of the five Table 2 properties (sunk-carbon avoidance, peak pricing) are mainly asserted, and not demonstrated.
+
+Proper Use of AI
+----------------
+Yes

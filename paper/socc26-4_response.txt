@@ -1,0 +1,35 @@
+Dear reviewers,
+
+Thank you for the reviews and shepherding guidance. We have revised the paper as follows. Substantive changes and newly added research references in the main text are highlighted in blue. The many new references for the provider methodology sources in the Appendix are left black for readability.
+
+**1. SCI, rSCI, and accounting scope**
+
+Sections 2 and 4 now explain why SCI alone does not solve the reconciliation problem. Although SCI covers operational and embodied emissions, tenants lack information about shared idle capacity and other provider overheads. Adding an embodied term does not guarantee agreement with the provider's inventory. rSCI accounts for that discrepancy without treating either estimate as ground truth.
+
+Following El-Zahr and Zilberman, we distinguish attributional accounting from consequential analysis. rSCI assigns reported emissions to workloads. It does not determine the emissions avoided by an intervention. We also clarify that idle electricity and cooling are operational overheads, so overheads cannot all be classified as embodied emissions.
+
+**2. Updated provider survey**
+
+We repeated the survey and now cover 50 cloud providers. The appendix gives the complete list, inclusion and exclusion criteria, classification criteria, and sources. We added Exoscale and OUTSCALE to Table 1, bringing the comparison to eleven providers offering customer emissions reports for compute services. We also reassessed the existing classifications, distinguishing undocumented responses from documented absence of a response.
+
+**3. Capacity allocation**
+
+Section 4 now grounds the allocation of the "capacity-driven residual" in existing literature instead of committing to a single, insufficiently validated Shapley formulation. We discuss methods for allocating idle and embodied emissions, with peak demand as one capacity driver alongside availability and latency requirements. The illustrative example in Section 5 uses a simple rule informed by this literature. We removed the claim that it preserves Shapley incentives. Evaluating effects on scheduling and future hardware needs remains future work.
+
+**4. Revised experiment and reproducibility**
+
+The example now uses shared resource demand independent of the workload trace, so a workload's own burst need not coincide with a shared peak. Section 5 specifies the hourly allocation rule. We compare this rule with uniform allocation per token, showing how it shifts a larger share of capacity emissions to work during busy hours.
+
+We corrected the residual and embodied carbon calculations and explicitly label the provider's 100 kg report as assumed. The example illustrates allocation across hours and does not validate allocation between workloads. We have prepared the code and instructions to reproduce the experiment and Figure 2, and will release it upon full acceptance.
+
+**5. Incentive conditions**
+
+Table 2 now distinguishes guaranteed reconciliation from conditional incentive claims. The appendix proves that reducing operational emissions cannot increase an individual workload's score when the provider report, betas, capacity shares, other workloads' emissions, and output remain fixed. It gives the conditions for a strict decrease, including the different beta regimes. For a single workload, total attribution follows the provider report, so reducing that total requires the report to reflect the improvement.
+
+We also qualify the sunk-carbon claim: depreciation gives no automatic discount within a reporting slice, but fleet age can still affect the provider's inventory. Section 6 explains that negative residuals can arise from model error or differences in boundaries and allocation. The appendix shows that a negative capacity residual rewards larger capacity shares with larger credits, reversing the intended incentive.
+
+**6. Practical requirements and remaining corrections**
+
+Section 6 now identifies additional information needed to apply the proposed allocation: separate energy and capacity components and demand data for the shared resource pool. We updated the related work, including Man and Kleppmann, corrected Ian Schneider and Taylor Mattia's names, and fixed the reported typos, including Figure 1's label.
+
+We prepared several pages of supporting material covering the provider inventory, detailed reporting coverage, and incentive analysis. The revision appendix contains a 1-page summary containing the provider list and a concise incentive derivation. After acceptance, we intend to publish the full material in an extended arXiv version, where we can also expand the explanations behind the Table 1 classifications.
