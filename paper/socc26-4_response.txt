@@ -1,6 +1,6 @@
 Dear reviewers,
 
-Thank you for the reviews and shepherding guidance. We have revised the paper as follows. Substantive changes and newly added research references in the main text are highlighted in blue. The many new references for the provider methodology sources in the Appendix are left black for readability.
+Thank you for the reviews and shepherding guidance. We have revised the paper as described below. Substantive changes and newly added research references are highlighted in blue. The many new references for the provider methodology sources in the Appendix are left black for readability.
 
 **1. SCI, rSCI, and accounting scope**
 
@@ -28,8 +28,8 @@ Table 2 now distinguishes guaranteed reconciliation from conditional incentive c
 
 We also qualify the sunk-carbon claim: depreciation gives no automatic discount within a reporting slice, but fleet age can still affect the provider's inventory. Section 6 explains that negative residuals can arise from model error or differences in boundaries and allocation. The appendix shows that a negative capacity residual rewards larger capacity shares with larger credits, reversing the intended incentive.
 
-**6. Practical requirements and remaining corrections**
+**6. Remaining corrections**
 
-Section 6 now identifies additional information needed to apply the proposed allocation: separate energy and capacity components and demand data for the shared resource pool. We updated the related work, including Man and Kleppmann, corrected Ian Schneider and Taylor Mattia's names, and fixed the reported typos, including Figure 1's label.
+Section 6 now identifies additional information needed to apply the proposed allocation, meaning separate energy and capacity components and demand data for the shared resource pool. We updated the related work, corrected Ian Schneider and Taylor Mattia's names, and fixed the reported typos, including Figure 1's label.
 
-We prepared several pages of supporting material covering the provider inventory, detailed reporting coverage, and incentive analysis. The revision appendix contains a 1-page summary containing the provider list and a concise incentive derivation. After acceptance, we intend to publish the full material in an extended arXiv version, where we can also expand the explanations behind the Table 1 classifications.
+We prepared several pages of supporting material covering the provider inventory, detailed reporting coverage, explanations behind the Table 1 classifications, and incentive analysis which we intend to publish in an extended arXiv version after acceptance. The revision appendix contains a 1-page summary containing the provider list and incentive analysis.

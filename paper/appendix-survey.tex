@@ -1,0 +1,230 @@
+% Publication tables. Detailed working evidence remains local in survey/.
+\begingroup
+\definecolor{surveyHeading}{HTML}{285A8E}
+\definecolor{surveyReport}{HTML}{12633D}
+\definecolor{surveyMetrics}{HTML}{8A6800}
+\definecolor{surveyClaims}{HTML}{A85516}
+\definecolor{surveyMissing}{HTML}{9B4141}
+\newcommand{\surveyclass}[2]{\textcolor{#1}{\textbf{#2}}}
+\newcommand{\surveysource}[2]{#2~\cite{#1}}
+\color{black}
+\hypersetup{urlcolor=black,linkcolor=black,citecolor=black}
+\newcommand{\surveygroup}[1]{\colorbox{surveyHeading!10}{\parbox{\dimexpr\textwidth-2\fboxsep\relax}{\textcolor{surveyHeading}{\strut\textbf{#1}}}}}
+\section{Provider Survey}
+\label{app:provider-survey}
+This appendix documents the provider survey discussed in Section~\ref{sec:sota}.
+
+\subsection{Survey Scope and Provider Disclosures}
+\label{app:inventory}
+We reviewed publicly available environmental disclosures from 50 cloud providers across general-purpose compute, GPU/HPC (neocloud), CDN/edge, application hosting, and object storage.
+The sample includes major cloud platforms and selected regional and specialized providers, with a focus on Europe and North America.
+We excluded colocation-only providers, general business SaaS, model-only APIs, and independent carbon-accounting tools.
+Providers were selected regardless of their environmental disclosures.
+We initially reviewed official documentation and reports on 27 September 2026.
+
+\smallskip
+\noindent\textbf{Classification.} Categories reflect providers' publicly available documentation, reports, and claims.
+We did not test every customer reporting tool or independently verify all reported figures.
+Each provider is assigned the first applicable category below.
+\begin{itemize}
+\setlength{\itemsep}{1pt}
+\setlength{\parskip}{0pt}
+\item \textcolor{surveyReport}{\textbf{Customer report}} (15): emissions attributed to an individual customer's usage, excluding reports that show only estimated savings.
+\item \textcolor{surveyMetrics}{\textbf{Public metrics}} (17): quantified corporate or operational environmental results, without a per-customer report.
+\item \textcolor{surveyClaims}{\textbf{Claims only}} (12): environmental commitments, practices, targets, or projected savings, without quantified results.
+\item \textcolor{surveyMissing}{\textbf{Not found}} (6): no qualifying disclosure identified in the reviewed sources.
+\end{itemize}
+
+\small
+\renewcommand{\arraystretch}{1.20}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}p{.22\textwidth}p{.24\textwidth}p{\dimexpr.54\textwidth-16pt\relax}@{}}
+\caption{Environmental disclosures from the surveyed cloud providers.}
+\vspace{-3mm}
+\label{tab:provider-inventory}\\
+\toprule
+\textbf{Provider} & \textbf{Disclosure} & \textbf{Source} \\
+\midrule
+\endfirsthead
+\multicolumn{3}{l}{\emph{Table~\ref{tab:provider-inventory}: provider disclosures (continued)}} \\
+\toprule
+\textbf{Provider} & \textbf{Disclosure} & \textbf{Source} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\emph{Continued on next page}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\multicolumn{3}{@{}l@{}}{\surveygroup{Hyperscalers (9)}} \\*
+Alibaba Cloud & \surveyclass{surveyReport}{Customer report} & \surveysource{alibaba-cloud-carbon-footprint}{Cloud product carbon footprint documentation} \\*
+AWS & \surveyclass{surveyReport}{Customer report} & \surveysource{aws-sustainability-concepts}{Sustainability console documentation} \\*
+Azure & \surveyclass{surveyReport}{Customer report} & \surveysource{azure-carbon-overview}{Azure Carbon Optimization overview} \\*
+GCP & \surveyclass{surveyReport}{Customer report} & \surveysource{google-carbon-methodology}{Carbon Footprint methodology} \\*
+IBM Cloud & \surveyclass{surveyReport}{Customer report} & \surveysource{ibm-carbon-current}{Working with IBM Cloud's carbon calculator} \\*
+Oracle (OCI) & \surveyclass{surveyReport}{Customer report} & \surveysource{oracle-emissions-management}{OCI Emissions Management documentation} \\*
+Baidu AI Cloud & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{baidu-esg-2024}{Baidu ESG report (2024)} \\*
+Huawei Cloud & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{huawei-green-data-centers}{Huawei Cloud: green data centers and PUE} \\*
+Tencent Cloud & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{tencent-carbon-neutrality}{Tencent climate disclosures} \\
+\multicolumn{3}{@{}l@{}}{\surveygroup{Other general-purpose cloud providers (18)}} \\*
+Exoscale & \surveyclass{surveyReport}{Customer report} & \surveysource{exoscale-environmental-impact}{Environmental Impact reporting documentation} \\*
+Infomaniak & \surveyclass{surveyReport}{Customer report} & \surveysource{infomaniak-invoice-footprint}{Invoice-footprint methodology (FAQ 1160)} \\*
+OUTSCALE & \surveyclass{surveyReport}{Customer report} & \surveysource{outscale-carbon-reporting}{Carbon Footprint reporting documentation} \\*
+OVHcloud & \surveyclass{surveyReport}{Customer report} & \surveysource{ovh-eit-v2}{Environmental Impact Tracker methodology} \\*
+Scaleway & \surveyclass{surveyReport}{Customer report} & \surveysource{scaleway-footprint-api}{Environmental Footprint API documentation} \\*
+T Cloud Public & \surveyclass{surveyReport}{Customer report} & \surveysource{tcloud-sustainability-dashboard}{Sustainability Dashboard and methodology} \\*
+GleSYS & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{glesys-sustainability-2024}{Sustainability report announcement (2024)} \\*
+Hetzner & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{hetzner-environmental-statement-2025}{Environmental statement (2025, German operations)} \\*
+IONOS & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{ionos-environment}{Environmental disclosures} \\*
+JD Cloud & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{jd-esg-2024}{JD.com ESG report announcement (2024)} \\*
+Rackspace & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{rackspace-sustainability-2025}{Sustainability report announcement (2025)} \\*
+STACKIT & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{stackit-colocation}{Colocation specifications and PUE} \\*
+UpCloud & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{upcloud-esg-2024}{ESG report (2024)} \\*
+Yandex Cloud & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{yandex-sustainability-2024}{Yandex sustainability report (2024)} \\*
+Civo & \surveyclass{surveyClaims}{Claims only} & \surveysource{civo-uk-ai-sovereignty}{UK infrastructure and efficiency commitments} \\*
+Leafcloud & \surveyclass{surveyClaims}{Claims only} & \surveysource{leafcloud-gpu-carbon-calculator}{GPU carbon savings calculator explained} \\*
+Vultr & \surveyclass{surveyClaims}{Claims only} & \surveysource{vultr-sabey-expansion}{Sabey partnership and environmental commitments} \\*
+DigitalOcean & \surveyclass{surveyMissing}{Not found} & -- \\
+\multicolumn{3}{@{}l@{}}{\surveygroup{GPU/HPC providers (10)}} \\*
+atNorth & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{atnorth-sustainability-2024}{Sustainability report announcement (2024)} \\*
+Crusoe & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{crusoe-impact-2024}{Impact report (2024)} \\*
+Nebius & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{nebius-sustainability}{Sustainability disclosures} \\*
+Verda & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{verda-locations-sustainability}{Locations and sustainability documentation} \\*
+CoreWeave & \surveyclass{surveyClaims}{Claims only} & \surveysource{coreweave-10k-2025}{Form 10-K, fiscal year 2025} \\*
+Hyperstack & \surveyclass{surveyClaims}{Claims only} & \surveysource{hyperstack-infrastructure}{Infrastructure and renewable-power claims} \\*
+Lambda & \surveyclass{surveyClaims}{Claims only} & \surveysource{lambda-hydrogen-gb300}{Hydrogen-powered facility announcement} \\*
+Nscale & \surveyclass{surveyClaims}{Claims only} & \surveysource{nscale-sustainable-infrastructure}{Sustainable AI infrastructure commitments} \\*
+RunPod & \surveyclass{surveyClaims}{Claims only} & \surveysource{runpod-legal-compliance}{Environmental procurement criteria} \\*
+Paperspace & \surveyclass{surveyMissing}{Not found} & -- \\
+\multicolumn{3}{@{}l@{}}{\surveygroup{CDN/edge providers (6)}} \\*
+Akamai & \surveyclass{surveyReport}{Customer report} & \surveysource{akamai-customer-engagement}{Customer emissions reporting and calculator} \\*
+Fastly & \surveyclass{surveyReport}{Customer report} & \surveysource{fastly-sustainability-output}{Sustainability dashboard documentation} \\*
+CDNetworks & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{cdnetworks-sustainability}{Sustainability metrics} \\*
+Cloudflare & \surveyclass{surveyMetrics}{Public metrics} & \surveysource{cloudflare-impact-2025}{Impact report (2025): corporate emissions inventory} \\*
+Gcore & \surveyclass{surveyClaims}{Claims only} & \surveysource{gcore-infrastructure}{Infrastructure and efficiency claims} \\*
+Bunny.net & \surveyclass{surveyMissing}{Not found} & -- \\
+\multicolumn{3}{@{}l@{}}{\surveygroup{Application hosting platforms (5)}} \\*
+Netlify & \surveyclass{surveyClaims}{Claims only} & \surveysource{netlify-sustainability}{Sustainability commitments} \\*
+Vercel & \surveyclass{surveyClaims}{Claims only} & \surveysource{vercel-avanade-case-study}{Customer case study: website carbon reduction} \\*
+Fly.io & \surveyclass{surveyMissing}{Not found} & -- \\*
+Railway & \surveyclass{surveyMissing}{Not found} & -- \\*
+Render & \surveyclass{surveyMissing}{Not found} & -- \\
+\multicolumn{3}{@{}l@{}}{\surveygroup{Object storage providers (2)}} \\*
+Wasabi & \surveyclass{surveyReport}{Customer report} & \surveysource{wasabi-carbon-subaccounts}{Account Control Manager: Carbon Footprint} \\*
+Backblaze & \surveyclass{surveyClaims}{Claims only} & \surveysource{backblaze-infrastructure}{Infrastructure, recycling, and cooling practices} \\
+\end{longtable}
+\normalsize
+
+\clearpage
+\subsection{Coverage and Granularity of Cloud Emissions Reports}
+\label{app:reporting-coverage}
+Of the 50 surveyed providers, 15 claim to offer reports that attribute emissions to individual customers.
+Table~\ref{tab:reporting-coverage} compares their reporting intervals, the breakdowns available to customers, and the emissions sources and electricity accounting methods covered by their reports.
+The entries are based on the public documentation cited beside each provider. We additionally checked the documentation for reporting breakdowns on 6 October 2026.
+The columns should be read as follows:
+
+\begin{itemize}
+\item \textbf{Reporting interval} gives the shortest period for which a provider documents emissions totals. We did not test all dashboards, but daily reporting in particular warrants caution. For example, in our June~2026 tests, Scaleway's daily reports appeared unreliable.
+\item \textbf{Reporting breakdown} lists how customers can split or filter reported emissions. Detail varies by service and reporting interface. The listed dimensions are not necessarily available together.
+\item The \textbf{Scopes 1, 2, and 3} columns show which emissions providers account for when calculating the footprints allocated to customers. Scope~1 covers direct emissions, such as fuel combustion. The two Scope~2 columns distinguish methods for calculating emissions from electricity use. \emph{Location-based} estimates use the average emissions per unit of electricity supplied by the local grid. \emph{Market-based} estimates use emission factors associated with the provider's electricity purchases, including contracts and renewable energy certificates. These columns also cover electricity classified as provider Scope~3, such as colocation electricity. The five Scope~3 columns compare coverage of selected emissions sources. They do not correspond one-to-one to GHG Protocol categories.
+\end{itemize}
+
+We did not independently verify the reported emissions.
+Coverage may vary by service and region.
+A checkmark indicates inclusion but does not imply complete coverage of an emissions source.
+Customer allocation methods and their responses to engineering actions are assessed separately in Table~\ref{tab:levers} and Appendix~\ref{app:action-evidence}.
+
+\begin{table}[h!]
+\centering
+\caption{Coverage and granularity of cloud emissions reports. \faithful: emissions source included or electricity accounting basis used, \notrefl: source excluded or basis not used, \undocumented: undocumented.}
+\vspace{-3mm}
+\label{tab:reporting-coverage}
+\small
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{@{}p{2.45cm}p{1.35cm}Lcccccccc@{}}
+\toprule
+& & & \textbf{Scope 1} & \multicolumn{2}{c}{\textbf{Scope 2}} & \multicolumn{5}{c}{\textbf{Scope 3}} \\
+\cmidrule(lr){4-4}\cmidrule(lr){5-6}\cmidrule(l){7-11}
+\textbf{Provider / source} & \makecell[l]{\textbf{Reporting}\\\textbf{interval}} & \textbf{Reporting breakdown} & & \makecell{\textbf{Location-}\\\textbf{based}} & \makecell{\textbf{Market-}\\\textbf{based}} & \makecell{\textbf{Hard-}\\\textbf{ware}} & \makecell{\textbf{Build-}\\\textbf{ings}} & \makecell{\textbf{Upstream}\\\textbf{energy}} & \makecell{\textbf{Trans-}\\\textbf{port}} & \makecell{\textbf{End}\\\textbf{of life}} \\
+\midrule
+\rowcolor{surveyHeading!10}\multicolumn{11}{l}{\textcolor{surveyHeading}{\strut\textbf{Hyperscalers (6)}}} \\
+Alibaba Cloud~\cite{alibaba-cloud-carbon-footprint} & Month & Account & \faithful & \notrefl & \faithful & \notrefl & \notrefl & \notrefl & \notrefl & \notrefl \\
+AWS~\cite{aws-ccft-model3,aws-sustainability-concepts} & Month & Account, service category, region & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \notrefl \\
+Azure~\cite{azure-methodology-2026,azure-carbon-overview} & Month & Subscription, resource group, resource type, resource, region & \faithful & \notrefl & \faithful & \faithful & \notrefl & \notrefl & \faithful & \faithful \\
+GCP~\cite{google-carbon-methodology,google-carbon-schema} & Month & Billing account, project, service, region or zone & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \notrefl \\
+IBM Cloud~\cite{ibm-carbon-calc-v3,ibm-carbon-current} & Month & Account, resource group, service, region or datacenter & \notrefl & \faithful & \faithful & \notrefl & \notrefl & \notrefl & \notrefl & \notrefl \\
+Oracle (OCI)~\cite{oracle-emissions-management,oracle-carbon-viewreports} & Day & Tenant, compartment, tag, service, SKU, resource, region or zone & \faithful & \faithful & \faithful & \notrefl & \notrefl & \notrefl & \notrefl & \notrefl \\
+\rowcolor{surveyHeading!10}\multicolumn{11}{l}{\textcolor{surveyHeading}{\strut\textbf{Other general-purpose cloud providers (6)}}} \\
+Exoscale~\cite{exoscale-impact-methodology,exoscale-environmental-impact} & Day & Organization, resource type and size, zone & \notrefl & \faithful & \notrefl & \faithful & \notrefl & \faithful & \faithful & \faithful \\
+Infomaniak~\cite{infomaniak-invoice-footprint} & Year & Not specified (web hosting/mail) & \notrefl & \notrefl & \faithful & \faithful & \notrefl & \undocumented & \faithful & \faithful \\
+OUTSCALE~\cite{outscale-carbon-methodology,outscale-carbon-reporting} & Month & Account, service category, region & \notrefl & \faithful & \notrefl & \faithful & \undocumented & \undocumented & \undocumented & \undocumented \\
+OVHcloud~\cite{ovh-eit-v2} & Month & Service, product family, datacenter & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \undocumented \\
+Scaleway~\cite{scaleway-footprint-calculator,scaleway-footprint-api} & Day & Project, service category, product type, SKU, region or zone & \undocumented & \faithful & \notrefl & \faithful & \faithful & \faithful & \faithful & \faithful \\
+T Cloud Public~\cite{tcloud-sustainability-dashboard} & Day & Tenant, service & \faithful & \notrefl & \faithful & \notrefl & \notrefl & \notrefl & \notrefl & \notrefl \\
+\rowcolor{surveyHeading!10}\multicolumn{11}{l}{\textcolor{surveyHeading}{\strut\textbf{CDN/edge providers (2)}}} \\
+Akamai~\cite{akamai-emissions-policy-2025,akamai-customer-reporting} & Quarter & Customer total (finer breakdown unclear) & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \faithful & \undocumented \\
+Fastly~\cite{fastly-sustainability-output} & Day & Service category (Delivery, Compute, shared components), country & \notrefl & \faithful & \faithful & \notrefl & \notrefl & \faithful & \notrefl & \notrefl \\
+\rowcolor{surveyHeading!10}\multicolumn{11}{l}{\textcolor{surveyHeading}{\strut\textbf{Object storage providers (1)}}} \\
+Wasabi~\cite{wasabi-carbon-footprint-dashboard,wasabi-carbon-subaccounts} & Month & Account, subaccount & \undocumented & \undocumented & \undocumented & \undocumented & \undocumented & \undocumented & \undocumented & \undocumented \\
+\bottomrule
+\end{tabularx}
+
+\end{table}
+
+\clearpage
+\subsection{Interpreting Table~\ref{tab:levers}}
+\label{app:action-evidence}
+The following paragraphs explain the five action classifications in Table~\ref{tab:levers}, which covers the 11 providers offering customer reports for general-purpose compute.
+
+% These headings already end with a question mark.
+\renewcommand{\parag}[1]{\vspace{2mm}\noindent\textbf{#1}\hspace{2mm}}
+
+\parag{Efficient resource: Does using more energy-efficient hardware for the same work lower reported emissions?}
+Most methods use prices or pooled resource weights, which need not track the efficiency of the hardware running a workload.
+GCP weights SKU usage by list price~\cite{schneider-mattia-2024}, Azure uses cost normalized to exclude discounts~\cite{microsoft-s3-2021,azure-methodology-2026}, and Oracle's spend-based method uses undiscounted charges~\cite{oracle-emissions-management}.
+AWS EC2 allocates service totals in proportion to normalized instance-hours~\cite{aws-ccft-model3}, and IBM VPC uses vCPU-hours~\cite{ibm-carbon-calc-v3}, without retaining the energy use of the customer's particular machine.
+Alibaba allocates by cloud resource quantity without specifying how its weights account for hardware efficiency~\cite{alibaba-cloud-carbon-footprint}.
+OVHcloud models dedicated servers individually but averages hardware impacts within each shared-instance range~\cite{ovh-eit-v2}, while Exoscale averages across each product's hardware pool~\cite{exoscale-impact-methodology}.
+Scaleway models CPU-instance power using processor characteristics and CPU utilization, but uses average consumption estimates for GPU instances~\cite{scaleway-instances-footprint}.
+T~Cloud maps services to infrastructure components using power profiles derived from measurements, so its estimates depend on the modeled configuration~\cite{tcloud-sustainability-release,tcloud-sustainability-dashboard}.
+OUTSCALE does not disclose its customer allocation weights~\cite{outscale-carbon-methodology}.
+
+\parag{Lower utilization: Does lower utilization reduce reported emissions when reserved capacity and runtime stay the same?}
+Scaleway's CPU-instance reports use actual CPU utilization in the power model, so reduced activity can lower attributed electricity use, whereas its GPU estimates do not follow customer activity~\cite{scaleway-instances-footprint}.
+For AWS EC2~\cite{aws-ccft-model3}, GCP Compute Engine~\cite{schneider-mattia-2024}, IBM VPC~\cite{ibm-carbon-calc-v3} and Exoscale~\cite{exoscale-impact-methodology}, lower CPU activity leaves the reserved quantities used for allocation unchanged.
+Azure's normalized-cost weight likewise stays unchanged for the same VM and runtime~\cite{microsoft-s3-2021,azure-methodology-2026}.
+OVHcloud estimates server energy at full load and allocates VM footprints by size and billed hours, without using the customer's actual CPU activity~\cite{ovh-eit-v2}.
+T~Cloud's release notes describe allocation by provisioned resources~\cite{tcloud-sustainability-release}, while its blog describes allocation by actual utilization~\cite{tcloud-sustainability-dashboard}, without explaining how the two are combined.
+Oracle~\cite{oracle-emissions-management}, Alibaba~\cite{alibaba-cloud-carbon-footprint} and OUTSCALE~\cite{outscale-carbon-methodology} do not specify whether customer CPU activity changes the allocation at a fixed reservation.
+
+\parag{Right-size: Does reserving less capacity for the same work and runtime lower reported emissions?}
+Smaller reservations reduce the quantities used for allocation in most methods.
+Within a comparable instance family, this reduces normalized instance-hours for AWS EC2~\cite{aws-ccft-model3}, billable resource units for GCP~\cite{schneider-mattia-2024}, vCPU-hours for IBM VPC~\cite{ibm-carbon-calc-v3}, and reserved-resource shares for OVHcloud~\cite{ovh-eit-v2} and Exoscale~\cite{exoscale-impact-methodology}.
+Scaleway allocates manufacturing impacts by reserved resource shares, so smaller reservations reduce this component, but the total also depends on CPU utilization after resizing~\cite{scaleway-instances-footprint}.
+Azure's cost-based allocation rewards smaller VMs when they reduce normalized cost~\cite{microsoft-s3-2021}, and Oracle's spend-based method similarly rewards lower undiscounted charges~\cite{oracle-emissions-management}.
+T~Cloud uses provisioned resources in its calculation, but its documentation does not establish how increased utilization after resizing affects the result~\cite{tcloud-sustainability-release,tcloud-sustainability-dashboard}.
+Alibaba does not specify whether its resource quantities measure reserved capacity or actual activity~\cite{alibaba-cloud-carbon-footprint}, and OUTSCALE does not disclose the allocation weights needed to assess resizing~\cite{outscale-carbon-methodology}.
+
+\parag{Region: Does using the same amount of electricity in a cleaner region lower reported emissions?}
+Most providers publish location-based figures and use regional emission factors, including AWS~\cite{aws-ccft-model3}, GCP~\cite{schneider-mattia-2024}, Oracle~\cite{oracle-emissions-management}, OVHcloud~\cite{ovh-eit-v2}, Scaleway~\cite{scaleway-calculation-values} and Exoscale~\cite{exoscale-impact-methodology}.
+The same electricity use is therefore attributed fewer emissions in a cleaner region.
+Oracle provides this comparison through its power-based method, while its spend-based method is market-based only~\cite{oracle-emissions-management}.
+IBM also documents location-based reporting, but currently lists that output as temporarily disabled~\cite{ibm-carbon-current}.
+OUTSCALE's calculation likewise scales electricity emissions with the grid factor, although both currently covered regions use France's factor~\cite{outscale-carbon-methodology}.
+Azure~\cite{azure-carbon-data} and T~Cloud~\cite{tcloud-sustainability-release} expose only market-based Scope~2 figures, while Alibaba includes green-electricity adjustments without documenting a separate location-based result~\cite{alibaba-cloud-carbon-footprint}.
+Their regional totals may differ, but do not show how differences in grid carbon intensity affect reported emissions.
+
+\parag{Time: Does running the same workload at cleaner times lower reported emissions?}
+%We consider shifts within the same month, with total resource-hours unchanged.
+None of the reviewed methods documents a reduction in a customer's reported emissions from shifting work to cleaner hours.
+GCP computes internal emissions hourly, but its published customer formula applies aggregate SKU and regional factors to customer usage without matching that usage to individual hours~\cite{schneider-mattia-2024}.
+AWS allocates monthly service emissions in proportion to customer usage within that month~\cite{aws-ccft-model3}.
+OVHcloud~\cite{ovh-eit-v2} and OUTSCALE~\cite{outscale-carbon-methodology} use yearly electricity emission factors.
+IBM generally uses source factors updated yearly and applies them for up to a year~\cite{ibm-carbon-calc-v3}.
+Scaleway~\cite{scaleway-calculation-values} and Exoscale~\cite{exoscale-impact-methodology} do not specify whether their electricity emission factors represent monthly or yearly averages.
+Azure~\cite{azure-carbon-data}, T~Cloud~\cite{tcloud-sustainability-release} and Alibaba~\cite{alibaba-cloud-carbon-footprint} lack the separate location-based output needed for this comparison.
+Oracle does not disclose the time resolution of its electricity factors or how customers' execution times enter the allocation~\cite{oracle-emissions-management}.
+
+
+\endgroup

@@ -28,3 +28,6 @@
 *.fls
 
 paper.pdf
+build/
+paper-camera-ready.pdf
+paper-arxiv.pdf

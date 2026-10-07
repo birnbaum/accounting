@@ -1,7 +1,8 @@
 % ============================================================
 % Bibliography
 % Fields kept minimal: author, title, venue/journal (with abbreviation), year.
-% Journals additionally carry page numbers; conferences do not. No DOIs.
+% Journals and book chapters additionally carry page numbers; conferences do not.
+% No DOIs, volume/issue fields, or separate conference series fields.
 % Web references (misc entries) retain their URL as the locator.
 % Source-grounding rule (see /CLAUDE.md): every entry is backed by a primary
 % source in /references/.
@@ -125,7 +126,8 @@
   title   = {Directive (EU) 2022/2464 of the European Parliament and of the Council},
   author  = {{European Parliament and Council of the European Union}},
   journal = {Official Journal of the European Union},
-  year    = {2022}
+  year    = {2022},
+  pages   = {15--80}
 }
 
 @misc{SEC2024_3311275,
@@ -207,6 +209,14 @@
   note         = {Accessed 2026-09-28}
 }
 
+@misc{oracle-carbon-viewreports,
+  title        = {Viewing Carbon Emissions Reports},
+  author       = {{Oracle}},
+  howpublished = {\url{https://docs.oracle.com/en-us/iaas/Content/General/Tasks/carbon-analysis-viewreports.htm}},
+  year         = {2026},
+  note         = {Accessed 2026-10-06}
+}
+
 @misc{scaleway-footprint-calculator,
   title        = {Environmental Footprint calculation breakdown},
   author       = {{Scaleway}},
@@ -244,6 +254,14 @@
   howpublished = {\url{https://www.t-cloud-public.com/en/blog/product-news/sustainability-dashboard}},
   year         = {2026},
   note         = {Accessed 2026-09-28}
+}
+
+@misc{tcloud-sustainability-release,
+  title        = {New Sustainability Dashboard in the Financial Dashboard},
+  author       = {{T Cloud Public}},
+  howpublished = {\url{https://www.t-cloud-public.com/en/support/release-notes/new-sustainability-dashboard-in-the-financial-dashboard}},
+  year         = {2026},
+  note         = {Published 2026-02-18. Accessed 2026-10-03}
 }
 
 @misc{alibaba-cloud-carbon-footprint,
@@ -286,6 +304,14 @@
   note         = {Accessed 2026-09-28}
 }
 
+@misc{outscale-carbon-reporting,
+  title        = {Getting Information About Your Carbon Footprint},
+  author       = {{OUTSCALE}},
+  howpublished = {\url{https://docs.outscale.com/en/userguide/Getting-Information-About-Your-Carbon-Footprint.html}},
+  year         = {2026},
+  note         = {Accessed 2026-10-06}
+}
+
 @misc{ovh-eit-v2,
   title        = {{OVHcloud} Environmental Impact Tracker Methodology},
   author       = {{OVHcloud}},
@@ -303,6 +329,22 @@
   howpublished = {\url{https://aws.amazon.com/sustainability/tools/console/}},
   note         = {Accessed 2026-09-28},
   year         = {2026}
+}
+
+@misc{google-carbon-schema,
+  title        = {Carbon Footprint Export Data Schema},
+  author       = {{Google}},
+  howpublished = {\url{https://docs.cloud.google.com/carbon-footprint/docs/data-schema}},
+  year         = {2026},
+  note         = {Accessed 2026-10-06}
+}
+
+@misc{aws-sustainability-concepts,
+  title        = {{AWS Sustainability}: Key Concepts},
+  author       = {{Amazon Web Services}},
+  howpublished = {\url{https://docs.aws.amazon.com/sustainability/latest/userguide/key-concepts.html}},
+  year         = {2026},
+  note         = {Accessed 2026-10-06}
 }
 
 @misc{baidu-esg-2024,
@@ -367,6 +409,14 @@
   howpublished = {\url{https://www.scaleway.com/en/docs/environmental-footprint/how-to/environmental-footprint-dashboard/}},
   year         = {2026},
   note         = {Accessed 2026-09-28}
+}
+
+@misc{scaleway-footprint-api,
+  title        = {Environmental Footprint {API}},
+  author       = {{Scaleway}},
+  howpublished = {\url{https://www.scaleway.com/en/developers/api/environmental-footprint/}},
+  year         = {2026},
+  note         = {Accessed 2026-10-06}
 }
 
 @misc{glesys-sustainability-2024,
@@ -633,6 +683,14 @@
   year         = {2026}
 }
 
+@misc{fastly-sustainability-output,
+  title        = {About the Sustainability Dashboard},
+  author       = {{Fastly}},
+  howpublished = {\url{https://www.fastly.com/documentation/guides/organizations-and-accounts/sustainability/about-the-sustainability-dashboard/}},
+  year         = {2026},
+  note         = {Accessed 2026-10-06}
+}
+
 @misc{wasabi-zero-circle-calculator,
   title        = {{Wasabi}: Carbon Footprint by {Zero Circle}},
   author       = {{Zero Circle}},
@@ -651,11 +709,19 @@
   year         = {2026}
 }
 
+@misc{wasabi-carbon-subaccounts,
+  title        = {Account Information Settings View: Sub-Accounts},
+  author       = {{Wasabi Technologies}},
+  howpublished = {\url{https://docs.wasabi.com/docs/sub-account-management}},
+  year         = {2026},
+  note         = {Accessed 2026-10-06}
+}
+
 @misc{gsf-measuring,
   title        = {Measuring for Reporting vs. Measuring for Action},
-  author       = {{Green Software Foundation}},
-  howpublished = {\url{https://greensoftware.foundation/articles/measuring-for-reporting-vs-measuring-for-action}},
-  year         = {2024}
+  author       = {Hussain, Asim},
+  howpublished = {Green Software Foundation. \url{https://greensoftware.foundation/articles/measuring-for-reporting-vs-measuring-for-action}},
+  year         = {2026}
 }
 
 @misc{cloudcarbonfootprint,
@@ -738,14 +804,14 @@
 @inproceedings{wiesner2025moving,
   author    = {Wiesner, Philipp and Kao, Odej},
   title     = {Moving Beyond Marginal Carbon Intensity: A Poor Metric for Both Carbon Accounting and Grid Flexibility},
-  booktitle = {Workshop on Measurements, Modeling, and Metrics for Carbon-Aware Computing (CarbonMetrics) at ACM SIGMETRICS},
+  booktitle = {Workshop on Measurements, Modeling, and Metrics for Carbon-Aware Computing (CarbonMetrics)},
   year      = {2025}
 }
 
 @inproceedings{wiesner2025qualitytime,
   title     = {Carbon-Aware Quality Adaptation for Energy-Intensive Services},
   author    = {Wiesner, Philipp and Grinwald, Dennis and Wei{\ss}, Philipp and Wilhelm, Patrick and Khalili, Ramin and Kao, Odej},
-  booktitle = {ACM International Conference on Future Energy Systems (e-Energy)},
+  booktitle = {ACM International Conference on Future and Sustainable Energy Systems (e-Energy)},
   year      = {2025}
 }
 
@@ -753,7 +819,8 @@
   title   = {Carbon-Aware Computing for Datacenters},
   author  = {Radovanovic, Ana and Koningstein, Ross and Schneider, Ian and Chen, Bokan and Duarte, Alexandre and Roy, Binz and Xiao, Diyue and Haridasan, Maya and Hung, Patrick and Care, Nick and Talukdar, Saurav and Mullen, Eric and Smith, Kendal and Cottman, Mariellen and Cirne, Walfredo},
   journal = {IEEE Transactions on Power Systems},
-  year    = {2022}
+  year    = {2023},
+  pages   = {1270--1280}
 }
 
 @inproceedings{acun2023carbon_explorer,
@@ -774,7 +841,8 @@
   title   = {{CarbonScaler}: Leveraging Cloud Workload Elasticity for Optimizing Carbon-Efficiency},
   author  = {Hanafy, Walid A. and Liang, Qianlin and Bashir, Noman and Irwin, David and Shenoy, Prashant},
   journal = {Proceedings of the ACM on Measurement and Analysis of Computing Systems (POMACS)},
-  year    = {2024}
+  year    = {2023},
+  pages   = {1--28}
 }
 
 @inproceedings{sukprasert2024limits,
@@ -794,7 +862,7 @@
 @inproceedings{gsteiger2024caribou,
   title     = {Caribou: Fine-Grained Geospatial Shifting of Serverless Applications for Sustainability},
   author    = {Gsteiger, Viktor and Long, Daniel and Sun, Jerry and Javanrood, Parshan and Shahrad, Mohammad},
-  booktitle = {Symposium on Operating Systems Principles (SOSP)},
+  booktitle = {ACM Symposium on Operating Systems Principles},
   year      = {2024}
 }
 
@@ -809,7 +877,8 @@
   title   = {The Online Pause and Resume Problem: Optimal Algorithms and an Application to Carbon-Aware Load Shifting},
   author  = {Lechowicz, Adam and Christianson, Nicolas and Zuo, Jinhang and Bashir, Noman and Hajiesmaili, Mohammad and Wierman, Adam and Shenoy, Prashant},
   journal = {Proceedings of the ACM on Measurement and Analysis of Computing Systems (POMACS)},
-  year    = {2023}
+  year    = {2023},
+  pages   = {1--32}
 }
 
 @article{lechowicz2024carbonclipper,
@@ -858,7 +927,8 @@
   author  = {Jacquet, Pierre and Coti, Camille and {Dias De Assun\c{c}\~ao}, Marcos and Rouvoy, Romain},
   title   = {{Cinergy}: Deterministic Power Monitoring for Carbon Accounting in the Cloud},
   journal = {IEEE Transactions on Cloud Computing},
-  year    = {2025}
+  year    = {2026},
+  pages   = {822--833}
 }
 
 @inproceedings{bhagavathula2024uncertainty,
@@ -892,54 +962,39 @@
 @article{elzahr2025measurement,
   title   = {From Measurement to Emissions: Assessing the Carbon Footprint of Traffic Flows},
   author  = {El-Zahr, Sawsan and Zilberman, Noa},
-  journal = {Proceedings of the ACM on Measurement and Analysis of Computing Systems},
-  volume  = {9},
-  number  = {3},
-  pages   = {1--24},
+  journal = {Proceedings of the ACM on Measurement and Analysis of Computing Systems (POMACS)},
   year    = {2025},
-  doi     = {10.1145/3771569}
+  pages   = {1--24}
 }
 
 @inproceedings{man2026emissionimpossible,
   title     = {{Emission Impossible}: Cryptographically Verifiable Carbon Emissions Reporting for Cloud Computing},
   author    = {Man, Jessica and Kleppmann, Martin},
-  booktitle = {Proceedings of the 17th ACM International Conference on Future and Sustainable Energy Systems},
-  series    = {e-Energy '26},
-  pages     = {712--725},
-  year      = {2026},
-  doi       = {10.1145/3744255.3811720}
+  booktitle = {ACM International Conference on Future and Sustainable Energy Systems (e-Energy)},
+  year      = {2026}
 }
 
 @inproceedings{eilam2021transparent,
   author    = {Eilam, Tamar},
   title     = {Towards Transparent and Trustworthy Cloud Carbon Accounting},
-  booktitle = {Proceedings of the 22nd International Middleware Conference: Extended Abstracts},
-  pages     = {1--5},
-  year      = {2021},
-  doi       = {10.1145/3501255.3501408}
+  booktitle = {ACM/IFIP International Middleware Conference: Extended Abstracts (Middleware)},
+  year      = {2021}
 }
 
 @article{schien2025causal,
   author  = {Schien, Daniel and Shabajee, Paul and Krug, Louise and McSorley, Greg and Preist, Chris},
   title   = {Causal allocation of fixed impacts in product systems: Assessing the effect of data demand on network energy consumption},
   journal = {Journal of Industrial Ecology},
-  volume  = {29},
-  number  = {5},
-  pages   = {1618--1631},
   year    = {2025},
-  doi     = {10.1111/jiec.70057}
+  pages   = {1618--1631}
 }
 
 @article{nasiriani2016peakpricing,
-  author   = {Nasiriani, Neda and Wang, Cheng and Kesidis, George and Urgaonkar, Bhuvan and Chen, Lydia Y. and Birke, Robert},
-  title    = {On Fair Attribution of Costs Under Peak-Based Pricing to Cloud Tenants},
-  journal  = {ACM Transactions on Modeling and Performance Evaluation of Computing Systems},
-  volume   = {2},
-  number   = {1},
-  articleno = {3},
-  numpages = {28},
-  year     = {2016},
-  doi      = {10.1145/2970815}
+  author  = {Nasiriani, Neda and Wang, Cheng and Kesidis, George and Urgaonkar, Bhuvan and Chen, Lydia Y. and Birke, Robert},
+  title   = {On Fair Attribution of Costs Under Peak-Based Pricing to Cloud Tenants},
+  journal = {ACM Transactions on Modeling and Performance Evaluation of Computing Systems (TOMPECS)},
+  year    = {2016},
+  pages   = {1--28}
 }
 
 @article{castro2009polynomial,
