@@ -1,0 +1,66 @@
+\begingroup
+\color{black}
+\hypersetup{citecolor=black,linkcolor=black,urlcolor=black}
+\section{Conditions for Allocation Incentives}
+\label{app:operational-incentives}
+
+The operational term of \RSCI decreases when a workload uses less energy or runs during cleaner hours or in cleaner regions.
+By construction, total attributed emissions equal the provider's reported total.
+The analysis below holds that report fixed to examine how allocation affects an individual workload's score, giving the incentive conditions discussed alongside Table~\ref{tab:properties}.
+
+\parag{Setup}
+Consider one reporting slice and suppress its index $s$.
+Let $x\geq0$ be the workload's modeled operational emissions and $X>0$ the total across all workloads in the slice.
+Hold reported emissions $C^{\downarrow k}\geq0$, scope fractions $\beta^k\in[0,1]$, functional output $R_i>0$, other workloads' operational emissions, and capacity shares fixed.
+Write
+\begin{equation}
+A=\sum_k\beta^k C^{\downarrow k},\qquad
+B=\sum_k(1-\beta^k)C^{\downarrow k},\qquad
+b=\beta^{\mathrm{S2}},\qquad v=w^{\mathrm{cap}}_{i,s}\in[0,1].
+\end{equation}
+The energy and capacity residuals are $A-bX$ and $B-(1-b)X$, respectively.
+With energy weights proportional to operational emissions, this workload's attributed emissions are
+\begin{equation}
+\begin{aligned}
+F(x)&=x+\frac{x}{X}(A-bX)+v\bigl(B-(1-b)X\bigr)\\
+    &=(1-b)x+A\frac{x}{X}+vB-v(1-b)X.
+\end{aligned}
+\end{equation}
+Dividing by the fixed $R_i$ gives this slice's contribution to the workload's score.
+
+\parag{Operational improvements}
+Because other workloads' emissions are fixed, $dX/dx=1$, giving
+\begin{equation}
+\frac{dF}{dx}=(1-b)(1-v)+A\frac{X-x}{X^2}\geq0.
+\label{eq:operational-incentive-derivative}
+\end{equation}
+\emph{Under these assumptions, reducing operational emissions cannot increase the reconciled score} while $X$ remains positive.
+Both the residuals and the energy weights are recomputed after the change.
+The derivative is strictly positive if either $b<1$ and $v<1$, or $A>0$ and other workloads have positive operational emissions.
+In particular:
+\begin{itemize}
+\setlength{\itemsep}{1pt}
+\item If $\beta^{\mathrm{S2}}<1$, a workload with less than the full capacity share receives a strictly lower score when its operational emissions decrease.
+\item If $\beta^{\mathrm{S2}}=1$, positive reported Scope~2 emissions and positive operational emissions from other workloads suffice for a strict decrease. Energy allocations from other scopes can also make $A>0$.
+\end{itemize}
+These conditions cover energy savings and moving work to cleaner hours when operational emissions and energy weights use the time-varying carbon intensity, and capacity shares remain fixed.
+The result extends across slices if the stated assumptions hold in each slice and operational emissions do not increase in any affected slice.
+When work moves between slices, lower total operational emissions alone do not guarantee a lower score. The combined attributions must be compared.
+
+\parag{Capacity allocation}
+Now hold all operational emissions, reports, scope fractions, and output fixed, and vary the workload's capacity share $v$.
+Its effect on the score is
+\begin{equation}
+\frac{\partial (F/R_i)}{\partial v}=\frac{B-(1-b)X}{R_i}=\frac{\Delta_s^{\mathrm{cap}}}{R_i}.
+\end{equation}
+\emph{A smaller capacity share lowers the score for a positive capacity residual, but raises it for a negative residual.}
+If the capacity residual is zero, changing the capacity share has no effect on the score.
+Setting every $\beta^k=1$ removes the capacity component.
+
+\parag{Limits}
+For a sole workload, $x=X$ and $v=1$, so $F=A+B=\sum_k C^{\downarrow k}$.
+\emph{Its total attribution follows the provider's reported total.}
+It therefore remains unchanged in the fixed-report analysis above.
+These results concern attribution and do not establish physical emissions savings.
+Actions that also change capacity shares, provider reports, scope fractions, other workloads' emissions, or functional output must be assessed with those changes included.
+\endgroup
